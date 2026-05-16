@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600, initial-scale=1.0">
+<title>Glance</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", "Hiragino Sans", sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8vh 6vw;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 520px;
+    text-align: center;
+  }
+
+  .greet {
+    font-size: clamp(18px, 3.2vw, 28px);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: #7cf6c8;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .time {
+    font-size: clamp(80px, 18vw, 160px);
+    font-weight: 200;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 24px rgba(124, 246, 200, 0.25);
+  }
+
+  .time .sec {
+    font-size: 0.35em;
+    vertical-align: super;
+    color: #7cf6c8;
+    margin-left: 0.15em;
+    font-weight: 300;
+  }
+
+  .date {
+    margin-top: 18px;
+    font-size: clamp(20px, 3.6vw, 32px);
+    font-weight: 300;
+    color: #cfd6e0;
+    letter-spacing: 0.02em;
+  }
+
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: #2a2f3a;
+    margin: 28px auto;
+  }
+
+  .status {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    font-size: clamp(14px, 2.4vw, 20px);
+    color: #8a93a3;
+    letter-spacing: 0.04em;
+  }
+
+  .status .item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #7cf6c8;
+    box-shadow: 0 0 8px #7cf6c8;
+  }
+
+  .footer {
+    position: fixed;
+    bottom: 14px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: #444a55;
+    letter-spacing: 0.2em;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="card">
+      <div class="greet" id="greet">Good Day</div>
+      <div class="time">
+        <span id="hm">--:--</span><span class="sec" id="sec">--</span>
+      </div>
+      <div class="date" id="date">----</div>
+
+      <div class="divider"></div>
+
+      <div class="status">
+        <div class="item"><span class="dot"></span><span id="day">---</span></div>
+        <div class="item"><span>W</span><span id="week">--</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">META · RAY-BAN · DISPLAY</div>
+
+<script>
+  const pad = n => String(n).padStart(2, '0');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function weekNumber(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
+  }
+
+  function greeting(h) {
+    if (h < 5)  return 'Good Night';
+    if (h < 11) return 'Good Morning';
+    if (h < 17) return 'Good Afternoon';
+    if (h < 22) return 'Good Evening';
+    return 'Good Night';
+  }
+
+  function tick() {
+    const d = new Date();
+    document.getElementById('hm').textContent  = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    document.getElementById('sec').textContent = pad(d.getSeconds());
+    document.getElementById('date').textContent =
+      months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    document.getElementById('day').textContent  = days[d.getDay()].toUpperCase();
+    document.getElementById('week').textContent = pad(weekNumber(d));
+    document.getElementById('greet').textContent = greeting(d.getHours());
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
+</body>
+</html>
