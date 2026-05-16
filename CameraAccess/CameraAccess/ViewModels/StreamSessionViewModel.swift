@@ -95,7 +95,9 @@ class StreamSessionViewModel: ObservableObject {
   func startSession() async {
     do {
       let session = try wearables.createSession(deviceSelector: deviceSelector)
-      try session.start()
+      // Register the Stream capability BEFORE starting the session so the
+      // session knows it has to bring up streaming. Calling addStream after
+      // start() returns nil on some device + SDK 0.7 combinations.
       guard let stream = try session.addStream(config: streamConfig) else {
         showError("Stream capability is not available on this device.")
         return
@@ -136,6 +138,7 @@ class StreamSessionViewModel: ObservableObject {
         }
       }
 
+      try session.start()
       self.session = session
       self.stream = stream
       updateStatusFromState(stream.state)
