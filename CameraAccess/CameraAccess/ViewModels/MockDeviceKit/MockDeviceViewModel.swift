@@ -71,23 +71,18 @@ extension MockDeviceCardView {
     }
 
     // Load mock video content
+    // TODO(DAT-0.7): API renamed in 0.7 — `MockDisplaylessGlasses.getCameraKit()` is gone.
+    // Stubbed out until the new accessor is identified. Verify against
+    // MWDATMockDevice.swiftinterface (look for `cameraKit`, `services`, or
+    // `MockDisplaylessGlassesServices`).
     func selectVideo(from url: URL) {
-      if let cameraKit = (device as? MockDisplaylessGlasses)?.getCameraKit() {
-        Task {
-          await cameraKit.setCameraFeed(fileURL: url)
-          hasCameraFeed = true
-        }
-      }
+      _ = url
     }
 
     // Load mock image content
+    // TODO(DAT-0.7): same as selectVideo.
     func selectImage(from url: URL) {
-      if let cameraKit = (device as? MockDisplaylessGlasses)?.getCameraKit() {
-        Task {
-          await cameraKit.setCapturedImage(fileURL: url)
-          hasCapturedImage = true
-        }
-      }
+      _ = url
     }
   }
 }
