@@ -159,6 +159,9 @@ class StreamSessionViewModel: ObservableObject {
           if message != self.errorMessage {
             self.showError(message)
           }
+          // Tear down so the user can retry. Without this, our reentry
+          // guard keeps skipping startSession because session != nil.
+          await self.teardownExistingSession()
         }
       }
       photoDataListenerToken = stream.photoDataPublisher.listen { [weak self] photoData in
@@ -227,6 +230,10 @@ class StreamSessionViewModel: ObservableObject {
     case .stopped:
       currentVideoFrame = nil
       streamingStatus = .stopped
+      // Free the Swift-side session/stream so the user can retry.
+      Task { @MainActor in
+        await self.teardownExistingSession()
+      }
     default:
       // Any non-stopped state implies the pipeline is active.
       // Once the first frame arrives we'll flip to .streaming via the
