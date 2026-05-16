@@ -31,6 +31,9 @@ struct CameraAccessApp: App {
   #endif
   private let wearables: WearablesInterface
   @StateObject private var wearablesViewModel: WearablesViewModel
+  // Ray-Ban Display への表示用パイプライン（Mock 接続）。実 DAT 接続時は
+  // GlassesPipelineEnvironment(client: DATGlassesDisplayClient(...)) に差し替え。
+  @StateObject private var glassesEnv = GlassesPipelineEnvironment()
 
   init() {
     do {
@@ -50,6 +53,7 @@ struct CameraAccessApp: App {
       // Main app view with access to the shared Wearables SDK instance
       // The Wearables.shared singleton provides the core DAT API
       MainAppView(wearables: Wearables.shared, viewModel: wearablesViewModel)
+        .environmentObject(glassesEnv)
         // Show error alerts for view model failures
         .alert("Error", isPresented: $wearablesViewModel.showError) {
           Button("OK") {

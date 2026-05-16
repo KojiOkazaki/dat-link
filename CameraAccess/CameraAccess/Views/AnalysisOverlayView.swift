@@ -5,6 +5,7 @@ struct AnalysisOverlayView: View {
     @StateObject private var speechService = SpeechService.shared
     @StateObject private var visionManager = VisionServiceManager.shared
     @StateObject private var downloader = ModelDownloader.shared
+    @EnvironmentObject private var glassesEnv: GlassesPipelineEnvironment
     @State private var selectedMode: AnalysisMode = .general
     @State private var analysisResult: String = ""
     @State private var isAnalyzing: Bool = false
@@ -15,6 +16,11 @@ struct AnalysisOverlayView: View {
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
+            if glassesEnv.client.currentPayload != nil {
+                GlassesPreviewView(client: glassesEnv.client)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+            }
             if showResult && !analysisResult.isEmpty { resultView }
             controlPanel
         }
@@ -81,6 +87,17 @@ struct AnalysisOverlayView: View {
                     .foregroundColor(.white).cornerRadius(20)
                 }
                 .disabled(isAnalyzing || currentFrame == nil)
+                Button { sendToGlasses() } label: {
+                    HStack(spacing: 6) {
+                        if glassesEnv.isProcessing { ProgressView().tint(.white).scaleEffect(0.8) }
+                        else { Image(systemName: "eyeglasses") }
+                        Text("Glasses").fontWeight(.semibold)
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(glassesEnv.isProcessing ? Color.gray : Color.purple)
+                    .foregroundColor(.white).cornerRadius(20)
+                }
+                .disabled(glassesEnv.isProcessing || currentFrame == nil)
                 Button { showSettings = true } label: {
                     Image(systemName: "gearshape.fill").padding(8)
                         .background(Color.gray.opacity(0.5))
@@ -141,5 +158,14 @@ struct AnalysisOverlayView: View {
             }
             isAnalyzing = false
         }
+    }
+
+    private func sendToGlasses() {
+        guard let image = currentFrame, !glassesEnv.isProcessing else { return }
+        if !downloader.modelExists {
+            showSettings = true
+            return
+        }
+        Task { await glassesEnv.describeAndShow(image: image) }
     }
 }
