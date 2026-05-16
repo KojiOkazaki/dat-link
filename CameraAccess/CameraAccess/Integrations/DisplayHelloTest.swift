@@ -55,7 +55,7 @@ final class DisplayHelloTestRunner: ObservableObject {
       status = "✅ sent — check the glasses"
     } catch let error as DeviceSessionError {
       NSLog("[DisplayHello] DeviceSessionError: \(error)")
-      status = "❌ DeviceSessionError: \(error.description)"
+      status = "❌ DeviceSessionError: \(error.localizedDescription)"
     } catch let error as DisplayError {
       NSLog("[DisplayHello] DisplayError: \(error)")
       status = "❌ DisplayError: \(error.description)"

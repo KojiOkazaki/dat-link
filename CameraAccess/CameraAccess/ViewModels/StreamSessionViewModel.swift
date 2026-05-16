@@ -66,8 +66,9 @@ class StreamSessionViewModel: ObservableObject {
       frameRate: 24)
 
     // Monitor device availability
+    let selector = self.deviceSelector
     deviceMonitorTask = Task { @MainActor [weak self] in
-      for await device in deviceSelector.activeDeviceStream() {
+      for await device in selector.activeDeviceStream() {
         self?.hasActiveDevice = device != nil
       }
     }
@@ -213,6 +214,18 @@ class StreamSessionViewModel: ObservableObject {
       return "The hinges on the glasses were closed. Please open the hinges and try again."
     case .thermalCritical:
       return "Device is too hot. Please let it cool down and try again."
+    case .thermalEmergency:
+      return "Device thermal emergency. Streaming stopped."
+    case .peakPowerShutdown:
+      return "Device power shutdown. Streaming stopped."
+    case .batteryCritical:
+      return "Battery critical. Streaming stopped."
+    case .deviceNotFound:
+      return "Device not found. Please ensure your device is connected."
+    case .deviceNotConnected:
+      return "Device not connected. Please check your connection and try again."
+    case .videoStreamingError:
+      return "Video streaming failed. Please try again."
     @unknown default:
       return "Streaming error: \(error.localizedDescription)"
     }
