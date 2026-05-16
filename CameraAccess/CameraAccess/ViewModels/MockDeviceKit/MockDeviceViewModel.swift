@@ -72,16 +72,16 @@ extension MockDeviceCardView {
 
     // Load mock video content
     func selectVideo(from url: URL) {
-      if let services = (device as? MockDisplaylessGlasses)?.services {
-        services.setCameraFeed(fileURL: url)
+      if let camera = (device as? MockDisplaylessGlasses)?.services.camera {
+        camera.setCameraFeed(fileURL: url)
         hasCameraFeed = true
       }
     }
 
     // Load mock image content
     func selectImage(from url: URL) {
-      if let services = (device as? MockDisplaylessGlasses)?.services {
-        services.setCapturedImage(fileURL: url)
+      if let camera = (device as? MockDisplaylessGlasses)?.services.camera {
+        camera.setCapturedImage(fileURL: url)
         hasCapturedImage = true
       }
     }

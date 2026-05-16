@@ -9,9 +9,13 @@
 //
 // StreamSessionViewModel.swift
 //
-// Core view model demonstrating video streaming from Meta wearable devices using the DAT SDK.
-// This class showcases the key streaming patterns: device selection, session management,
-// video frame handling, photo capture, and error handling.
+// Rewritten for DAT SDK 0.7:
+//   - StreamSession        → MWDATCamera.Stream
+//   - StreamSessionConfig  → StreamConfiguration
+//   - StreamSessionState   → StreamState
+//   - StreamSessionError   → StreamError
+//   - Construction is now DeviceSession.addStream(config:) instead of
+//     directly creating a StreamSession.
 //
 
 import MWDATCamera
@@ -37,83 +41,34 @@ class StreamSessionViewModel: ObservableObject {
     streamingStatus != .stopped
   }
 
-  // Photo capture properties
   @Published var capturedPhoto: UIImage?
   @Published var showPhotoPreview: Bool = false
-  // The core DAT SDK StreamSession - handles all streaming operations
-  private var streamSession: StreamSession
-  // Listener tokens are used to manage DAT SDK event subscriptions
+
+  private let wearables: WearablesInterface
+  private let deviceSelector: AutoDeviceSelector
+  private let streamConfig: StreamConfiguration
+
+  private var session: DeviceSession?
+  private var stream: MWDATCamera.Stream?
+
   private var stateListenerToken: AnyListenerToken?
   private var videoFrameListenerToken: AnyListenerToken?
   private var errorListenerToken: AnyListenerToken?
   private var photoDataListenerToken: AnyListenerToken?
-  private let wearables: WearablesInterface
-  private let deviceSelector: AutoDeviceSelector
   private var deviceMonitorTask: Task<Void, Never>?
 
   init(wearables: WearablesInterface) {
     self.wearables = wearables
-    // Let the SDK auto-select from available devices
     self.deviceSelector = AutoDeviceSelector(wearables: wearables)
-    let config = StreamSessionConfig(
-      videoCodec: VideoCodec.raw,
-      resolution: StreamingResolution.low,
+    self.streamConfig = StreamConfiguration(
+      videoCodec: .raw,
+      resolution: .low,
       frameRate: 24)
-    streamSession = StreamSession(streamSessionConfig: config, deviceSelector: deviceSelector)
 
     // Monitor device availability
-    deviceMonitorTask = Task { @MainActor in
+    deviceMonitorTask = Task { @MainActor [weak self] in
       for await device in deviceSelector.activeDeviceStream() {
-        self.hasActiveDevice = device != nil
-      }
-    }
-
-    // Subscribe to session state changes using the DAT SDK listener pattern
-    // State changes tell us when streaming starts, stops, or encounters issues
-    stateListenerToken = streamSession.statePublisher.listen { [weak self] state in
-      Task { @MainActor [weak self] in
-        self?.updateStatusFromState(state)
-      }
-    }
-
-    // Subscribe to video frames from the device camera
-    // Each VideoFrame contains the raw camera data that we convert to UIImage
-    videoFrameListenerToken = streamSession.videoFramePublisher.listen { [weak self] videoFrame in
-      Task { @MainActor [weak self] in
-        guard let self else { return }
-
-        if let image = videoFrame.makeUIImage() {
-          self.currentVideoFrame = image
-          if !self.hasReceivedFirstFrame {
-            self.hasReceivedFirstFrame = true
-          }
-        }
-      }
-    }
-
-    // Subscribe to streaming errors
-    // Errors include device disconnection, streaming failures, etc.
-    errorListenerToken = streamSession.errorPublisher.listen { [weak self] error in
-      Task { @MainActor [weak self] in
-        guard let self else { return }
-        let newErrorMessage = formatStreamingError(error)
-        if newErrorMessage != self.errorMessage {
-          showError(newErrorMessage)
-        }
-      }
-    }
-
-    updateStatusFromState(streamSession.state)
-
-    // Subscribe to photo capture events
-    // PhotoData contains the captured image in the requested format (JPEG/HEIC)
-    photoDataListenerToken = streamSession.photoDataPublisher.listen { [weak self] photoData in
-      Task { @MainActor [weak self] in
-        guard let self else { return }
-        if let uiImage = UIImage(data: photoData.data) {
-          self.capturedPhoto = uiImage
-          self.showPhotoPreview = true
-        }
+        self?.hasActiveDevice = device != nil
       }
     }
   }
@@ -133,30 +88,71 @@ class StreamSessionViewModel: ObservableObject {
       }
       showError("Permission denied")
     } catch {
-      showError("Permission error: \(error.description)")
+      showError("Permission error: \(error.localizedDescription)")
     }
   }
 
   func startSession() async {
-    await streamSession.start()
-  }
+    do {
+      let session = try wearables.createSession(deviceSelector: deviceSelector)
+      try session.start()
+      guard let stream = try session.addStream(config: streamConfig) else {
+        showError("Stream capability is not available on this device.")
+        return
+      }
 
-  private func showError(_ message: String) {
-    errorMessage = message
-    showError = true
+      stateListenerToken = stream.statePublisher.listen { [weak self] state in
+        Task { @MainActor in
+          self?.updateStatusFromState(state)
+        }
+      }
+      videoFrameListenerToken = stream.videoFramePublisher.listen { [weak self] videoFrame in
+        Task { @MainActor in
+          guard let self else { return }
+          if let image = videoFrame.makeUIImage() {
+            self.currentVideoFrame = image
+            if !self.hasReceivedFirstFrame {
+              self.hasReceivedFirstFrame = true
+            }
+          }
+        }
+      }
+      errorListenerToken = stream.errorPublisher.listen { [weak self] error in
+        Task { @MainActor in
+          guard let self else { return }
+          let message = self.formatStreamingError(error)
+          if message != self.errorMessage {
+            self.showError(message)
+          }
+        }
+      }
+      photoDataListenerToken = stream.photoDataPublisher.listen { [weak self] photoData in
+        Task { @MainActor in
+          guard let self else { return }
+          if let uiImage = UIImage(data: photoData.data) {
+            self.capturedPhoto = uiImage
+            self.showPhotoPreview = true
+          }
+        }
+      }
+
+      self.session = session
+      self.stream = stream
+      updateStatusFromState(stream.state)
+      await stream.start()
+    } catch {
+      showError("Failed to start streaming: \(error.localizedDescription)")
+    }
   }
 
   func stopSession() async {
-    await streamSession.stop()
-  }
-
-  func dismissError() {
-    showError = false
-    errorMessage = ""
+    await stream?.stop()
+    stream = nil
+    session = nil
   }
 
   func capturePhoto() {
-    streamSession.capturePhoto(format: .jpeg)
+    _ = stream?.capturePhoto(format: .jpeg)
   }
 
   func dismissPhotoPreview() {
@@ -164,38 +160,44 @@ class StreamSessionViewModel: ObservableObject {
     capturedPhoto = nil
   }
 
-  private func updateStatusFromState(_ state: StreamSessionState) {
+  func dismissError() {
+    showError = false
+    errorMessage = ""
+  }
+
+  private func showError(_ message: String) {
+    errorMessage = message
+    showError = true
+  }
+
+  // Conservative state mapping: only `.stopped` is reliably named the same
+  // across versions. Other states (starting/started/stopping/paused, etc.)
+  // are coalesced into waiting/streaming via the default branch.
+  private func updateStatusFromState(_ state: StreamState) {
     switch state {
     case .stopped:
       currentVideoFrame = nil
       streamingStatus = .stopped
-    case .waitingForDevice, .starting, .stopping, .paused:
-      streamingStatus = .waiting
-    case .streaming:
-      streamingStatus = .streaming
+    default:
+      // Any non-stopped state implies the pipeline is active.
+      // Once the first frame arrives we'll flip to .streaming via the
+      // frame listener; until then keep showing the waiting spinner.
+      streamingStatus = hasReceivedFirstFrame ? .streaming : .waiting
     }
   }
 
-  private func formatStreamingError(_ error: StreamSessionError) -> String {
+  private func formatStreamingError(_ error: StreamError) -> String {
     switch error {
-    case .internalError:
-      return "An internal error occurred. Please try again."
-    case .deviceNotFound:
-      return "Device not found. Please ensure your device is connected."
-    case .deviceNotConnected:
-      return "Device not connected. Please check your connection and try again."
     case .timeout:
       return "The operation timed out. Please try again."
-    case .videoStreamingError:
-      return "Video streaming failed. Please try again."
-    case .audioStreamingError:
-      return "Audio streaming failed. Please try again."
     case .permissionDenied:
       return "Camera permission denied. Please grant permission in Settings."
     case .hingesClosed:
       return "The hinges on the glasses were closed. Please open the hinges and try again."
+    case .thermalCritical:
+      return "Device is too hot. Please let it cool down and try again."
     @unknown default:
-      return "An unknown streaming error occurred."
+      return "Streaming error: \(error.localizedDescription)"
     }
   }
 }
