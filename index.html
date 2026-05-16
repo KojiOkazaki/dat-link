@@ -2,396 +2,394 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=600, initial-scale=1.0">
+<meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
 <title>Glance</title>
+<link rel="manifest" href="manifest.webmanifest">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   html, body {
-    width: 100%;
-    height: 100%;
+    width: 600px;
+    height: 600px;
+    overflow: hidden;
     background: #000;
     color: #fff;
-    font-family: -apple-system, "SF Pro Display", "Helvetica Neue", "Hiragino Sans", sans-serif;
-    overflow: hidden;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue",
+                 "Hiragino Sans", sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ---------- top status bar ---------- */
+  /* ---------- stage ---------- */
+  .stage {
+    width: 600px;
+    height: 600px;
+    position: relative;
+  }
+
+  /* ---------- top bar: title + dots ---------- */
   .topbar {
-    position: fixed;
+    position: absolute;
     top: 0; left: 0; right: 0;
-    height: 36px;
+    height: 44px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
-    font-size: 13px;
-    letter-spacing: 0.1em;
-    color: #cfd6e0;
-    z-index: 10;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+    padding: 0 28px;
+    z-index: 5;
   }
-  .topbar .right { display: flex; gap: 10px; align-items: center; }
-  .battery {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-variant-numeric: tabular-nums;
+  .topbar .title {
+    font-size: 16px;
+    letter-spacing: 0.22em;
+    color: #7cf6c8;
   }
-  .battery .cell {
-    width: 22px; height: 10px;
-    border: 1px solid #cfd6e0;
-    border-radius: 2px;
-    position: relative;
-    padding: 1px;
+  .dots {
+    display: flex;
+    gap: 8px;
   }
-  .battery .cell::after {
-    content: "";
-    position: absolute; right: -3px; top: 2px;
-    width: 2px; height: 4px;
-    background: #cfd6e0;
-    border-radius: 0 1px 1px 0;
+  .dots .d {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2a2f3a;
+    transition: all 0.25s ease;
   }
-  .battery .fill {
-    height: 100%;
+  .dots .d.on {
     background: #7cf6c8;
-    border-radius: 1px;
-    transition: width 0.3s ease;
+    width: 22px;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #7cf6c8;
   }
 
-  /* ---------- carousel ---------- */
-  .carousel {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    scrollbar-width: none;
-  }
-  .carousel::-webkit-scrollbar { display: none; }
-
+  /* ---------- card ---------- */
   .card {
-    flex: 0 0 100vw;
-    height: 100vh;
-    scroll-snap-align: center;
+    position: absolute;
+    inset: 0;
+    padding: 56px 36px 28px;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .card.active {
     display: flex;
+    opacity: 1;
+  }
+
+  .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px 6vw 80px;
+    text-align: center;
   }
 
-  .panel {
-    width: 100%;
-    max-width: 520px;
-    text-align: center;
+  .actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  /* ---------- focusable buttons ---------- */
+  .focusable {
+    background: transparent;
+    color: #fff;
+    border: 2px solid #2a2f3a;
+    border-radius: 12px;
+    min-height: 88px;
+    min-width: 120px;
+    padding: 0 24px;
+    font-size: 22px;
+    font-family: inherit;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+  .focusable:focus {
+    outline: none;
+    border-color: #7cf6c8;
+    color: #7cf6c8;
+    box-shadow: 0 0 20px rgba(124, 246, 200, 0.4);
   }
 
   /* ---------- card 1: clock ---------- */
   .greet {
-    font-size: clamp(16px, 2.8vw, 24px);
+    font-size: 20px;
     font-weight: 400;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.16em;
     color: #7cf6c8;
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
   .time {
-    font-size: clamp(72px, 17vw, 150px);
+    font-size: 132px;
     font-weight: 200;
     letter-spacing: -0.04em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 24px rgba(124, 246, 200, 0.25);
+    text-shadow: 0 0 24px rgba(124, 246, 200, 0.3);
   }
   .time .sec {
-    font-size: 0.32em;
+    font-size: 40px;
     vertical-align: super;
     color: #7cf6c8;
-    margin-left: 0.15em;
+    margin-left: 6px;
     font-weight: 300;
   }
   .date {
-    margin-top: 16px;
-    font-size: clamp(18px, 3.4vw, 28px);
+    margin-top: 18px;
+    font-size: 26px;
     font-weight: 300;
     color: #cfd6e0;
   }
   .meta-row {
     display: flex;
     justify-content: center;
-    gap: 24px;
-    margin-top: 20px;
-    font-size: clamp(13px, 2.2vw, 18px);
+    gap: 28px;
+    margin-top: 14px;
+    font-size: 18px;
     color: #8a93a3;
     letter-spacing: 0.1em;
   }
 
   /* ---------- card 2: weather ---------- */
-  .wx-label {
-    font-size: clamp(14px, 2.6vw, 20px);
-    color: #7cf6c8;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    margin-bottom: 14px;
-  }
   .wx-place {
-    font-size: clamp(18px, 3.2vw, 26px);
+    font-size: 20px;
     color: #cfd6e0;
-    margin-bottom: 24px;
+    margin-bottom: 14px;
     font-weight: 300;
+    letter-spacing: 0.04em;
   }
   .wx-icon {
-    font-size: clamp(72px, 14vw, 120px);
+    font-size: 88px;
     line-height: 1;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .wx-temp {
-    font-size: clamp(64px, 14vw, 120px);
+    font-size: 96px;
     font-weight: 200;
     letter-spacing: -0.03em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
   }
-  .wx-temp .deg { font-size: 0.4em; color: #7cf6c8; vertical-align: top; }
+  .wx-temp .deg { font-size: 36px; color: #7cf6c8; vertical-align: top; }
   .wx-desc {
-    margin-top: 12px;
-    font-size: clamp(16px, 3vw, 22px);
+    margin-top: 8px;
+    font-size: 22px;
     color: #cfd6e0;
     font-weight: 300;
   }
   .wx-extra {
     display: flex;
     justify-content: center;
-    gap: 28px;
-    margin-top: 22px;
-    font-size: clamp(13px, 2.2vw, 18px);
+    gap: 32px;
+    margin-top: 14px;
+    font-size: 18px;
     color: #8a93a3;
   }
-  .wx-extra div span { color: #cfd6e0; font-weight: 400; }
+  .wx-extra span { color: #cfd6e0; }
 
-  /* ---------- card 3: notifications ---------- */
-  .ntf-title {
-    font-size: clamp(14px, 2.6vw, 20px);
-    color: #7cf6c8;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    margin-bottom: 22px;
+  /* ---------- card 3: compass ---------- */
+  .dial {
+    width: 260px;
+    height: 260px;
+    position: relative;
+    margin-bottom: 14px;
   }
-  .ntf-list {
+  .dial-ring {
+    position: absolute;
+    inset: 0;
+    border: 2px solid #2a2f3a;
+    border-radius: 50%;
+  }
+  .dial-ring::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border: 1px solid #1a1f2a;
+    border-radius: 50%;
+  }
+  .dial-rotor {
+    position: absolute;
+    inset: 0;
+    transition: transform 0.1s linear;
+  }
+  .cardinal {
+    position: absolute;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: #cfd6e0;
+  }
+  .cardinal.n { top: 8px;    left: 50%;  transform: translateX(-50%); color: #ff5b6e; }
+  .cardinal.e { right: 14px; top: 50%;   transform: translateY(-50%); }
+  .cardinal.s { bottom: 8px; left: 50%;  transform: translateX(-50%); }
+  .cardinal.w { left: 14px;  top: 50%;   transform: translateY(-50%); }
+  .dial-pointer {
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 14px solid #7cf6c8;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 0 6px #7cf6c8);
+  }
+  .dial-num {
+    position: absolute;
+    inset: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    text-align: left;
-  }
-  .ntf {
-    background: rgba(124, 246, 200, 0.04);
-    border-left: 2px solid #7cf6c8;
-    padding: 12px 16px;
-    border-radius: 4px;
-  }
-  .ntf .head {
-    display: flex;
-    justify-content: space-between;
-    font-size: clamp(11px, 2vw, 14px);
-    color: #8a93a3;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .ntf .head .src { color: #7cf6c8; }
-  .ntf .body {
-    font-size: clamp(14px, 2.6vw, 18px);
-    color: #fff;
-    font-weight: 300;
-    line-height: 1.4;
-  }
-
-  /* ---------- card 4: music ---------- */
-  .mu-label {
-    font-size: clamp(14px, 2.6vw, 20px);
-    color: #7cf6c8;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-  .mu-art {
-    width: clamp(140px, 28vw, 200px);
-    height: clamp(140px, 28vw, 200px);
-    margin: 0 auto 20px;
-    border-radius: 12px;
-    background:
-      radial-gradient(circle at 30% 30%, #7cf6c8 0%, transparent 60%),
-      radial-gradient(circle at 70% 70%, #5b8def 0%, transparent 60%),
-      #1a1f2a;
-    box-shadow: 0 0 40px rgba(124, 246, 200, 0.2);
-  }
-  .mu-title {
-    font-size: clamp(20px, 3.6vw, 28px);
-    font-weight: 300;
-    margin-bottom: 4px;
-  }
-  .mu-artist {
-    font-size: clamp(14px, 2.6vw, 18px);
-    color: #8a93a3;
-    margin-bottom: 24px;
-  }
-  .mu-bar {
-    width: 70%;
-    height: 3px;
-    background: #2a2f3a;
-    border-radius: 2px;
-    margin: 0 auto 8px;
-    overflow: hidden;
-  }
-  .mu-bar .prog {
-    height: 100%;
-    width: 38%;
-    background: #7cf6c8;
-    border-radius: 2px;
-  }
-  .mu-time {
-    display: flex;
-    justify-content: space-between;
-    width: 70%;
-    margin: 0 auto;
-    font-size: 12px;
-    color: #8a93a3;
+    align-items: center;
+    justify-content: center;
     font-variant-numeric: tabular-nums;
   }
-  .mu-ctrl {
-    display: flex;
-    justify-content: center;
-    gap: 28px;
-    margin-top: 24px;
-    color: #cfd6e0;
-    font-size: clamp(22px, 4vw, 30px);
+  .dial-num .h {
+    font-size: 56px;
+    font-weight: 200;
+    color: #fff;
+    line-height: 1;
   }
-  .mu-ctrl .play {
+  .dial-num .lbl {
+    font-size: 16px;
     color: #7cf6c8;
-    font-size: clamp(28px, 5vw, 38px);
+    letter-spacing: 0.2em;
+    margin-top: 6px;
   }
 
-  /* ---------- pagination dots ---------- */
-  .dots {
-    position: fixed;
-    bottom: 18px;
-    left: 0; right: 0;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    z-index: 10;
+  /* ---------- card 4: counter ---------- */
+  .ct-label {
+    font-size: 18px;
+    color: #7cf6c8;
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
   }
-  .dots .d {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #2a2f3a;
-    transition: all 0.3s ease;
+  .ct-num {
+    font-size: 180px;
+    font-weight: 200;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 30px rgba(124, 246, 200, 0.25);
   }
-  .dots .d.on {
-    background: #7cf6c8;
-    width: 18px;
-    border-radius: 3px;
-    box-shadow: 0 0 8px #7cf6c8;
+  .ct-hint {
+    margin-top: 14px;
+    font-size: 16px;
+    color: #8a93a3;
+    letter-spacing: 0.08em;
+  }
+  .focusable.minus,
+  .focusable.plus {
+    min-width: 88px;
+    font-size: 36px;
+    font-weight: 300;
   }
 
-  .footer {
-    position: fixed;
-    bottom: 4px;
+  /* ---------- bottom hint bar ---------- */
+  .hint {
+    position: absolute;
+    bottom: 6px;
     left: 0; right: 0;
     text-align: center;
-    font-size: 9px;
+    font-size: 12px;
     color: #2a2f3a;
     letter-spacing: 0.3em;
+    pointer-events: none;
   }
 </style>
 </head>
 <body>
+<div class="stage">
 
-  <!-- Top status bar -->
+  <!-- Top bar -->
   <div class="topbar">
-    <div class="left" id="topClock">--:--</div>
-    <div class="right">
-      <span id="conn">● LINKED</span>
-      <span class="battery">
-        <span class="cell"><span class="fill" id="batFill" style="width:80%"></span></span>
-        <span id="batPct">80%</span>
-      </span>
+    <div class="title" id="cardTitle">CLOCK</div>
+    <div class="dots" id="dots">
+      <div class="d on"></div><div class="d"></div><div class="d"></div><div class="d"></div>
     </div>
   </div>
 
-  <!-- Cards -->
-  <div class="carousel" id="carousel">
-
-    <!-- Card 1: Clock -->
-    <section class="card">
-      <div class="panel">
-        <div class="greet" id="greet">Good Day</div>
-        <div class="time">
-          <span id="hm">--:--</span><span class="sec" id="sec">--</span>
-        </div>
-        <div class="date" id="date">----</div>
-        <div class="meta-row">
-          <div id="day">---</div>
-          <div>W<span id="week">--</span></div>
-        </div>
+  <!-- Card 1: Clock -->
+  <section class="card active" data-title="CLOCK">
+    <div class="body">
+      <div class="greet" id="greet">Good Day</div>
+      <div class="time">
+        <span id="hm">--:--</span><span class="sec" id="sec">--</span>
       </div>
-    </section>
+      <div class="date" id="date">----</div>
+      <div class="meta-row">
+        <div id="day">---</div>
+        <div>W<span id="week">--</span></div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Card 2: Weather -->
-    <section class="card">
-      <div class="panel">
-        <div class="wx-label">Weather</div>
-        <div class="wx-place" id="wxPlace">Loading…</div>
-        <div class="wx-icon" id="wxIcon">☁</div>
-        <div class="wx-temp"><span id="wxTemp">--</span><span class="deg">°C</span></div>
-        <div class="wx-desc" id="wxDesc">—</div>
-        <div class="wx-extra">
-          <div>WIND <span id="wxWind">--</span> m/s</div>
-          <div>HUM <span id="wxHum">--</span>%</div>
+  <!-- Card 2: Weather -->
+  <section class="card" data-title="WEATHER">
+    <div class="body">
+      <div class="wx-place" id="wxPlace">—</div>
+      <div class="wx-icon" id="wxIcon">·</div>
+      <div class="wx-temp"><span id="wxTemp">--</span><span class="deg">°C</span></div>
+      <div class="wx-desc" id="wxDesc">Press REFRESH</div>
+      <div class="wx-extra">
+        <div>WIND <span id="wxWind">--</span></div>
+        <div>HUM <span id="wxHum">--</span>%</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="focusable" id="wxBtn">REFRESH</button>
+    </div>
+  </section>
+
+  <!-- Card 3: Compass -->
+  <section class="card" data-title="COMPASS">
+    <div class="body">
+      <div class="dial">
+        <div class="dial-ring"></div>
+        <div class="dial-rotor" id="rotor">
+          <span class="cardinal n">N</span>
+          <span class="cardinal e">E</span>
+          <span class="cardinal s">S</span>
+          <span class="cardinal w">W</span>
         </div>
-      </div>
-    </section>
-
-    <!-- Card 3: Notifications -->
-    <section class="card">
-      <div class="panel">
-        <div class="ntf-title">Notifications</div>
-        <div class="ntf-list" id="ntfList"></div>
-      </div>
-    </section>
-
-    <!-- Card 4: Music -->
-    <section class="card">
-      <div class="panel">
-        <div class="mu-label">Now Playing</div>
-        <div class="mu-art"></div>
-        <div class="mu-title">Midnight City</div>
-        <div class="mu-artist">M83</div>
-        <div class="mu-bar"><div class="prog" id="muProg"></div></div>
-        <div class="mu-time"><span id="muCur">1:32</span><span>4:03</span></div>
-        <div class="mu-ctrl">
-          <span>⏮</span><span class="play">▶</span><span>⏭</span>
+        <div class="dial-pointer"></div>
+        <div class="dial-num">
+          <div class="h" id="heading">---°</div>
+          <div class="lbl" id="cardLbl">—</div>
         </div>
       </div>
-    </section>
+    </div>
+    <div class="actions">
+      <button class="focusable" id="cpBtn">ENABLE</button>
+    </div>
+  </section>
 
-  </div>
+  <!-- Card 4: Counter (localStorage) -->
+  <section class="card" data-title="COUNTER">
+    <div class="body">
+      <div class="ct-label">TALLY</div>
+      <div class="ct-num" id="ctNum">0</div>
+      <div class="ct-hint">SAVED LOCALLY</div>
+    </div>
+    <div class="actions">
+      <button class="focusable minus" id="ctMinus">−</button>
+      <button class="focusable" id="ctReset">RESET</button>
+      <button class="focusable plus"  id="ctPlus">+</button>
+    </div>
+  </section>
 
-  <!-- Pagination dots -->
-  <div class="dots" id="dots">
-    <div class="d on"></div><div class="d"></div><div class="d"></div><div class="d"></div>
-  </div>
-
-  <div class="footer">META · RAY-BAN · DISPLAY</div>
+  <div class="hint">← →  CARDS  ·  ↑ ↓  FOCUS  ·  ⏎  SELECT</div>
+</div>
 
 <script>
-  /* ---------- helpers ---------- */
+  /* =========================================================
+     Helpers
+  ========================================================= */
   const $ = id => document.getElementById(id);
   const pad = n => String(n).padStart(2, '0');
-  const days   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   function weekNumber(d) {
     const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -400,7 +398,6 @@
     const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
     return Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
   }
-
   function greeting(h) {
     if (h < 5)  return 'Good Night';
     if (h < 11) return 'Good Morning';
@@ -409,51 +406,49 @@
     return 'Good Night';
   }
 
-  /* ---------- clock ---------- */
+  /* =========================================================
+     Clock
+  ========================================================= */
   function tick() {
     const d = new Date();
-    const hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
-    $('hm').textContent  = hm;
-    $('sec').textContent = pad(d.getSeconds());
-    $('topClock').textContent = hm;
-    $('date').textContent =
-      months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-    $('day').textContent  = days[d.getDay()].toUpperCase();
+    $('hm').textContent   = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    $('sec').textContent  = pad(d.getSeconds());
+    $('date').textContent = MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    $('day').textContent  = DAYS[d.getDay()].toUpperCase();
     $('week').textContent = pad(weekNumber(d));
     $('greet').textContent = greeting(d.getHours());
   }
   tick();
   setInterval(tick, 1000);
 
-  /* ---------- weather (Open-Meteo, no key) ---------- */
+  /* =========================================================
+     Weather (Open-Meteo, no API key, paired phone GPS)
+  ========================================================= */
   const WMO = {
-    0:  ['☀','Clear'],         1:  ['🌤','Mainly clear'],
-    2:  ['⛅','Partly cloudy'], 3:  ['☁','Overcast'],
-    45: ['🌫','Fog'],           48: ['🌫','Rime fog'],
-    51: ['🌦','Light drizzle'], 53: ['🌦','Drizzle'],
-    55: ['🌧','Dense drizzle'], 61: ['🌧','Light rain'],
-    63: ['🌧','Rain'],          65: ['🌧','Heavy rain'],
-    71: ['🌨','Light snow'],    73: ['🌨','Snow'],
-    75: ['❄','Heavy snow'],    80: ['🌦','Showers'],
-    81: ['🌧','Showers'],       82: ['⛈','Heavy showers'],
-    95: ['⛈','Thunderstorm'],  96: ['⛈','Thunder + hail'],
-    99: ['⛈','Thunder + hail']
+    0:['☀','Clear'], 1:['🌤','Mainly clear'], 2:['⛅','Partly cloudy'], 3:['☁','Overcast'],
+    45:['🌫','Fog'], 48:['🌫','Rime fog'],
+    51:['🌦','Light drizzle'], 53:['🌦','Drizzle'], 55:['🌧','Dense drizzle'],
+    61:['🌧','Light rain'], 63:['🌧','Rain'], 65:['🌧','Heavy rain'],
+    71:['🌨','Light snow'], 73:['🌨','Snow'], 75:['❄','Heavy snow'],
+    80:['🌦','Showers'], 81:['🌧','Showers'], 82:['⛈','Heavy showers'],
+    95:['⛈','Thunderstorm'], 96:['⛈','Thunder + hail'], 99:['⛈','Thunder + hail']
   };
 
-  async function loadWeather(lat, lon, label) {
+  async function fetchWeather(lat, lon, label) {
     try {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
-                + `&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`
-                + `&wind_speed_unit=ms&timezone=auto`;
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat
+                + '&longitude=' + lon
+                + '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m'
+                + '&wind_speed_unit=ms&timezone=auto';
       const r = await fetch(url);
       const j = await r.json();
       const c = j.current;
-      const w = WMO[c.weather_code] || ['•','—'];
+      const w = WMO[c.weather_code] || ['·','—'];
       $('wxPlace').textContent = label;
       $('wxIcon').textContent  = w[0];
       $('wxDesc').textContent  = w[1];
       $('wxTemp').textContent  = Math.round(c.temperature_2m);
-      $('wxWind').textContent  = c.wind_speed_10m.toFixed(1);
+      $('wxWind').textContent  = c.wind_speed_10m.toFixed(1) + ' m/s';
       $('wxHum').textContent   = c.relative_humidity_2m;
     } catch (e) {
       $('wxPlace').textContent = 'Offline';
@@ -461,80 +456,119 @@
     }
   }
 
-  function initWeather() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        p => loadWeather(p.coords.latitude, p.coords.longitude, 'Current Location'),
-        () => loadWeather(35.6762, 139.6503, 'Tokyo'),
-        { timeout: 4000 }
-      );
+  function loadWeather() {
+    $('wxDesc').textContent = 'Loading…';
+    if (!navigator.geolocation) {
+      fetchWeather(35.6762, 139.6503, 'Tokyo');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      p => fetchWeather(p.coords.latitude, p.coords.longitude, 'Current Location'),
+      () => fetchWeather(35.6762, 139.6503, 'Tokyo'),
+      { timeout: 15000, maximumAge: 60000 }
+    );
+  }
+  $('wxBtn').addEventListener('click', loadWeather);
+
+  /* =========================================================
+     Compass (DeviceOrientationEvent)
+  ========================================================= */
+  let compassActive = false;
+
+  function cardinal(deg) {
+    const names = ['N','NE','E','SE','S','SW','W','NW'];
+    return names[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+  }
+
+  function onOrientation(e) {
+    // Prefer webkitCompassHeading (iOS); fallback to alpha
+    let h = (typeof e.webkitCompassHeading === 'number')
+            ? e.webkitCompassHeading
+            : (360 - (e.alpha || 0));
+    h = ((h % 360) + 360) % 360;
+    $('rotor').style.transform = 'rotate(' + (-h) + 'deg)';
+    $('heading').textContent = Math.round(h) + '°';
+    $('cardLbl').textContent = cardinal(h);
+  }
+
+  function enableCompass() {
+    if (compassActive) return;
+    const start = () => {
+      window.addEventListener('deviceorientation', onOrientation);
+      compassActive = true;
+      $('cpBtn').textContent = 'ACTIVE';
+    };
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(state => { if (state === 'granted') start(); })
+        .catch(() => {});
     } else {
-      loadWeather(35.6762, 139.6503, 'Tokyo');
+      start();
     }
   }
-  initWeather();
+  $('cpBtn').addEventListener('click', enableCompass);
 
-  /* ---------- notifications (mock feed) ---------- */
-  const NOTES = [
-    { src: 'Messages',  time: 'now',    body: 'Akira: 今夜の予定どうする？' },
-    { src: 'Calendar',  time: '15 min', body: 'Design Review · Meeting Room A' },
-    { src: 'Mail',      time: '1 h',    body: 'Invoice from Anthropic – review required' },
-    { src: 'Reminders', time: '2 h',    body: 'Pick up dry cleaning on the way home' }
-  ];
-  function renderNotes() {
-    $('ntfList').innerHTML = NOTES.map(n => `
-      <div class="ntf">
-        <div class="head"><span class="src">${n.src}</span><span>${n.time}</span></div>
-        <div class="body">${n.body}</div>
-      </div>
-    `).join('');
+  /* =========================================================
+     Counter (localStorage)
+  ========================================================= */
+  const CT_KEY = 'glance.counter';
+  let count = parseInt(localStorage.getItem(CT_KEY) || '0', 10);
+  function renderCount() {
+    $('ctNum').textContent = count;
+    localStorage.setItem(CT_KEY, String(count));
   }
-  renderNotes();
+  renderCount();
+  $('ctPlus').addEventListener('click',  () => { count++; renderCount(); });
+  $('ctMinus').addEventListener('click', () => { count--; renderCount(); });
+  $('ctReset').addEventListener('click', () => { count = 0; renderCount(); });
 
-  /* ---------- music progress (mock) ---------- */
-  let muSec = 92;
-  const muTotal = 243;
-  setInterval(() => {
-    muSec = (muSec + 1) % muTotal;
-    const pct = (muSec / muTotal) * 100;
-    $('muProg').style.width = pct + '%';
-    $('muCur').textContent = Math.floor(muSec / 60) + ':' + pad(muSec % 60);
-  }, 1000);
+  /* =========================================================
+     Card navigation (arrow keys + Enter)
+  ========================================================= */
+  const cards = Array.from(document.querySelectorAll('.card'));
+  const dots  = Array.from(document.querySelectorAll('#dots .d'));
+  let cardIdx = 0;
 
-  /* ---------- battery ---------- */
-  function setBat(pct) {
-    $('batPct').textContent = pct + '%';
-    $('batFill').style.width = pct + '%';
-    $('batFill').style.background = pct < 20 ? '#ff5b6e' : '#7cf6c8';
-  }
-  if (navigator.getBattery) {
-    navigator.getBattery().then(b => {
-      const upd = () => setBat(Math.round(b.level * 100));
-      upd();
-      b.addEventListener('levelchange', upd);
-    });
-  } else {
-    setBat(80);
+  function showCard(i) {
+    cardIdx = (i + cards.length) % cards.length;
+    cards.forEach((c, idx) => c.classList.toggle('active', idx === cardIdx));
+    dots.forEach((d, idx)  => d.classList.toggle('on',     idx === cardIdx));
+    $('cardTitle').textContent = cards[cardIdx].dataset.title;
+    // Focus first focusable element in the new card
+    const first = cards[cardIdx].querySelector('.focusable');
+    if (first) first.focus();
+    else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
   }
 
-  /* ---------- pagination + keyboard nav ---------- */
-  const carousel = $('carousel');
-  const dots = document.querySelectorAll('#dots .d');
-
-  carousel.addEventListener('scroll', () => {
-    const idx = Math.round(carousel.scrollLeft / window.innerWidth);
-    dots.forEach((d, i) => d.classList.toggle('on', i === idx));
-  });
-
-  function goTo(i) {
-    carousel.scrollTo({ left: i * window.innerWidth, behavior: 'smooth' });
+  function moveFocus(dir) {
+    const list = Array.from(cards[cardIdx].querySelectorAll('.focusable:not([disabled])'));
+    if (!list.length) return;
+    const cur = list.indexOf(document.activeElement);
+    let next;
+    if (cur === -1) next = 0;
+    else next = (cur + (dir === 'down' ? 1 : -1) + list.length) % list.length;
+    list[next].focus();
   }
+
   document.addEventListener('keydown', e => {
-    const idx = Math.round(carousel.scrollLeft / window.innerWidth);
-    if (e.key === 'ArrowRight') goTo(Math.min(idx + 1, dots.length - 1));
-    if (e.key === 'ArrowLeft')  goTo(Math.max(idx - 1, 0));
+    switch (e.key) {
+      case 'ArrowLeft':  showCard(cardIdx - 1); break;
+      case 'ArrowRight': showCard(cardIdx + 1); break;
+      case 'ArrowUp':    moveFocus('up');       break;
+      case 'ArrowDown':  moveFocus('down');     break;
+      case 'Enter':
+        if (document.activeElement && document.activeElement.classList.contains('focusable')) {
+          document.activeElement.click();
+        }
+        break;
+      default: return;
+    }
+    e.preventDefault();
   });
-  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+
+  // Initial focus
+  showCard(0);
 </script>
 </body>
 </html>
