@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import PhotosUI
 
 struct AnalysisOverlayView: View {
     @StateObject private var speechService = SpeechService.shared
@@ -11,6 +12,7 @@ struct AnalysisOverlayView: View {
     @State private var isAnalyzing: Bool = false
     @State private var showSettings: Bool = false
     @State private var showResult: Bool = false
+    @State private var pickedItem: PhotosPickerItem?
     let currentFrame: UIImage?
 
     var body: some View {
@@ -101,6 +103,22 @@ struct AnalysisOverlayView: View {
                     .foregroundColor(.white).cornerRadius(20)
                 }
                 .disabled(glassesEnv.isProcessing || currentFrame == nil)
+                PhotosPicker(selection: $pickedItem, matching: .images) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "photo.on.rectangle")
+                        Text("Photo").fontWeight(.semibold)
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 10)
+                    .background(Color.pink.opacity(0.85))
+                    .foregroundColor(.white).cornerRadius(20)
+                }
+                .onChange(of: pickedItem) { _, newItem in
+                    Task {
+                        guard let data = try? await newItem?.loadTransferable(type: Data.self),
+                              let image = UIImage(data: data) else { return }
+                        await glassesEnv.describeAndShow(image: image)
+                    }
+                }
                 Button { showSettings = true } label: {
                     Image(systemName: "gearshape.fill").padding(8)
                         .background(Color.gray.opacity(0.5))
