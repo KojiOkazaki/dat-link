@@ -37,7 +37,7 @@ actor LlamaWrapper {
     }
 
     func generate(prompt: String, maxTokens: Int32 = 512) throws -> String {
-        guard let model, let context, let vocab, let sampling else {
+        guard model != nil, let context, let vocab, let sampling else {
             throw LlamaWrapperError.notLoaded
         }
         llama_memory_clear(llama_get_memory(context), true)
