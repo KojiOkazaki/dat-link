@@ -46,12 +46,19 @@ struct CameraAccessApp: App {
     let wearables = Wearables.shared
     self.wearables = wearables
     self._wearablesViewModel = StateObject(wrappedValue: WearablesViewModel(wearables: wearables))
+    // Defer the actual glasses-display client construction until the first
+    // payload is shown. This keeps app startup cheap and avoids creating an
+    // AutoDeviceSelector/Display before the user opts into the Glasses flow.
     #if targetEnvironment(simulator)
-    let glassesClient: any GlassesDisplayClient = MockGlassesDisplayClient()
+    let factory: @MainActor () -> any GlassesDisplayClient = {
+      MockGlassesDisplayClient()
+    }
     #else
-    let glassesClient: any GlassesDisplayClient = DATGlassesDisplayClient(wearables: wearables)
+    let factory: @MainActor () -> any GlassesDisplayClient = {
+      DATGlassesDisplayClient(wearables: wearables)
+    }
     #endif
-    self._glassesEnv = StateObject(wrappedValue: GlassesPipelineEnvironment(client: glassesClient))
+    self._glassesEnv = StateObject(wrappedValue: GlassesPipelineEnvironment(clientFactory: factory))
   }
 
   var body: some Scene {

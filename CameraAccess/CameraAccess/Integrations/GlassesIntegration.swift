@@ -85,7 +85,8 @@ enum GlassesIntegrationError: LocalizedError {
 final class GlassesPipelineEnvironment: ObservableObject {
     let analyzer: CameraAccessSceneAnalyzer
     let formatter: DisplayFormatter
-    private let client: any GlassesDisplayClient
+    private let clientFactory: @MainActor () -> any GlassesDisplayClient
+    private lazy var client: any GlassesDisplayClient = clientFactory()
 
     @Published private(set) var currentPayload: DisplayPayload?
     @Published private(set) var lastDescription: SceneDescription?
@@ -95,13 +96,13 @@ final class GlassesPipelineEnvironment: ObservableObject {
     private var clearTask: Task<Void, Never>?
 
     init() {
-        self.client = MockGlassesDisplayClient()
+        self.clientFactory = { MockGlassesDisplayClient() }
         self.analyzer = CameraAccessSceneAnalyzer()
         self.formatter = DisplayFormatter()
     }
 
-    init(client: any GlassesDisplayClient) {
-        self.client = client
+    init(clientFactory: @escaping @MainActor () -> any GlassesDisplayClient) {
+        self.clientFactory = clientFactory
         self.analyzer = CameraAccessSceneAnalyzer()
         self.formatter = DisplayFormatter()
     }

@@ -32,6 +32,11 @@ extension MockDeviceKitView {
 
     // Add a new mock Ray-Ban Meta device
     func pairRaybanMeta() {
+      // DAT 0.6+ requires explicit enable() before pairing; calling
+      // pairRaybanMeta() on a disabled kit triggers EXC_BREAKPOINT.
+      if !mockDeviceKit.isEnabled {
+        mockDeviceKit.enable()
+      }
       let mockDevice = mockDeviceKit.pairRaybanMeta()
       cardViewModels.append(MockDeviceCardView.ViewModel(device: mockDevice))
     }
