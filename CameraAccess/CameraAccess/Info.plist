@@ -36,7 +36,7 @@
 	<key>MWDAT</key>
 	<dict>
 		<key>AppLinkURLScheme</key>
-		<string>https://kojiokazaki.github.io</string>
+		<string>mrbtest://</string>
 		<key>ClientToken</key>
 		<string>AR|4225976931002254|4828102db363d0a7a98d4afb4ae2ba23</string>
 		<key>DAMEnabled</key>
