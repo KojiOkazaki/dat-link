@@ -95,13 +95,28 @@ class StreamSessionViewModel: ObservableObject {
   func startSession() async {
     do {
       let session = try wearables.createSession(deviceSelector: deviceSelector)
-      // Register the Stream capability BEFORE starting the session so the
-      // session knows it has to bring up streaming. Calling addStream after
-      // start() returns nil on some device + SDK 0.7 combinations.
+      self.session = session
+      NSLog("[CameraAccess] createSession ok, state=\(session.state)")
+
+      try session.start()
+      NSLog("[CameraAccess] session.start() returned, state=\(session.state)")
+
+      // Some SDK 0.7 + iOS 26 combinations report state .starting for a few
+      // hundred ms after start() returns. Polling for a started/idle-equiv.
+      // state gives addStream a better chance of succeeding.
+      for _ in 0..<10 {
+        let s = "\(session.state)"
+        if !s.contains("starting") && !s.contains("stopping") { break }
+        try? await Task.sleep(nanoseconds: 100_000_000)
+      }
+      NSLog("[CameraAccess] after settle, state=\(session.state)")
+
       guard let stream = try session.addStream(config: streamConfig) else {
-        showError("Stream capability is not available on this device.")
+        NSLog("[CameraAccess] addStream nil. final state=\(session.state)")
+        showError("Stream capability is not available on this device. (Mock or device may not support streaming in DAT 0.7.)")
         return
       }
+      NSLog("[CameraAccess] stream obtained, state=\(stream.state)")
 
       stateListenerToken = stream.statePublisher.listen { [weak self] state in
         Task { @MainActor in
@@ -138,12 +153,11 @@ class StreamSessionViewModel: ObservableObject {
         }
       }
 
-      try session.start()
-      self.session = session
       self.stream = stream
       updateStatusFromState(stream.state)
       await stream.start()
     } catch {
+      NSLog("[CameraAccess] startSession threw: \(error)")
       showError("Failed to start streaming: \(error.localizedDescription)")
     }
   }
