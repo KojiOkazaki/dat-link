@@ -50,6 +50,7 @@ class StreamSessionViewModel: ObservableObject {
 
   private var session: DeviceSession?
   private var stream: MWDATCamera.Stream?
+  private var startSessionInProgress: Bool = false
 
   private var stateListenerToken: AnyListenerToken?
   private var videoFrameListenerToken: AnyListenerToken?
@@ -75,6 +76,7 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func handleStartStreaming() async {
+    NSLog("[CameraAccess] handleStartStreaming called (already in progress: \(startSessionInProgress))")
     let permission = Permission.camera
     do {
       let status = try await wearables.checkPermissionStatus(permission)
@@ -94,6 +96,17 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func startSession() async {
+    if startSessionInProgress {
+      NSLog("[CameraAccess] startSession SKIPPED (already in progress)")
+      return
+    }
+    if session != nil {
+      NSLog("[CameraAccess] startSession SKIPPED (session already exists)")
+      return
+    }
+    startSessionInProgress = true
+    defer { startSessionInProgress = false }
+
     // Tear down any previous session/stream first so we don't trip
     // DeviceSessionError.sessionAlreadyExists on retry.
     await teardownExistingSession()

@@ -30,7 +30,14 @@ final class DisplayHelloTestRunner: ObservableObject {
     NSLog("[DisplayHello] start")
     do {
       let wearables = Wearables.shared
-      let selector = AutoDeviceSelector(wearables: wearables)
+      // Filter to devices that actually advertise display support.
+      // Without this filter, AutoDeviceSelector may pick a glasses
+      // that the SDK doesn't consider a Display device, returning
+      // noEligibleDevice from createSession.
+      let selector = AutoDeviceSelector(
+        wearables: wearables,
+        filter: { $0.supportsDisplay() }
+      )
       let session = try wearables.createSession(deviceSelector: selector)
       self.session = session
       NSLog("[DisplayHello] session created, state=\(session.state)")
