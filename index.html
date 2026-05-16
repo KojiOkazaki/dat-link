@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+<title>Glance</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 600px;
+    height: 600px;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue",
+                 "Hiragino Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- stage ---------- */
+  .stage {
+    width: 600px;
+    height: 600px;
+    position: relative;
+  }
+
+  /* ---------- top bar: title + dots ---------- */
+  .topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    z-index: 5;
+  }
+  .topbar .title {
+    font-size: 16px;
+    letter-spacing: 0.22em;
+    color: #7cf6c8;
+  }
+  .dots {
+    display: flex;
+    gap: 8px;
+  }
+  .dots .d {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2a2f3a;
+    transition: all 0.25s ease;
+  }
+  .dots .d.on {
+    background: #7cf6c8;
+    width: 22px;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #7cf6c8;
+  }
+
+  /* ---------- card ---------- */
+  .card {
+    position: absolute;
+    inset: 0;
+    padding: 56px 36px 28px;
+    display: none;
+    flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .card.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  /* ---------- focusable buttons ---------- */
+  .focusable {
+    background: transparent;
+    color: #fff;
+    border: 2px solid #2a2f3a;
+    border-radius: 12px;
+    min-height: 88px;
+    min-width: 120px;
+    padding: 0 24px;
+    font-size: 22px;
+    font-family: inherit;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+  .focusable:focus {
+    outline: none;
+    border-color: #7cf6c8;
+    color: #7cf6c8;
+    box-shadow: 0 0 20px rgba(124, 246, 200, 0.4);
+  }
+
+  /* ---------- card 1: clock ---------- */
+  .greet {
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    color: #7cf6c8;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .time {
+    font-size: 132px;
+    font-weight: 200;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 24px rgba(124, 246, 200, 0.3);
+  }
+  .time .sec {
+    font-size: 40px;
+    vertical-align: super;
+    color: #7cf6c8;
+    margin-left: 6px;
+    font-weight: 300;
+  }
+  .date {
+    margin-top: 18px;
+    font-size: 26px;
+    font-weight: 300;
+    color: #cfd6e0;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin-top: 14px;
+    font-size: 18px;
+    color: #8a93a3;
+    letter-spacing: 0.1em;
+  }
+
+  /* ---------- card 2: weather ---------- */
+  .wx-place {
+    font-size: 20px;
+    color: #cfd6e0;
+    margin-bottom: 14px;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+  }
+  .wx-icon {
+    font-size: 88px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .wx-temp {
+    font-size: 96px;
+    font-weight: 200;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .wx-temp .deg { font-size: 36px; color: #7cf6c8; vertical-align: top; }
+  .wx-desc {
+    margin-top: 8px;
+    font-size: 22px;
+    color: #cfd6e0;
+    font-weight: 300;
+  }
+  .wx-extra {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 14px;
+    font-size: 18px;
+    color: #8a93a3;
+  }
+  .wx-extra span { color: #cfd6e0; }
+
+  /* ---------- card 3: compass ---------- */
+  .dial {
+    width: 260px;
+    height: 260px;
+    position: relative;
+    margin-bottom: 14px;
+  }
+  .dial-ring {
+    position: absolute;
+    inset: 0;
+    border: 2px solid #2a2f3a;
+    border-radius: 50%;
+  }
+  .dial-ring::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border: 1px solid #1a1f2a;
+    border-radius: 50%;
+  }
+  .dial-rotor {
+    position: absolute;
+    inset: 0;
+    transition: transform 0.1s linear;
+  }
+  .cardinal {
+    position: absolute;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: #cfd6e0;
+  }
+  .cardinal.n { top: 8px;    left: 50%;  transform: translateX(-50%); color: #ff5b6e; }
+  .cardinal.e { right: 14px; top: 50%;   transform: translateY(-50%); }
+  .cardinal.s { bottom: 8px; left: 50%;  transform: translateX(-50%); }
+  .cardinal.w { left: 14px;  top: 50%;   transform: translateY(-50%); }
+  .dial-pointer {
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 14px solid #7cf6c8;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 0 6px #7cf6c8);
+  }
+  .dial-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .dial-num .h {
+    font-size: 56px;
+    font-weight: 200;
+    color: #fff;
+    line-height: 1;
+  }
+  .dial-num .lbl {
+    font-size: 16px;
+    color: #7cf6c8;
+    letter-spacing: 0.2em;
+    margin-top: 6px;
+  }
+
+  /* ---------- card 4: counter ---------- */
+  .ct-label {
+    font-size: 18px;
+    color: #7cf6c8;
+    letter-spacing: 0.2em;
+    margin-bottom: 16px;
+  }
+  .ct-num {
+    font-size: 180px;
+    font-weight: 200;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 30px rgba(124, 246, 200, 0.25);
+  }
+  .ct-hint {
+    margin-top: 14px;
+    font-size: 16px;
+    color: #8a93a3;
+    letter-spacing: 0.08em;
+  }
+  .focusable.minus,
+  .focusable.plus {
+    min-width: 88px;
+    font-size: 36px;
+    font-weight: 300;
+  }
+
+  /* ---------- bottom hint bar ---------- */
+  .hint {
+    position: absolute;
+    bottom: 6px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 12px;
+    color: #2a2f3a;
+    letter-spacing: 0.3em;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="title" id="cardTitle">CLOCK</div>
+    <div class="dots" id="dots">
+      <div class="d on"></div><div class="d"></div><div class="d"></div><div class="d"></div>
+    </div>
+  </div>
+
+  <!-- Card 1: Clock -->
+  <section class="card active" data-title="CLOCK">
+    <div class="body">
+      <div class="greet" id="greet">Good Day</div>
+      <div class="time">
+        <span id="hm">--:--</span><span class="sec" id="sec">--</span>
+      </div>
+      <div class="date" id="date">----</div>
+      <div class="meta-row">
+        <div id="day">---</div>
+        <div>W<span id="week">--</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Card 2: Weather -->
+  <section class="card" data-title="WEATHER">
+    <div class="body">
+      <div class="wx-place" id="wxPlace">—</div>
+      <div class="wx-icon" id="wxIcon">·</div>
+      <div class="wx-temp"><span id="wxTemp">--</span><span class="deg">°C</span></div>
+      <div class="wx-desc" id="wxDesc">Press REFRESH</div>
+      <div class="wx-extra">
+        <div>WIND <span id="wxWind">--</span></div>
+        <div>HUM <span id="wxHum">--</span>%</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="focusable" id="wxBtn">REFRESH</button>
+    </div>
+  </section>
+
+  <!-- Card 3: Compass -->
+  <section class="card" data-title="COMPASS">
+    <div class="body">
+      <div class="dial">
+        <div class="dial-ring"></div>
+        <div class="dial-rotor" id="rotor">
+          <span class="cardinal n">N</span>
+          <span class="cardinal e">E</span>
+          <span class="cardinal s">S</span>
+          <span class="cardinal w">W</span>
+        </div>
+        <div class="dial-pointer"></div>
+        <div class="dial-num">
+          <div class="h" id="heading">---°</div>
+          <div class="lbl" id="cardLbl">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="focusable" id="cpBtn">ENABLE</button>
+    </div>
+  </section>
+
+  <!-- Card 4: Counter (localStorage) -->
+  <section class="card" data-title="COUNTER">
+    <div class="body">
+      <div class="ct-label">TALLY</div>
+      <div class="ct-num" id="ctNum">0</div>
+      <div class="ct-hint">SAVED LOCALLY</div>
+    </div>
+    <div class="actions">
+      <button class="focusable minus" id="ctMinus">−</button>
+      <button class="focusable" id="ctReset">RESET</button>
+      <button class="focusable plus"  id="ctPlus">+</button>
+    </div>
+  </section>
+
+  <div class="hint">← →  CARDS  ·  ↑ ↓  FOCUS  ·  ⏎  SELECT</div>
+</div>
+
+<script>
+  /* =========================================================
+     Helpers
+  ========================================================= */
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  function weekNumber(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNum = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    return Math.ceil((((t - yearStart) / 86400000) + 1) / 7);
+  }
+  function greeting(h) {
+    if (h < 5)  return 'Good Night';
+    if (h < 11) return 'Good Morning';
+    if (h < 17) return 'Good Afternoon';
+    if (h < 22) return 'Good Evening';
+    return 'Good Night';
+  }
+
+  /* =========================================================
+     Clock
+  ========================================================= */
+  function tick() {
+    const d = new Date();
+    $('hm').textContent   = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    $('sec').textContent  = pad(d.getSeconds());
+    $('date').textContent = MONTHS[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+    $('day').textContent  = DAYS[d.getDay()].toUpperCase();
+    $('week').textContent = pad(weekNumber(d));
+    $('greet').textContent = greeting(d.getHours());
+  }
+  tick();
+  setInterval(tick, 1000);
+
+  /* =========================================================
+     Weather (Open-Meteo, no API key, paired phone GPS)
+  ========================================================= */
+  const WMO = {
+    0:['☀','Clear'], 1:['🌤','Mainly clear'], 2:['⛅','Partly cloudy'], 3:['☁','Overcast'],
+    45:['🌫','Fog'], 48:['🌫','Rime fog'],
+    51:['🌦','Light drizzle'], 53:['🌦','Drizzle'], 55:['🌧','Dense drizzle'],
+    61:['🌧','Light rain'], 63:['🌧','Rain'], 65:['🌧','Heavy rain'],
+    71:['🌨','Light snow'], 73:['🌨','Snow'], 75:['❄','Heavy snow'],
+    80:['🌦','Showers'], 81:['🌧','Showers'], 82:['⛈','Heavy showers'],
+    95:['⛈','Thunderstorm'], 96:['⛈','Thunder + hail'], 99:['⛈','Thunder + hail']
+  };
+
+  async function fetchWeather(lat, lon, label) {
+    try {
+      const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lat
+                + '&longitude=' + lon
+                + '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m'
+                + '&wind_speed_unit=ms&timezone=auto';
+      const r = await fetch(url);
+      const j = await r.json();
+      const c = j.current;
+      const w = WMO[c.weather_code] || ['·','—'];
+      $('wxPlace').textContent = label;
+      $('wxIcon').textContent  = w[0];
+      $('wxDesc').textContent  = w[1];
+      $('wxTemp').textContent  = Math.round(c.temperature_2m);
+      $('wxWind').textContent  = c.wind_speed_10m.toFixed(1) + ' m/s';
+      $('wxHum').textContent   = c.relative_humidity_2m;
+    } catch (e) {
+      $('wxPlace').textContent = 'Offline';
+      $('wxDesc').textContent  = 'No data';
+    }
+  }
+
+  function loadWeather() {
+    $('wxDesc').textContent = 'Loading…';
+    if (!navigator.geolocation) {
+      fetchWeather(35.6762, 139.6503, 'Tokyo');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      p => fetchWeather(p.coords.latitude, p.coords.longitude, 'Current Location'),
+      () => fetchWeather(35.6762, 139.6503, 'Tokyo'),
+      { timeout: 15000, maximumAge: 60000 }
+    );
+  }
+  $('wxBtn').addEventListener('click', loadWeather);
+
+  /* =========================================================
+     Compass (DeviceOrientationEvent)
+  ========================================================= */
+  let compassActive = false;
+
+  function cardinal(deg) {
+    const names = ['N','NE','E','SE','S','SW','W','NW'];
+    return names[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+  }
+
+  function onOrientation(e) {
+    // Prefer webkitCompassHeading (iOS); fallback to alpha
+    let h = (typeof e.webkitCompassHeading === 'number')
+            ? e.webkitCompassHeading
+            : (360 - (e.alpha || 0));
+    h = ((h % 360) + 360) % 360;
+    $('rotor').style.transform = 'rotate(' + (-h) + 'deg)';
+    $('heading').textContent = Math.round(h) + '°';
+    $('cardLbl').textContent = cardinal(h);
+  }
+
+  function enableCompass() {
+    if (compassActive) return;
+    const start = () => {
+      window.addEventListener('deviceorientation', onOrientation);
+      compassActive = true;
+      $('cpBtn').textContent = 'ACTIVE';
+    };
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(state => { if (state === 'granted') start(); })
+        .catch(() => {});
+    } else {
+      start();
+    }
+  }
+  $('cpBtn').addEventListener('click', enableCompass);
+
+  /* =========================================================
+     Counter (localStorage)
+  ========================================================= */
+  const CT_KEY = 'glance.counter';
+  let count = parseInt(localStorage.getItem(CT_KEY) || '0', 10);
+  function renderCount() {
+    $('ctNum').textContent = count;
+    localStorage.setItem(CT_KEY, String(count));
+  }
+  renderCount();
+  $('ctPlus').addEventListener('click',  () => { count++; renderCount(); });
+  $('ctMinus').addEventListener('click', () => { count--; renderCount(); });
+  $('ctReset').addEventListener('click', () => { count = 0; renderCount(); });
+
+  /* =========================================================
+     Card navigation (arrow keys + Enter)
+  ========================================================= */
+  const cards = Array.from(document.querySelectorAll('.card'));
+  const dots  = Array.from(document.querySelectorAll('#dots .d'));
+  let cardIdx = 0;
+
+  function showCard(i) {
+    cardIdx = (i + cards.length) % cards.length;
+    cards.forEach((c, idx) => c.classList.toggle('active', idx === cardIdx));
+    dots.forEach((d, idx)  => d.classList.toggle('on',     idx === cardIdx));
+    $('cardTitle').textContent = cards[cardIdx].dataset.title;
+    // Focus first focusable element in the new card
+    const first = cards[cardIdx].querySelector('.focusable');
+    if (first) first.focus();
+    else if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  }
+
+  function moveFocus(dir) {
+    const list = Array.from(cards[cardIdx].querySelectorAll('.focusable:not([disabled])'));
+    if (!list.length) return;
+    const cur = list.indexOf(document.activeElement);
+    let next;
+    if (cur === -1) next = 0;
+    else next = (cur + (dir === 'down' ? 1 : -1) + list.length) % list.length;
+    list[next].focus();
+  }
+
+  document.addEventListener('keydown', e => {
+    switch (e.key) {
+      case 'ArrowLeft':  showCard(cardIdx - 1); break;
+      case 'ArrowRight': showCard(cardIdx + 1); break;
+      case 'ArrowUp':    moveFocus('up');       break;
+      case 'ArrowDown':  moveFocus('down');     break;
+      case 'Enter':
+        if (document.activeElement && document.activeElement.classList.contains('focusable')) {
+          document.activeElement.click();
+        }
+        break;
+      default: return;
+    }
+    e.preventDefault();
+  });
+
+  // Initial focus
+  showCard(0);
+</script>
+</body>
+</html>
