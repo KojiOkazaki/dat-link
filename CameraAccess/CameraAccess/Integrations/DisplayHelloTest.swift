@@ -18,13 +18,21 @@ import SwiftUI
 final class DisplayHelloTestRunner: ObservableObject {
   @Published private(set) var status: String = "idle"
 
+  private var session: DeviceSession?
+  private var display: Display?
+
   func run() async {
+    // Always tear down any previous run first so we don't trip
+    // sessionAlreadyExists on a re-tap.
+    await teardown()
+
     status = "creating session..."
     NSLog("[DisplayHello] start")
     do {
       let wearables = Wearables.shared
       let selector = AutoDeviceSelector(wearables: wearables)
       let session = try wearables.createSession(deviceSelector: selector)
+      self.session = session
       NSLog("[DisplayHello] session created, state=\(session.state)")
       status = "starting session..."
 
@@ -33,6 +41,7 @@ final class DisplayHelloTestRunner: ObservableObject {
 
       status = "adding display..."
       let display = try session.addDisplay()
+      self.display = display
       NSLog("[DisplayHello] addDisplay ok, display.state=\(display.state)")
 
       status = "starting display..."
@@ -56,13 +65,25 @@ final class DisplayHelloTestRunner: ObservableObject {
     } catch let error as DeviceSessionError {
       NSLog("[DisplayHello] DeviceSessionError: \(error)")
       status = "❌ DeviceSessionError: \(error.localizedDescription)"
+      await teardown()
     } catch let error as DisplayError {
       NSLog("[DisplayHello] DisplayError: \(error)")
       status = "❌ DisplayError: \(error.description)"
+      await teardown()
     } catch {
       NSLog("[DisplayHello] other error: \(error)")
       status = "❌ \(error.localizedDescription)"
+      await teardown()
     }
+  }
+
+  private func teardown() async {
+    if let display {
+      await display.stop()
+    }
+    self.display = nil
+    self.session = nil
+    try? await Task.sleep(nanoseconds: 200_000_000)
   }
 }
 

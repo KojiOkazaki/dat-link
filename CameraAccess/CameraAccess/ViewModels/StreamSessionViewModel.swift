@@ -94,6 +94,10 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func startSession() async {
+    // Tear down any previous session/stream first so we don't trip
+    // DeviceSessionError.sessionAlreadyExists on retry.
+    await teardownExistingSession()
+
     do {
       let session = try wearables.createSession(deviceSelector: deviceSelector)
       self.session = session
@@ -164,9 +168,23 @@ class StreamSessionViewModel: ObservableObject {
   }
 
   func stopSession() async {
-    await stream?.stop()
+    await teardownExistingSession()
+  }
+
+  private func teardownExistingSession() async {
+    stateListenerToken = nil
+    videoFrameListenerToken = nil
+    errorListenerToken = nil
+    photoDataListenerToken = nil
+    if let stream {
+      await stream.stop()
+    }
     stream = nil
     session = nil
+    // Give the SDK a brief moment to release its internal session
+    // bookkeeping before any retry. Without this, immediate retries
+    // can race with the in-flight teardown and trip sessionAlreadyExists.
+    try? await Task.sleep(nanoseconds: 200_000_000)
   }
 
   func capturePhoto() {
