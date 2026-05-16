@@ -1,0 +1,51 @@
+<!--
+Drop these keys into the app's Info.plist <dict>. Replace
+YOUR_APP_ID / YOUR_TOKEN / YOUR_TEAM_ID / yourapp with your values
+from the Wearables Developer Center.
+
+DAMEnabled is mandatory for Display. AppLinkURLScheme can be either
+a universal-link host (https://...) or a custom URL scheme.
+-->
+<key>MWDAT</key>
+<dict>
+    <key>AppLinkURLScheme</key>
+    <string>yourapp://</string>
+    <key>ClientToken</key>
+    <string>AR|YOUR_APP_ID|YOUR_TOKEN</string>
+    <key>DAMEnabled</key>
+    <true/>
+    <key>MetaAppID</key>
+    <string>YOUR_APP_ID</string>
+    <key>TeamID</key>
+    <string>YOUR_TEAM_ID</string>
+</dict>
+
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Needed to connect to Meta Ray-Ban Display glasses.</string>
+
+<key>UIBackgroundModes</key>
+<array>
+    <string>bluetooth-central</string>
+    <string>bluetooth-peripheral</string>
+    <string>external-accessory</string>
+    <string>audio</string>
+</array>
+
+<key>UISupportedExternalAccessoryProtocols</key>
+<array>
+    <string>com.meta.ar.wearable</string>
+</array>
+
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLName</key>
+        <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>yourapp</string>
+        </array>
+    </dict>
+</array>
