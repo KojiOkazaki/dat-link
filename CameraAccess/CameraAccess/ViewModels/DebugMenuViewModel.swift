@@ -26,6 +26,11 @@ class DebugMenuViewModel: ObservableObject {
   @Published public var mockDeviceKitViewModel: MockDeviceKitView.ViewModel
 
   init(mockDeviceKit: MockDeviceKitInterface) {
+    // DAT 0.6+ requires explicit enable() before pairing mock devices.
+    // pairRaybanMeta() crashes with EXC_BREAKPOINT otherwise.
+    if !mockDeviceKit.isEnabled {
+      mockDeviceKit.enable()
+    }
     self.mockDeviceKitViewModel = MockDeviceKitView.ViewModel(mockDeviceKit: mockDeviceKit)
     self.showDebugMenu = false
   }
