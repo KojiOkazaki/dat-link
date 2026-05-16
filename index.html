@@ -17,120 +17,380 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .stage {
+  /* ---------- top status bar ---------- */
+  .topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: #cfd6e0;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+  }
+  .topbar .right { display: flex; gap: 10px; align-items: center; }
+  .battery {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .battery .cell {
+    width: 22px; height: 10px;
+    border: 1px solid #cfd6e0;
+    border-radius: 2px;
+    position: relative;
+    padding: 1px;
+  }
+  .battery .cell::after {
+    content: "";
+    position: absolute; right: -3px; top: 2px;
+    width: 2px; height: 4px;
+    background: #cfd6e0;
+    border-radius: 0 1px 1px 0;
+  }
+  .battery .fill {
+    height: 100%;
+    background: #7cf6c8;
+    border-radius: 1px;
+    transition: width 0.3s ease;
+  }
+
+  /* ---------- carousel ---------- */
+  .carousel {
     width: 100vw;
     height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8vh 6vw;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
   }
+  .carousel::-webkit-scrollbar { display: none; }
 
   .card {
+    flex: 0 0 100vw;
+    height: 100vh;
+    scroll-snap-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 6vw 80px;
+  }
+
+  .panel {
     width: 100%;
     max-width: 520px;
     text-align: center;
   }
 
+  /* ---------- card 1: clock ---------- */
   .greet {
-    font-size: clamp(18px, 3.2vw, 28px);
+    font-size: clamp(16px, 2.8vw, 24px);
     font-weight: 400;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     color: #7cf6c8;
     text-transform: uppercase;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
-
   .time {
-    font-size: clamp(80px, 18vw, 160px);
+    font-size: clamp(72px, 17vw, 150px);
     font-weight: 200;
     letter-spacing: -0.04em;
     line-height: 1;
     font-variant-numeric: tabular-nums;
     text-shadow: 0 0 24px rgba(124, 246, 200, 0.25);
   }
-
   .time .sec {
-    font-size: 0.35em;
+    font-size: 0.32em;
     vertical-align: super;
     color: #7cf6c8;
     margin-left: 0.15em;
     font-weight: 300;
   }
-
   .date {
-    margin-top: 18px;
-    font-size: clamp(20px, 3.6vw, 32px);
+    margin-top: 16px;
+    font-size: clamp(18px, 3.4vw, 28px);
     font-weight: 300;
     color: #cfd6e0;
-    letter-spacing: 0.02em;
+  }
+  .meta-row {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 20px;
+    font-size: clamp(13px, 2.2vw, 18px);
+    color: #8a93a3;
+    letter-spacing: 0.1em;
   }
 
-  .divider {
-    width: 60px;
-    height: 1px;
-    background: #2a2f3a;
-    margin: 28px auto;
+  /* ---------- card 2: weather ---------- */
+  .wx-label {
+    font-size: clamp(14px, 2.6vw, 20px);
+    color: #7cf6c8;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
   }
-
-  .status {
+  .wx-place {
+    font-size: clamp(18px, 3.2vw, 26px);
+    color: #cfd6e0;
+    margin-bottom: 24px;
+    font-weight: 300;
+  }
+  .wx-icon {
+    font-size: clamp(72px, 14vw, 120px);
+    line-height: 1;
+    margin-bottom: 10px;
+  }
+  .wx-temp {
+    font-size: clamp(64px, 14vw, 120px);
+    font-weight: 200;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .wx-temp .deg { font-size: 0.4em; color: #7cf6c8; vertical-align: top; }
+  .wx-desc {
+    margin-top: 12px;
+    font-size: clamp(16px, 3vw, 22px);
+    color: #cfd6e0;
+    font-weight: 300;
+  }
+  .wx-extra {
     display: flex;
     justify-content: center;
     gap: 28px;
-    font-size: clamp(14px, 2.4vw, 20px);
+    margin-top: 22px;
+    font-size: clamp(13px, 2.2vw, 18px);
     color: #8a93a3;
-    letter-spacing: 0.04em;
   }
+  .wx-extra div span { color: #cfd6e0; font-weight: 400; }
 
-  .status .item {
+  /* ---------- card 3: notifications ---------- */
+  .ntf-title {
+    font-size: clamp(14px, 2.6vw, 20px);
+    color: #7cf6c8;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+  .ntf-list {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+  }
+  .ntf {
+    background: rgba(124, 246, 200, 0.04);
+    border-left: 2px solid #7cf6c8;
+    padding: 12px 16px;
+    border-radius: 4px;
+  }
+  .ntf .head {
+    display: flex;
+    justify-content: space-between;
+    font-size: clamp(11px, 2vw, 14px);
+    color: #8a93a3;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .ntf .head .src { color: #7cf6c8; }
+  .ntf .body {
+    font-size: clamp(14px, 2.6vw, 18px);
+    color: #fff;
+    font-weight: 300;
+    line-height: 1.4;
   }
 
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+  /* ---------- card 4: music ---------- */
+  .mu-label {
+    font-size: clamp(14px, 2.6vw, 20px);
+    color: #7cf6c8;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .mu-art {
+    width: clamp(140px, 28vw, 200px);
+    height: clamp(140px, 28vw, 200px);
+    margin: 0 auto 20px;
+    border-radius: 12px;
+    background:
+      radial-gradient(circle at 30% 30%, #7cf6c8 0%, transparent 60%),
+      radial-gradient(circle at 70% 70%, #5b8def 0%, transparent 60%),
+      #1a1f2a;
+    box-shadow: 0 0 40px rgba(124, 246, 200, 0.2);
+  }
+  .mu-title {
+    font-size: clamp(20px, 3.6vw, 28px);
+    font-weight: 300;
+    margin-bottom: 4px;
+  }
+  .mu-artist {
+    font-size: clamp(14px, 2.6vw, 18px);
+    color: #8a93a3;
+    margin-bottom: 24px;
+  }
+  .mu-bar {
+    width: 70%;
+    height: 3px;
+    background: #2a2f3a;
+    border-radius: 2px;
+    margin: 0 auto 8px;
+    overflow: hidden;
+  }
+  .mu-bar .prog {
+    height: 100%;
+    width: 38%;
     background: #7cf6c8;
+    border-radius: 2px;
+  }
+  .mu-time {
+    display: flex;
+    justify-content: space-between;
+    width: 70%;
+    margin: 0 auto;
+    font-size: 12px;
+    color: #8a93a3;
+    font-variant-numeric: tabular-nums;
+  }
+  .mu-ctrl {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    margin-top: 24px;
+    color: #cfd6e0;
+    font-size: clamp(22px, 4vw, 30px);
+  }
+  .mu-ctrl .play {
+    color: #7cf6c8;
+    font-size: clamp(28px, 5vw, 38px);
+  }
+
+  /* ---------- pagination dots ---------- */
+  .dots {
+    position: fixed;
+    bottom: 18px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    z-index: 10;
+  }
+  .dots .d {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2a2f3a;
+    transition: all 0.3s ease;
+  }
+  .dots .d.on {
+    background: #7cf6c8;
+    width: 18px;
+    border-radius: 3px;
     box-shadow: 0 0 8px #7cf6c8;
   }
 
   .footer {
     position: fixed;
-    bottom: 14px;
-    left: 0;
-    right: 0;
+    bottom: 4px;
+    left: 0; right: 0;
     text-align: center;
-    font-size: 12px;
-    color: #444a55;
-    letter-spacing: 0.2em;
+    font-size: 9px;
+    color: #2a2f3a;
+    letter-spacing: 0.3em;
   }
 </style>
 </head>
 <body>
-  <div class="stage">
-    <div class="card">
-      <div class="greet" id="greet">Good Day</div>
-      <div class="time">
-        <span id="hm">--:--</span><span class="sec" id="sec">--</span>
-      </div>
-      <div class="date" id="date">----</div>
 
-      <div class="divider"></div>
-
-      <div class="status">
-        <div class="item"><span class="dot"></span><span id="day">---</span></div>
-        <div class="item"><span>W</span><span id="week">--</span></div>
-      </div>
+  <!-- Top status bar -->
+  <div class="topbar">
+    <div class="left" id="topClock">--:--</div>
+    <div class="right">
+      <span id="conn">● LINKED</span>
+      <span class="battery">
+        <span class="cell"><span class="fill" id="batFill" style="width:80%"></span></span>
+        <span id="batPct">80%</span>
+      </span>
     </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="carousel" id="carousel">
+
+    <!-- Card 1: Clock -->
+    <section class="card">
+      <div class="panel">
+        <div class="greet" id="greet">Good Day</div>
+        <div class="time">
+          <span id="hm">--:--</span><span class="sec" id="sec">--</span>
+        </div>
+        <div class="date" id="date">----</div>
+        <div class="meta-row">
+          <div id="day">---</div>
+          <div>W<span id="week">--</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Card 2: Weather -->
+    <section class="card">
+      <div class="panel">
+        <div class="wx-label">Weather</div>
+        <div class="wx-place" id="wxPlace">Loading…</div>
+        <div class="wx-icon" id="wxIcon">☁</div>
+        <div class="wx-temp"><span id="wxTemp">--</span><span class="deg">°C</span></div>
+        <div class="wx-desc" id="wxDesc">—</div>
+        <div class="wx-extra">
+          <div>WIND <span id="wxWind">--</span> m/s</div>
+          <div>HUM <span id="wxHum">--</span>%</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Card 3: Notifications -->
+    <section class="card">
+      <div class="panel">
+        <div class="ntf-title">Notifications</div>
+        <div class="ntf-list" id="ntfList"></div>
+      </div>
+    </section>
+
+    <!-- Card 4: Music -->
+    <section class="card">
+      <div class="panel">
+        <div class="mu-label">Now Playing</div>
+        <div class="mu-art"></div>
+        <div class="mu-title">Midnight City</div>
+        <div class="mu-artist">M83</div>
+        <div class="mu-bar"><div class="prog" id="muProg"></div></div>
+        <div class="mu-time"><span id="muCur">1:32</span><span>4:03</span></div>
+        <div class="mu-ctrl">
+          <span>⏮</span><span class="play">▶</span><span>⏭</span>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Pagination dots -->
+  <div class="dots" id="dots">
+    <div class="d on"></div><div class="d"></div><div class="d"></div><div class="d"></div>
   </div>
 
   <div class="footer">META · RAY-BAN · DISPLAY</div>
 
 <script>
+  /* ---------- helpers ---------- */
+  const $ = id => document.getElementById(id);
   const pad = n => String(n).padStart(2, '0');
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const days   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   function weekNumber(d) {
@@ -149,18 +409,132 @@
     return 'Good Night';
   }
 
+  /* ---------- clock ---------- */
   function tick() {
     const d = new Date();
-    document.getElementById('hm').textContent  = pad(d.getHours()) + ':' + pad(d.getMinutes());
-    document.getElementById('sec').textContent = pad(d.getSeconds());
-    document.getElementById('date').textContent =
+    const hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    $('hm').textContent  = hm;
+    $('sec').textContent = pad(d.getSeconds());
+    $('topClock').textContent = hm;
+    $('date').textContent =
       months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-    document.getElementById('day').textContent  = days[d.getDay()].toUpperCase();
-    document.getElementById('week').textContent = pad(weekNumber(d));
-    document.getElementById('greet').textContent = greeting(d.getHours());
+    $('day').textContent  = days[d.getDay()].toUpperCase();
+    $('week').textContent = pad(weekNumber(d));
+    $('greet').textContent = greeting(d.getHours());
   }
   tick();
   setInterval(tick, 1000);
+
+  /* ---------- weather (Open-Meteo, no key) ---------- */
+  const WMO = {
+    0:  ['☀','Clear'],         1:  ['🌤','Mainly clear'],
+    2:  ['⛅','Partly cloudy'], 3:  ['☁','Overcast'],
+    45: ['🌫','Fog'],           48: ['🌫','Rime fog'],
+    51: ['🌦','Light drizzle'], 53: ['🌦','Drizzle'],
+    55: ['🌧','Dense drizzle'], 61: ['🌧','Light rain'],
+    63: ['🌧','Rain'],          65: ['🌧','Heavy rain'],
+    71: ['🌨','Light snow'],    73: ['🌨','Snow'],
+    75: ['❄','Heavy snow'],    80: ['🌦','Showers'],
+    81: ['🌧','Showers'],       82: ['⛈','Heavy showers'],
+    95: ['⛈','Thunderstorm'],  96: ['⛈','Thunder + hail'],
+    99: ['⛈','Thunder + hail']
+  };
+
+  async function loadWeather(lat, lon, label) {
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}`
+                + `&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m`
+                + `&wind_speed_unit=ms&timezone=auto`;
+      const r = await fetch(url);
+      const j = await r.json();
+      const c = j.current;
+      const w = WMO[c.weather_code] || ['•','—'];
+      $('wxPlace').textContent = label;
+      $('wxIcon').textContent  = w[0];
+      $('wxDesc').textContent  = w[1];
+      $('wxTemp').textContent  = Math.round(c.temperature_2m);
+      $('wxWind').textContent  = c.wind_speed_10m.toFixed(1);
+      $('wxHum').textContent   = c.relative_humidity_2m;
+    } catch (e) {
+      $('wxPlace').textContent = 'Offline';
+      $('wxDesc').textContent  = 'No data';
+    }
+  }
+
+  function initWeather() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        p => loadWeather(p.coords.latitude, p.coords.longitude, 'Current Location'),
+        () => loadWeather(35.6762, 139.6503, 'Tokyo'),
+        { timeout: 4000 }
+      );
+    } else {
+      loadWeather(35.6762, 139.6503, 'Tokyo');
+    }
+  }
+  initWeather();
+
+  /* ---------- notifications (mock feed) ---------- */
+  const NOTES = [
+    { src: 'Messages',  time: 'now',    body: 'Akira: 今夜の予定どうする？' },
+    { src: 'Calendar',  time: '15 min', body: 'Design Review · Meeting Room A' },
+    { src: 'Mail',      time: '1 h',    body: 'Invoice from Anthropic – review required' },
+    { src: 'Reminders', time: '2 h',    body: 'Pick up dry cleaning on the way home' }
+  ];
+  function renderNotes() {
+    $('ntfList').innerHTML = NOTES.map(n => `
+      <div class="ntf">
+        <div class="head"><span class="src">${n.src}</span><span>${n.time}</span></div>
+        <div class="body">${n.body}</div>
+      </div>
+    `).join('');
+  }
+  renderNotes();
+
+  /* ---------- music progress (mock) ---------- */
+  let muSec = 92;
+  const muTotal = 243;
+  setInterval(() => {
+    muSec = (muSec + 1) % muTotal;
+    const pct = (muSec / muTotal) * 100;
+    $('muProg').style.width = pct + '%';
+    $('muCur').textContent = Math.floor(muSec / 60) + ':' + pad(muSec % 60);
+  }, 1000);
+
+  /* ---------- battery ---------- */
+  function setBat(pct) {
+    $('batPct').textContent = pct + '%';
+    $('batFill').style.width = pct + '%';
+    $('batFill').style.background = pct < 20 ? '#ff5b6e' : '#7cf6c8';
+  }
+  if (navigator.getBattery) {
+    navigator.getBattery().then(b => {
+      const upd = () => setBat(Math.round(b.level * 100));
+      upd();
+      b.addEventListener('levelchange', upd);
+    });
+  } else {
+    setBat(80);
+  }
+
+  /* ---------- pagination + keyboard nav ---------- */
+  const carousel = $('carousel');
+  const dots = document.querySelectorAll('#dots .d');
+
+  carousel.addEventListener('scroll', () => {
+    const idx = Math.round(carousel.scrollLeft / window.innerWidth);
+    dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+  });
+
+  function goTo(i) {
+    carousel.scrollTo({ left: i * window.innerWidth, behavior: 'smooth' });
+  }
+  document.addEventListener('keydown', e => {
+    const idx = Math.round(carousel.scrollLeft / window.innerWidth);
+    if (e.key === 'ArrowRight') goTo(Math.min(idx + 1, dots.length - 1));
+    if (e.key === 'ArrowLeft')  goTo(Math.max(idx - 1, 0));
+  });
+  dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
 </script>
 </body>
 </html>
