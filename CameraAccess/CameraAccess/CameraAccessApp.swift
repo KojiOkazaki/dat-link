@@ -33,7 +33,7 @@ struct CameraAccessApp: App {
   @StateObject private var wearablesViewModel: WearablesViewModel
   // Ray-Ban Display への表示用パイプライン（Mock 接続）。実 DAT 接続時は
   // GlassesPipelineEnvironment(client: DATGlassesDisplayClient(...)) に差し替え。
-  @StateObject private var glassesEnv = GlassesPipelineEnvironment()
+  @StateObject private var glassesEnv: GlassesPipelineEnvironment
 
   init() {
     do {
@@ -46,6 +46,7 @@ struct CameraAccessApp: App {
     let wearables = Wearables.shared
     self.wearables = wearables
     self._wearablesViewModel = StateObject(wrappedValue: WearablesViewModel(wearables: wearables))
+    self._glassesEnv = StateObject(wrappedValue: GlassesPipelineEnvironment())
   }
 
   var body: some Scene {

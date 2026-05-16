@@ -15,26 +15,28 @@ import UIKit
 /// - JSON が返ってこなければ先頭 12/40 文字でフォールバック SceneDescription を組み立てる
 /// - 元の AnalysisOverlayView の自然文表示フローは変更しない
 @MainActor
-public final class CameraAccessSceneAnalyzer: SceneAnalyzing {
+final class CameraAccessSceneAnalyzer: SceneAnalyzing {
     private let manager: VisionServiceManager
     private let parser: SceneDescriptionParser
 
-    public init(
-        manager: VisionServiceManager = .shared,
-        parser: SceneDescriptionParser = SceneDescriptionParser()
-    ) {
+    init() {
+        self.manager = VisionServiceManager.shared
+        self.parser = SceneDescriptionParser()
+    }
+
+    init(manager: VisionServiceManager, parser: SceneDescriptionParser = SceneDescriptionParser()) {
         self.manager = manager
         self.parser = parser
     }
 
-    public func analyze(imageData: Data) async throws -> SceneDescription {
+    func analyze(imageData: Data) async throws -> SceneDescription {
         guard let image = UIImage(data: imageData) else {
             throw GlassesIntegrationError.imageDecodingFailed
         }
         return try await analyze(image: image)
     }
 
-    public func analyze(image: UIImage) async throws -> SceneDescription {
+    func analyze(image: UIImage) async throws -> SceneDescription {
         let raw = try await manager.currentEngine.analyzeImage(
             image,
             prompt: VLMPrompt.sceneDescription
@@ -59,10 +61,10 @@ public final class CameraAccessSceneAnalyzer: SceneAnalyzing {
     }
 }
 
-public enum GlassesIntegrationError: LocalizedError {
+enum GlassesIntegrationError: LocalizedError {
     case imageDecodingFailed
 
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .imageDecodingFailed: return "画像のデコードに失敗しました"
         }
@@ -75,18 +77,24 @@ public enum GlassesIntegrationError: LocalizedError {
 /// TODO(DAT): 実 DAT のディスプレイ API が利用可能になったら、
 /// `MockGlassesDisplayClient` の代わりに `DATGlassesDisplayClient` を注入する。
 @MainActor
-public final class GlassesPipelineEnvironment: ObservableObject {
-    public let client: MockGlassesDisplayClient
-    public let analyzer: CameraAccessSceneAnalyzer
-    public let formatter: DisplayFormatter
+final class GlassesPipelineEnvironment: ObservableObject {
+    let client: MockGlassesDisplayClient
+    let analyzer: CameraAccessSceneAnalyzer
+    let formatter: DisplayFormatter
 
-    @Published public private(set) var lastDescription: SceneDescription?
-    @Published public private(set) var isProcessing: Bool = false
-    @Published public private(set) var lastError: String?
+    @Published private(set) var lastDescription: SceneDescription?
+    @Published private(set) var isProcessing: Bool = false
+    @Published private(set) var lastError: String?
 
-    public init(
-        client: MockGlassesDisplayClient = MockGlassesDisplayClient(),
-        analyzer: CameraAccessSceneAnalyzer = CameraAccessSceneAnalyzer(),
+    init() {
+        self.client = MockGlassesDisplayClient()
+        self.analyzer = CameraAccessSceneAnalyzer()
+        self.formatter = DisplayFormatter()
+    }
+
+    init(
+        client: MockGlassesDisplayClient,
+        analyzer: CameraAccessSceneAnalyzer,
         formatter: DisplayFormatter = DisplayFormatter()
     ) {
         self.client = client
@@ -95,7 +103,7 @@ public final class GlassesPipelineEnvironment: ObservableObject {
     }
 
     /// MVP の一発処理: image → SceneDescription → DisplayPayload → glasses。
-    public func describeAndShow(image: UIImage) async {
+    func describeAndShow(image: UIImage) async {
         isProcessing = true
         lastError = nil
         defer { isProcessing = false }
@@ -112,7 +120,7 @@ public final class GlassesPipelineEnvironment: ObservableObject {
         }
     }
 
-    public func clear() async {
+    func clear() async {
         try? await client.clear()
     }
 }
