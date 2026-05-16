@@ -16,8 +16,8 @@ struct AnalysisOverlayView: View {
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            if glassesEnv.client.currentPayload != nil {
-                GlassesPreviewView(client: glassesEnv.client)
+            if glassesEnv.currentPayload != nil {
+                GlassesPreviewView(payload: glassesEnv.currentPayload)
                     .padding(.horizontal)
                     .padding(.bottom, 8)
             }

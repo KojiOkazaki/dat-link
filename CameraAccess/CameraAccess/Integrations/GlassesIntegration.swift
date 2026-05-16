@@ -71,20 +71,28 @@ enum GlassesIntegrationError: LocalizedError {
     }
 }
 
-/// グラス表示用のパイプライン一式（client + analyzer + formatter）。
-/// `@EnvironmentObject` で配って、任意の View から `describeAndShow(image:)` を呼べる。
+/// グラス表示パイプライン全体を保持する EnvironmentObject。
 ///
-/// TODO(DAT): 実 DAT のディスプレイ API が利用可能になったら、
-/// `MockGlassesDisplayClient` の代わりに `DATGlassesDisplayClient` を注入する。
+/// 出力先は `client: any GlassesDisplayClient`。CameraAccessApp で:
+///   - シミュレータ → MockGlassesDisplayClient
+///   - 実機         → DATGlassesDisplayClient（MWDATDisplay 経由で実グラスへ）
+/// を選んで注入する。
+///
+/// `currentPayload` は iPhone 側の擬似 HUD プレビュー用。
+/// 自動クリアは `durationSeconds` 経過後にこのクラスがスケジュールする
+/// （Mock/DAT クライアント側の挙動に依存しない）。
 @MainActor
 final class GlassesPipelineEnvironment: ObservableObject {
-    let client: MockGlassesDisplayClient
     let analyzer: CameraAccessSceneAnalyzer
     let formatter: DisplayFormatter
+    private let client: any GlassesDisplayClient
 
+    @Published private(set) var currentPayload: DisplayPayload?
     @Published private(set) var lastDescription: SceneDescription?
     @Published private(set) var isProcessing: Bool = false
     @Published private(set) var lastError: String?
+
+    private var clearTask: Task<Void, Never>?
 
     init() {
         self.client = MockGlassesDisplayClient()
@@ -92,14 +100,10 @@ final class GlassesPipelineEnvironment: ObservableObject {
         self.formatter = DisplayFormatter()
     }
 
-    init(
-        client: MockGlassesDisplayClient,
-        analyzer: CameraAccessSceneAnalyzer,
-        formatter: DisplayFormatter = DisplayFormatter()
-    ) {
+    init(client: any GlassesDisplayClient) {
         self.client = client
-        self.analyzer = analyzer
-        self.formatter = formatter
+        self.analyzer = CameraAccessSceneAnalyzer()
+        self.formatter = DisplayFormatter()
     }
 
     /// MVP の一発処理: image → SceneDescription → DisplayPayload → glasses。
@@ -110,17 +114,36 @@ final class GlassesPipelineEnvironment: ObservableObject {
         do {
             let description = try await analyzer.analyze(image: image)
             lastDescription = description
-            let payload = formatter.format(description)
-            try await client.show(payload: payload)
+            await present(formatter.format(description))
         } catch {
             lastError = error.localizedDescription
-            try? await client.show(
-                payload: formatter.errorPayload(message: error.localizedDescription)
-            )
+            await present(formatter.errorPayload(message: error.localizedDescription))
         }
     }
 
     func clear() async {
+        clearTask?.cancel()
+        currentPayload = nil
         try? await client.clear()
+    }
+
+    private func present(_ payload: DisplayPayload) async {
+        currentPayload = payload
+        scheduleAutoClear(after: payload.durationSeconds)
+        do {
+            try await client.show(payload: payload)
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    private func scheduleAutoClear(after seconds: Int) {
+        clearTask?.cancel()
+        clearTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(max(1, seconds)) * 1_000_000_000)
+            if Task.isCancelled { return }
+            self?.currentPayload = nil
+            try? await self?.client.clear()
+        }
     }
 }

@@ -1,15 +1,13 @@
 import SwiftUI
 
 /// iPhone 画面上に Ray-Ban Display 風の擬似 HUD を表示するプレビュー。
-/// `MockGlassesDisplayClient.currentPayload` を観測して描画する。
-///
-/// 実 DAT 接続時はこの View 自体はそのまま開発用プレビューとして残してよい。
-/// 本番のグラス表示は DATGlassesDisplayClient が担当する。
+/// 引数の `payload` をそのまま描画する純粋な View。実 DAT 接続の有無に関わらず、
+/// 親から `glassesEnv.currentPayload` を流して常時プレビューできる。
 public struct GlassesPreviewView: View {
-    @ObservedObject var client: MockGlassesDisplayClient
+    public let payload: DisplayPayload?
 
-    public init(client: MockGlassesDisplayClient) {
-        self.client = client
+    public init(payload: DisplayPayload?) {
+        self.payload = payload
     }
 
     public var body: some View {
@@ -17,7 +15,7 @@ public struct GlassesPreviewView: View {
             RoundedRectangle(cornerRadius: 18)
                 .fill(Color.black)
 
-            if let payload = client.currentPayload {
+            if let payload {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(payload.title)
                         .font(.system(size: 22, weight: .bold, design: .rounded))
@@ -48,12 +46,12 @@ public struct GlassesPreviewView: View {
             }
         }
         .frame(height: 140)
-        .animation(.easeInOut(duration: 0.2), value: client.currentPayload)
+        .animation(.easeInOut(duration: 0.2), value: payload)
         .overlay(alignment: .topTrailing) {
             Text("Ray-Ban Display preview")
                 .font(.caption2)
                 .foregroundColor(.white.opacity(0.5))
                 .padding(6)
-            }
+        }
     }
 }

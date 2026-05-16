@@ -46,7 +46,12 @@ struct CameraAccessApp: App {
     let wearables = Wearables.shared
     self.wearables = wearables
     self._wearablesViewModel = StateObject(wrappedValue: WearablesViewModel(wearables: wearables))
-    self._glassesEnv = StateObject(wrappedValue: GlassesPipelineEnvironment())
+    #if targetEnvironment(simulator)
+    let glassesClient: any GlassesDisplayClient = MockGlassesDisplayClient()
+    #else
+    let glassesClient: any GlassesDisplayClient = DATGlassesDisplayClient(wearables: wearables)
+    #endif
+    self._glassesEnv = StateObject(wrappedValue: GlassesPipelineEnvironment(client: glassesClient))
   }
 
   var body: some Scene {
