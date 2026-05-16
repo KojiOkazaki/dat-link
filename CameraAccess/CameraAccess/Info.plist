@@ -39,6 +39,8 @@
 		<string>mrbtest://</string>
 		<key>ClientToken</key>
 		<string>AR|4225976931002254|4828102db363d0a7a98d4afb4ae2ba23</string>
+		<key>DAMEnabled</key>
+		<true/>
 		<key>MetaAppID</key>
 		<string>4225976931002254</string>
 		<key>TeamID</key>
