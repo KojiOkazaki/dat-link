@@ -68,7 +68,7 @@
     overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     position: relative;
   }
   .content::-webkit-scrollbar { display: none; }
@@ -100,19 +100,19 @@
     opacity: 0.85;
   }
   .msg {
-    font-size: 32px;
+    font-size: 24px;
     font-weight: 300;
-    line-height: 1.35;
+    line-height: 1.42;
     letter-spacing: 0.01em;
     color: #fff;
     max-width: 100%;
     text-wrap: balance;
     animation: rise 0.32s cubic-bezier(.2,.7,.2,1);
   }
-  .msg.long    { font-size: 26px; line-height: 1.4; }
-  .msg.xlong   { font-size: 22px; line-height: 1.45; }
-  .msg.xxlong  { font-size: 18px; line-height: 1.5; }
-  .msg.xxxlong { font-size: 16px; line-height: 1.55; text-align: left; }
+  .msg.long    { font-size: 22px; line-height: 1.45; }
+  .msg.xlong   { font-size: 19px; line-height: 1.5; }
+  .msg.xxlong  { font-size: 17px; line-height: 1.55; text-align: left; }
+  .msg.xxxlong { font-size: 15px; line-height: 1.6;  text-align: left; }
   .msg.hint  { color: #ffe8a8; font-weight: 300; }
   .msg.hint .lead { color: #ffce5b; letter-spacing: 0.2em; font-size: 11px;
                     display: block; margin-bottom: 6px; }
@@ -157,12 +157,12 @@
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 14px;
-    padding: 10px 14px;
+    padding: 10px 18px;
     font-family: inherit;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 300;
-    line-height: 1.3;
-    letter-spacing: 0.02em;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
     cursor: pointer;
     text-align: center;
     transition: all 130ms cubic-bezier(.2,.7,.2,1);
@@ -189,20 +189,24 @@
     pointer-events: none;
   }
   .focusable.sys {
-    font-size: 13px;
+    font-size: 14px;
     letter-spacing: 0.22em;
     color: #8a93a3;
   }
   .focusable.sys:focus { color: #7cf6c8; }
   .focusable.cat {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 400;
     letter-spacing: 0.06em;
   }
-  .focusable .ic {
+  .focusable.scroll {
     font-size: 18px;
-    margin-right: 8px;
-    opacity: 0.7;
+    letter-spacing: 0.18em;
+    color: #7cf6c8;
+    border-color: rgba(124, 246, 200, 0.35);
+  }
+  .focusable.full {
+    grid-column: 1 / -1;
   }
 </style>
 </head>
@@ -228,10 +232,9 @@
   const grid    = $('grid');
 
   const CATS = [
-    { id: 'self_pr',    label: '自己PR',   ic: '◇' },
-    { id: 'gakuchika',  label: 'ガクチカ', ic: '◈' },
-    { id: 'motivation', label: '志望動機', ic: '◉' },
-    { id: 'reverse',    label: '逆質問',   ic: '◐' },
+    { id: 'self_pr',    label: '自己PR' },
+    { id: 'gakuchika',  label: 'ガクチカ' },
+    { id: 'motivation', label: '志望動機' },
   ];
 
   let history     = [];
@@ -253,11 +256,28 @@
 
   function msgSizeClass(text) {
     const n = (text || '').length;
-    if (n > 260) return 'xxxlong';
-    if (n > 180) return 'xxlong';
-    if (n > 110) return 'xlong';
-    if (n > 60)  return 'long';
+    if (n > 220) return 'xxxlong';
+    if (n > 140) return 'xxlong';
+    if (n > 80)  return 'xlong';
+    if (n > 40)  return 'long';
     return '';
+  }
+
+  function canScrollDown() {
+    const c = $('content');
+    return c.scrollHeight > c.clientHeight + 1
+        && c.scrollTop + c.clientHeight < c.scrollHeight - 1;
+  }
+
+  function canScrollUp() {
+    return $('content').scrollTop > 1;
+  }
+
+  function stepScroll(dir) {
+    const c = $('content');
+    const step = 60;
+    if (dir === 'down') c.scrollTop = Math.min(c.scrollHeight, c.scrollTop + step);
+    else                c.scrollTop = Math.max(0, c.scrollTop - step);
   }
 
   function updateScrollHints() {
@@ -379,6 +399,21 @@
     return b;
   }
 
+  function scrollBtn() {
+    return btn('▼ もっと見る', {
+      cls: 'scroll full',
+      key: 'scroll-down',
+      onClick: () => {
+        stepScroll('down');
+        // give the smooth scroll a frame, then refresh button state
+        requestAnimationFrame(() => {
+          renderGrid();
+          updateScrollHints();
+        });
+      },
+    });
+  }
+
   function renderGrid() {
     const prevKey = document.activeElement && document.activeElement.dataset
                     ? document.activeElement.dataset.key : null;
@@ -388,11 +423,14 @@
 
     if (screen === 'category' || screen === 'ended') {
       buttons = CATS.map(c => btn(c.label, {
-        cls: 'cat',
+        cls: 'cat full',
         key: 'cat-' + c.id,
         disabled: busy,
         onClick: () => switchCategory(c.id),
       }));
+      if (screen === 'ended' && canScrollDown()) {
+        buttons.unshift(scrollBtn());
+      }
     } else if (screen === 'menu') {
       buttons = [
         btn('HINT',     { cls: 'sys', key: 'hint',  disabled: busy, onClick: askHint }),
@@ -402,19 +440,23 @@
       ];
     } else {
       // screen === 'answer' (or 'loading' fallback)
-      const s = suggestions.slice(0, 3);
+      const s = suggestions.slice(0, 2);
       buttons = s.map((txt, i) => btn(txt, {
         key: 'sg-' + i,
         disabled: busy,
         onClick: () => pickReply(txt),
       }));
-      while (buttons.length < 3) {
+      while (buttons.length < 2) {
         buttons.push(placeholderBtn('sg-' + buttons.length));
       }
       buttons.push(btn('MENU', {
-        cls: 'sys', key: 'menu',
+        cls: 'sys full',
+        key: 'menu',
         onClick: () => { screen = 'menu'; render(); },
       }));
+      if (canScrollDown()) {
+        buttons.push(scrollBtn());
+      }
     }
 
     buttons.forEach(b => grid.appendChild(b));
@@ -427,17 +469,23 @@
     target.focus();
   }
 
-  function render() {
+  function render(opts) {
     renderContent();
     renderGrid();
     requestAnimationFrame(() => {
-      $('content').scrollTop = 0;
+      if (!opts || opts.resetScroll !== false) $('content').scrollTop = 0;
       updateScrollHints();
+      // The scroll button only renders when overflow exists, so on first
+      // paint we may need to add it now that we know the real layout.
+      renderGrid();
     });
   }
 
   $('content').addEventListener('scroll', updateScrollHints);
-  window.addEventListener('resize', updateScrollHints);
+  window.addEventListener('resize', () => {
+    updateScrollHints();
+    renderGrid();
+  });
 
   /* ---------- API ---------- */
   async function pickReply(text) {
@@ -527,55 +575,59 @@
   connect();
 
   /* ---------- D-pad (2x2 grid aware) ---------- */
-  // Try to scroll the main content area; returns true if it actually scrolled.
-  function tryScrollContent(dir) {
-    const c = $('content');
-    if (c.scrollHeight <= c.clientHeight + 1) return false;
-    const step = Math.round(c.clientHeight * 0.55);
-    if (dir === 'up' && c.scrollTop > 1) {
-      c.scrollTop = Math.max(0, c.scrollTop - step);
-      return true;
-    }
-    if (dir === 'down' && c.scrollTop + c.clientHeight < c.scrollHeight - 1) {
-      c.scrollTop = Math.min(c.scrollHeight, c.scrollTop + step);
-      return true;
-    }
-    return false;
-  }
-
+  // Spatial nav using getBoundingClientRect so it works regardless of
+  // whether cells are half-width or span the row (.full).
   function navigate(dir) {
-    const all = Array.from(grid.querySelectorAll('.focusable:not(:disabled):not(.empty)'));
-    if (!all.length) return;
-    const cur = all.indexOf(document.activeElement);
-    if (cur === -1) { all[0].focus(); return; }
+    const cells = Array.from(grid.querySelectorAll('.focusable:not(:disabled):not(.empty)'));
+    if (!cells.length) return;
+    const cur = document.activeElement;
+    if (!cells.includes(cur)) { cells[0].focus(); return; }
 
-    const allCells = Array.from(grid.querySelectorAll('.focusable'));
-    const idxInGrid = allCells.indexOf(document.activeElement);
-    const cols = 2;
-    const rows = Math.ceil(allCells.length / cols);
-    const row = Math.floor(idxInGrid / cols);
-    const col = idxInGrid % cols;
+    const rects = cells.map(c => c.getBoundingClientRect());
+    const rows = [];
+    rects.forEach((r, i) => {
+      const row = rows.find(rr => Math.abs(rects[rr[0]].top - r.top) < 10);
+      if (row) row.push(i);
+      else rows.push([i]);
+    });
+    rows.sort((a, b) => rects[a[0]].top - rects[b[0]].top);
+    rows.forEach(r => r.sort((a, b) => rects[a].left - rects[b].left));
 
-    // From top row + ArrowUp, or bottom row + ArrowDown, give scrolling
-    // the long-form content priority before wrapping focus.
-    if (dir === 'up'   && row === 0        && tryScrollContent('up'))   return;
-    if (dir === 'down' && row === rows - 1 && tryScrollContent('down')) return;
+    const curIdx = cells.indexOf(cur);
+    let curRow = -1, curCol = -1;
+    for (let i = 0; i < rows.length; i++) {
+      const j = rows[i].indexOf(curIdx);
+      if (j !== -1) { curRow = i; curCol = j; break; }
+    }
+    if (curRow === -1) { cells[0].focus(); return; }
 
-    let targetIdx;
-    if (dir === 'left' || dir === 'right') {
-      targetIdx = row * cols + (col === 0 ? 1 : 0);
+    // Vertical moves at the boundary fall through to content scrolling first.
+    const c = $('content');
+    const overflow = c.scrollHeight > c.clientHeight + 1;
+    if (dir === 'up' && curRow === 0 && overflow && c.scrollTop > 1) {
+      stepScroll('up'); return;
+    }
+    if (dir === 'down' && curRow === rows.length - 1
+        && overflow && c.scrollTop + c.clientHeight < c.scrollHeight - 1) {
+      stepScroll('down'); return;
+    }
+
+    if (dir === 'up' || dir === 'down') {
+      const targetRow = (curRow + (dir === 'down' ? 1 : -1) + rows.length) % rows.length;
+      const curCenter = rects[curIdx].left + rects[curIdx].width / 2;
+      let best = rows[targetRow][0], bestDist = Infinity;
+      for (const t of rows[targetRow]) {
+        const center = rects[t].left + rects[t].width / 2;
+        const d = Math.abs(curCenter - center);
+        if (d < bestDist) { bestDist = d; best = t; }
+      }
+      cells[best].focus();
     } else {
-      const otherRow = (row + (dir === 'down' ? 1 : -1) + rows) % rows;
-      targetIdx = otherRow * cols + col;
+      const row = rows[curRow];
+      const ci  = row.indexOf(curIdx);
+      const t   = (ci + (dir === 'right' ? 1 : -1) + row.length) % row.length;
+      cells[row[t]].focus();
     }
-    const candidate = allCells[targetIdx];
-    if (candidate && !candidate.disabled && !candidate.classList.contains('empty')) {
-      candidate.focus();
-      return;
-    }
-    const delta = (dir === 'right' || dir === 'down') ? 1 : -1;
-    const next = all[(cur + delta + all.length) % all.length];
-    next.focus();
   }
 
   document.addEventListener('keydown', e => {
