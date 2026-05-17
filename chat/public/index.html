@@ -15,377 +15,398 @@
     background: #000;
     color: #fff;
     font-family: -apple-system, "SF Pro Display", "Helvetica Neue",
-                 "Hiragino Sans", sans-serif;
+                 "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
     -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
   }
 
   .stage {
     width: 600px;
     height: 600px;
-    display: flex;
-    flex-direction: column;
-    padding: 10px 16px 14px;
-    gap: 8px;
+    display: grid;
+    grid-template-rows: 38px 1fr auto;
+    padding: 18px 24px 22px;
+    gap: 14px;
   }
 
   /* ---------- top bar ---------- */
   .topbar {
-    height: 28px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-shrink: 0;
-    font-size: 12px;
-    letter-spacing: 0.16em;
-    color: #8a93a3;
   }
-  .topbar .L { display: flex; align-items: center; gap: 12px; }
-  .topbar .R { display: flex; align-items: center; gap: 8px; }
-  .topbar .brand { color: #7cf6c8; font-weight: 500; }
-  .topbar .pill {
-    background: rgba(124, 246, 200, 0.08);
-    border: 1px solid rgba(124, 246, 200, 0.25);
-    color: #cfd6e0;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-variant-numeric: tabular-nums;
+  .brand {
+    font-size: 12px;
+    letter-spacing: 0.42em;
+    font-weight: 500;
+    color: #7cf6c8;
   }
   .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #555; transition: all 0.3s ease;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2a2f3a;
+    transition: all 0.3s ease;
   }
-  .dot.live     { background: #7cf6c8; box-shadow: 0 0 8px #7cf6c8; }
-  .dot.thinking { background: #ffce5b; box-shadow: 0 0 8px #ffce5b;
-                  animation: pulse 1s infinite; }
-  .dot.error    { background: #ff5b6e; box-shadow: 0 0 8px #ff5b6e; }
-  @keyframes pulse { 50% { opacity: 0.4; } }
+  .dot.live     { background: #7cf6c8; box-shadow: 0 0 10px #7cf6c8; }
+  .dot.thinking { background: #ffce5b; box-shadow: 0 0 10px #ffce5b;
+                  animation: pulse 1.1s ease-in-out infinite; }
+  .dot.error    { background: #ff5b6e; box-shadow: 0 0 10px #ff5b6e; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
 
-  /* ---------- chat ---------- */
-  .chat {
-    flex: 1;
+  /* ---------- main content ---------- */
+  .content {
     min-height: 0;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    gap: 6px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
     overflow: hidden;
-    padding: 2px;
+  }
+  .label {
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: #7cf6c8;
+    text-transform: uppercase;
+    opacity: 0.85;
   }
   .msg {
-    max-width: 92%;
-    padding: 10px 14px;
-    border-radius: 13px;
-    font-size: 18px;
-    line-height: 1.42;
+    font-size: 32px;
     font-weight: 300;
-    border: 1px solid rgba(124, 246, 200, 0.18);
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    word-break: break-word;
-    animation: rise 0.22s ease-out;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    color: #fff;
+    max-width: 100%;
+    text-wrap: balance;
+    animation: rise 0.32s cubic-bezier(.2,.7,.2,1);
   }
+  .msg.long  { font-size: 26px; line-height: 1.4; }
+  .msg.xlong { font-size: 22px; line-height: 1.45; }
+  .msg.hint  { color: #ffe8a8; font-weight: 300; }
+  .msg.hint .lead { color: #ffce5b; letter-spacing: 0.2em; font-size: 11px;
+                    display: block; margin-bottom: 6px; }
   @keyframes rise {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  .msg.user {
-    align-self: flex-end;
-    border-color: rgba(255, 255, 255, 0.28);
-    background: rgba(255, 255, 255, 0.07);
-  }
-  .msg.assistant { align-self: flex-start; color: #e8fff4; }
-  .msg.hint {
-    border-color: rgba(255, 206, 91, 0.4);
-    background: rgba(255, 206, 91, 0.06);
-    color: #ffe8a8;
-    font-size: 16px;
-  }
-  .msg .who {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: #7cf6c8;
-    margin-bottom: 3px;
-    text-transform: uppercase;
-  }
-  .msg.user .who { color: #cfd6e0; text-align: right; }
-  .msg.hint .who { color: #ffce5b; }
-  .empty {
-    align-self: center;
-    margin: auto;
+
+  .echo {
     font-size: 13px;
-    color: #444;
-    letter-spacing: 0.2em;
+    color: #555;
+    letter-spacing: 0.04em;
+    max-width: 90%;
+    text-wrap: balance;
+  }
+  .echo::before { content: "› "; color: #7cf6c8; opacity: 0.6; }
+
+  .headline {
+    font-size: 38px;
+    font-weight: 200;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+  }
+  .subhead {
+    font-size: 13px;
+    color: #555;
+    letter-spacing: 0.18em;
   }
 
-  /* ---------- action area ---------- */
-  .actions {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex-shrink: 0;
+  /* ---------- 2x2 action grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 88px;
+    gap: 10px;
   }
-  .row { display: flex; gap: 6px; }
-  .row:empty { display: none; }
-
   .focusable {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(255, 255, 255, 0.025);
     color: #fff;
-    border: 1px solid rgba(124, 246, 200, 0.25);
-    border-radius: 11px;
-    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
+    padding: 10px 14px;
     font-family: inherit;
+    font-size: 16px;
     font-weight: 300;
+    line-height: 1.3;
     letter-spacing: 0.02em;
     cursor: pointer;
     text-align: center;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    transition: all 130ms ease;
+    transition: all 130ms cubic-bezier(.2,.7,.2,1);
     word-break: break-word;
     display: flex;
     align-items: center;
     justify-content: center;
-    line-height: 1.3;
+    overflow: hidden;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
   }
   .focusable:focus {
     outline: none;
     border-color: #7cf6c8;
     color: #7cf6c8;
-    background: rgba(124, 246, 200, 0.12);
-    box-shadow: 0 0 18px rgba(124, 246, 200, 0.45);
+    background: rgba(124, 246, 200, 0.10);
+    box-shadow: 0 0 22px rgba(124, 246, 200, 0.35);
+    transform: translateY(-1px);
   }
-  .focusable:disabled { opacity: 0.4; cursor: default; }
-
-  .cat {
-    flex: 1;
-    min-height: 56px;
-    font-size: 13px;
-    letter-spacing: 0.08em;
-    color: #8a93a3;
-    border-color: rgba(255, 255, 255, 0.14);
+  .focusable:disabled,
+  .focusable.empty {
+    opacity: 0.18;
+    cursor: default;
+    pointer-events: none;
   }
-  .cat.active {
-    color: #7cf6c8;
-    border-color: rgba(124, 246, 200, 0.6);
-    background: rgba(124, 246, 200, 0.08);
-  }
-  .cat:focus { color: #7cf6c8; border-color: #7cf6c8; }
-
-  .sugg {
-    flex: 1;
-    min-height: 88px;
-    font-size: 15px;
-  }
-
-  .fb {
-    flex: 1;
-    min-height: 60px;
-    font-size: 13px;
-    color: #cfd6e0;
-    border-color: rgba(255, 255, 255, 0.18);
-  }
-
-  .sys {
-    flex: 1;
-    min-height: 56px;
+  .focusable.sys {
     font-size: 13px;
     letter-spacing: 0.22em;
     color: #8a93a3;
-    border-color: rgba(255, 255, 255, 0.14);
+  }
+  .focusable.sys:focus { color: #7cf6c8; }
+  .focusable.cat {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+  }
+  .focusable .ic {
+    font-size: 18px;
+    margin-right: 8px;
+    opacity: 0.7;
   }
 </style>
 </head>
 <body>
 <div class="stage">
 
-  <div class="topbar">
-    <div class="L">
-      <span class="brand">INTERVIEW</span>
-      <span class="pill" id="catLabel">—</span>
-    </div>
-    <div class="R">
-      <span class="pill" id="qNum">Q0</span>
-      <span class="pill" id="timer">00:00</span>
-      <span class="dot" id="dot"></span>
-    </div>
-  </div>
+  <header class="topbar">
+    <div class="brand">INTERVIEW</div>
+    <span class="dot" id="dot"></span>
+  </header>
 
-  <div class="chat" id="chat">
-    <div class="empty">…</div>
-  </div>
+  <main class="content" id="content"></main>
 
-  <div class="actions">
-    <div class="row" id="catRow"></div>
-    <div class="row" id="suggRow1"></div>
-    <div class="row" id="suggRow2"></div>
-    <div class="row" id="fbRow"></div>
-    <div class="row" id="sysRow"></div>
-  </div>
+  <div class="grid" id="grid"></div>
 
 </div>
 
 <script>
   const $ = id => document.getElementById(id);
+  const content = $('content');
+  const grid    = $('grid');
 
   const CATS = [
-    { id: 'self_pr',    label: '自己PR' },
-    { id: 'gakuchika',  label: 'ガクチカ' },
-    { id: 'motivation', label: '志望動機' },
-    { id: 'reverse',    label: '逆質問' },
-  ];
-
-  const FALLBACKS = [
-    'もう一度お願いします。',
-    '少し考えさせてください。',
-    '具体例を挙げますね。',
+    { id: 'self_pr',    label: '自己PR',   ic: '◇' },
+    { id: 'gakuchika',  label: 'ガクチカ', ic: '◈' },
+    { id: 'motivation', label: '志望動機', ic: '◉' },
+    { id: 'reverse',    label: '逆質問',   ic: '◐' },
   ];
 
   let history     = [];
   let suggestions = [];
-  let stateObj    = { category: 'self_pr', questionNum: 0, startedAt: null };
+  let stateObj    = { category: 'self_pr', questionNum: 0 };
   let busy        = false;
+  let screen      = 'loading';   // loading | category | answer | menu
+  let echoText    = '';          // last user-picked reply, shown while waiting
 
-  function fmtTime(ms) {
-    if (!ms) return '00:00';
-    const s = Math.floor(ms / 1000);
-    return String(Math.floor(s / 60)).padStart(2,'0') + ':' + String(s % 60).padStart(2,'0');
+  /* ---------- helpers ---------- */
+  function setStatus(s) { $('dot').className = 'dot ' + s; }
+
+  function lastAssistant() {
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].role === 'assistant') return history[i];
+    }
+    return null;
   }
-  setInterval(() => {
-    $('timer').textContent = stateObj.startedAt
-      ? fmtTime(Date.now() - stateObj.startedAt) : '00:00';
-  }, 1000);
 
-  function renderChat() {
-    const chat = $('chat');
-    chat.innerHTML = '';
-    if (!history.length) {
-      const e = document.createElement('div');
-      e.className = 'empty';
-      e.textContent = 'CHOOSE A CATEGORY TO START';
-      chat.appendChild(e);
+  function msgSizeClass(text) {
+    const n = (text || '').length;
+    if (n > 110) return 'xlong';
+    if (n > 60)  return 'long';
+    return '';
+  }
+
+  /* ---------- main content ---------- */
+  function renderContent() {
+    content.innerHTML = '';
+
+    if (screen === 'loading') {
+      const h = document.createElement('div');
+      h.className = 'subhead';
+      h.textContent = 'CONNECTING…';
+      content.appendChild(h);
       return;
     }
-    for (const m of history.slice(-3)) {
-      const div = document.createElement('div');
-      div.className = 'msg ' + m.role + (m.kind === 'hint' ? ' hint' : '');
-      const who = document.createElement('span');
-      who.className = 'who';
-      who.textContent = m.role === 'user'
-        ? 'YOU'
-        : (m.kind === 'hint' ? 'HINT' : 'INTERVIEWER');
-      const body = document.createElement('div');
-      body.textContent = m.content.replace(/^HINT:\s*/, '');
-      div.appendChild(who);
-      div.appendChild(body);
-      chat.appendChild(div);
+
+    if (screen === 'category') {
+      const lead = document.createElement('div');
+      lead.className = 'label';
+      lead.textContent = 'CHOOSE YOUR FOCUS';
+      const head = document.createElement('div');
+      head.className = 'headline';
+      head.textContent = 'Interview';
+      const sub = document.createElement('div');
+      sub.className = 'subhead';
+      sub.textContent = 'GEMMA · POWERED BY YOUR PHONE';
+      content.appendChild(lead);
+      content.appendChild(head);
+      content.appendChild(sub);
+      return;
+    }
+
+    if (screen === 'menu') {
+      const lead = document.createElement('div');
+      lead.className = 'label';
+      lead.textContent = 'MENU';
+      const head = document.createElement('div');
+      head.className = 'headline';
+      head.textContent = '…';
+      const sub = document.createElement('div');
+      sub.className = 'subhead';
+      const cat = CATS.find(c => c.id === stateObj.category);
+      sub.textContent = (cat ? cat.label.toUpperCase() : '—') + ' · Q' + (stateObj.questionNum || 0);
+      content.appendChild(lead);
+      content.appendChild(head);
+      content.appendChild(sub);
+      return;
+    }
+
+    // screen === 'answer'
+    const m = lastAssistant();
+    if (!m) {
+      const e = document.createElement('div');
+      e.className = 'subhead';
+      e.textContent = 'WAITING FOR INTERVIEWER…';
+      content.appendChild(e);
+      return;
+    }
+
+    const lead = document.createElement('div');
+    lead.className = 'label';
+    lead.textContent = m.kind === 'hint' ? 'HINT' : 'INTERVIEWER';
+    content.appendChild(lead);
+
+    const body = document.createElement('div');
+    const text = m.content.replace(/^HINT:\s*/, '');
+    body.className = 'msg ' + msgSizeClass(text) + (m.kind === 'hint' ? ' hint' : '');
+    body.textContent = text;
+    content.appendChild(body);
+
+    if (busy && echoText) {
+      const e = document.createElement('div');
+      e.className = 'echo';
+      e.textContent = echoText.length > 38 ? echoText.slice(0, 38) + '…' : echoText;
+      content.appendChild(e);
     }
   }
 
-  function renderTop() {
-    const cat = CATS.find(c => c.id === stateObj.category);
-    $('catLabel').textContent = cat ? cat.label : '—';
-    $('qNum').textContent     = 'Q' + (stateObj.questionNum || 0);
-  }
-
-  function suggBtn(text, key) {
+  /* ---------- 2x2 action grid ---------- */
+  function btn(text, opts) {
     const b = document.createElement('button');
-    b.className = 'focusable sugg';
-    b.dataset.key = key;
+    b.className = 'focusable' + (opts.cls ? ' ' + opts.cls : '');
+    b.dataset.key = opts.key;
     b.textContent = text;
-    b.disabled = busy;
-    b.addEventListener('click', () => sendText(text));
+    if (opts.disabled) b.disabled = true;
+    if (opts.onClick)  b.addEventListener('click', opts.onClick);
     return b;
   }
 
-  function renderActions() {
-    const prevFocus = document.activeElement && document.activeElement.dataset
-                      ? document.activeElement.dataset.key : null;
-
-    const catRow = $('catRow');
-    catRow.innerHTML = '';
-    CATS.forEach(c => {
-      const b = document.createElement('button');
-      b.className = 'focusable cat' + (c.id === stateObj.category ? ' active' : '');
-      b.dataset.key = 'cat-' + c.id;
-      b.textContent = c.label;
-      b.disabled = busy;
-      b.addEventListener('click', () => switchCategory(c.id));
-      catRow.appendChild(b);
-    });
-
-    const r1 = $('suggRow1'); r1.innerHTML = '';
-    const r2 = $('suggRow2'); r2.innerHTML = '';
-    suggestions.slice(0, 3).forEach((s, i) => r1.appendChild(suggBtn(s, 'sg-' + i)));
-    suggestions.slice(3, 5).forEach((s, i) => r2.appendChild(suggBtn(s, 'sg-' + (i + 3))));
-
-    const fb = $('fbRow'); fb.innerHTML = '';
-    FALLBACKS.forEach((s, i) => {
-      const b = document.createElement('button');
-      b.className = 'focusable fb';
-      b.dataset.key = 'fb-' + i;
-      b.textContent = s;
-      b.disabled = busy;
-      b.addEventListener('click', () => sendText(s));
-      fb.appendChild(b);
-    });
-
-    const sys = $('sysRow'); sys.innerHTML = '';
-    const hint = document.createElement('button');
-    hint.className = 'focusable sys'; hint.dataset.key = 'hint';
-    hint.textContent = 'HINT'; hint.disabled = busy;
-    hint.addEventListener('click', askHint);
-    sys.appendChild(hint);
-    const reset = document.createElement('button');
-    reset.className = 'focusable sys'; reset.dataset.key = 'reset';
-    reset.textContent = 'RESET'; reset.disabled = busy;
-    reset.addEventListener('click', () => switchCategory(stateObj.category));
-    sys.appendChild(reset);
-
-    let target = null;
-    if (prevFocus) target = document.querySelector(`[data-key="${prevFocus}"]:not(:disabled)`);
-    if (!target) {
-      target = document.querySelector('[data-key="sg-0"]:not(:disabled)')
-            || document.querySelector('[data-key="cat-' + stateObj.category + '"]')
-            || document.querySelector('.focusable:not(:disabled)');
-    }
-    if (target) target.focus();
+  function placeholderBtn(key) {
+    const b = document.createElement('div');
+    b.className = 'focusable empty';
+    b.dataset.key = key;
+    return b;
   }
 
-  function setStatus(state) { $('dot').className = 'dot ' + state; }
+  function renderGrid() {
+    const prevKey = document.activeElement && document.activeElement.dataset
+                    ? document.activeElement.dataset.key : null;
+    grid.innerHTML = '';
 
-  async function sendText(text) {
+    let buttons = [];
+
+    if (screen === 'category') {
+      buttons = CATS.map(c => btn(c.label, {
+        cls: 'cat',
+        key: 'cat-' + c.id,
+        disabled: busy,
+        onClick: () => switchCategory(c.id),
+      }));
+    } else if (screen === 'menu') {
+      buttons = [
+        btn('HINT',     { cls: 'sys', key: 'hint',  disabled: busy, onClick: askHint }),
+        btn('RESET',    { cls: 'sys', key: 'reset', disabled: busy, onClick: () => switchCategory(stateObj.category) }),
+        btn('CATEGORY', { cls: 'sys', key: 'cat',   onClick: () => { screen = 'category'; render(); } }),
+        btn('CANCEL',   { cls: 'sys', key: 'back',  onClick: () => { screen = 'answer'; render(); } }),
+      ];
+    } else {
+      // screen === 'answer' (or 'loading' fallback)
+      const s = suggestions.slice(0, 3);
+      buttons = s.map((txt, i) => btn(txt, {
+        key: 'sg-' + i,
+        disabled: busy,
+        onClick: () => pickReply(txt),
+      }));
+      while (buttons.length < 3) {
+        buttons.push(placeholderBtn('sg-' + buttons.length));
+      }
+      buttons.push(btn('MENU', {
+        cls: 'sys', key: 'menu',
+        onClick: () => { screen = 'menu'; render(); },
+      }));
+    }
+
+    buttons.forEach(b => grid.appendChild(b));
+
+    // restore focus
+    const all = Array.from(grid.querySelectorAll('.focusable:not(:disabled):not(.empty)'));
+    if (!all.length) return;
+    let target = prevKey ? all.find(b => b.dataset.key === prevKey) : null;
+    if (!target) target = all[0];
+    target.focus();
+  }
+
+  function render() {
+    renderContent();
+    renderGrid();
+  }
+
+  /* ---------- API ---------- */
+  async function pickReply(text) {
     if (busy) return;
-    busy = true; setStatus('thinking');
+    busy = true;
+    echoText = text;
     suggestions = [];
-    renderActions();
+    setStatus('thinking');
+    render();
     try {
       await fetch('/api/say', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
-    } catch (e) { setStatus('error'); busy = false; }
+    } catch { setStatus('error'); busy = false; render(); }
   }
+
   async function askHint() {
     if (busy) return;
-    busy = true; setStatus('thinking'); renderActions();
+    busy = true; setStatus('thinking'); screen = 'answer'; render();
     try { await fetch('/api/hint', { method: 'POST' }); }
-    catch { setStatus('error'); busy = false; }
+    catch { setStatus('error'); busy = false; render(); }
   }
+
   async function switchCategory(cat) {
     if (busy) return;
-    busy = true; setStatus('thinking');
+    busy = true; setStatus('thinking'); screen = 'answer'; echoText = '';
+    render();
     try {
       await fetch('/api/category', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: cat }),
       });
-    } catch { setStatus('error'); busy = false; }
+    } catch { setStatus('error'); busy = false; render(); }
   }
 
+  /* ---------- SSE ---------- */
   function connect() {
     const es = new EventSource('/api/events');
     es.onopen  = () => setStatus('live');
@@ -395,45 +416,84 @@
     };
     es.onmessage = ev => {
       let m; try { m = JSON.parse(ev.data); } catch { return; }
+
       if (m.type === 'snapshot') {
         history     = m.history     || [];
         suggestions = m.suggestions || [];
         if (m.state) stateObj = m.state;
         busy = false;
+        echoText = '';
         setStatus('live');
-        renderTop(); renderChat(); renderActions();
+        if (!history.length) screen = 'category';
+        else if (screen === 'loading') screen = 'answer';
+        render();
       } else if (m.type === 'append') {
         history.push(m.message);
         if (m.state) stateObj = m.state;
-        renderTop(); renderChat();
-        if (m.message.role === 'assistant') { busy = false; setStatus('live'); }
+        if (m.message.role === 'assistant') {
+          busy = false;
+          echoText = '';
+          setStatus('live');
+          if (screen !== 'menu' && screen !== 'category') screen = 'answer';
+        }
+        render();
       } else if (m.type === 'suggestions') {
         suggestions = m.suggestions || [];
-        busy = false; setStatus('live');
-        renderActions();
+        busy = false;
+        setStatus('live');
+        renderGrid();
       }
     };
   }
   connect();
 
-  function moveFocus(dir) {
-    const list = Array.from(document.querySelectorAll('.focusable:not(:disabled)'));
-    if (!list.length) return;
-    const cur = list.indexOf(document.activeElement);
-    let next;
-    if (cur === -1) next = 0;
-    else next = (cur + (dir > 0 ? 1 : -1) + list.length) % list.length;
-    list[next].focus();
+  /* ---------- D-pad (2x2 grid aware) ---------- */
+  function navigate(dir) {
+    const all = Array.from(grid.querySelectorAll('.focusable:not(:disabled):not(.empty)'));
+    if (!all.length) return;
+    const cur = all.indexOf(document.activeElement);
+    if (cur === -1) { all[0].focus(); return; }
+
+    // Map grid index to row/col assuming 2 cols
+    const allCells = Array.from(grid.querySelectorAll('.focusable'));
+    const idxInGrid = allCells.indexOf(document.activeElement);
+    const row = Math.floor(idxInGrid / 2);
+    const col = idxInGrid % 2;
+
+    let targetIdx;
+    if (dir === 'left' || dir === 'right') {
+      targetIdx = row * 2 + (col === 0 ? 1 : 0);
+    } else { // up/down: swap row (in 2-row grid up==down)
+      const otherRow = (row + 1) % Math.ceil(allCells.length / 2);
+      targetIdx = otherRow * 2 + col;
+    }
+    const candidate = allCells[targetIdx];
+    if (candidate && !candidate.disabled && !candidate.classList.contains('empty')) {
+      candidate.focus();
+      return;
+    }
+    // Fallback: linear next/prev among interactive
+    const delta = (dir === 'right' || dir === 'down') ? 1 : -1;
+    const next = all[(cur + delta + all.length) % all.length];
+    next.focus();
   }
+
   document.addEventListener('keydown', e => {
     switch (e.key) {
-      case 'ArrowDown':
-      case 'ArrowRight': moveFocus(+1); break;
-      case 'ArrowUp':
-      case 'ArrowLeft':  moveFocus(-1); break;
+      case 'ArrowUp':    navigate('up');    break;
+      case 'ArrowDown':  navigate('down');  break;
+      case 'ArrowLeft':  navigate('left');  break;
+      case 'ArrowRight': navigate('right'); break;
       case 'Enter':
-        if (document.activeElement && document.activeElement.classList.contains('focusable')) {
+        if (document.activeElement && document.activeElement.classList.contains('focusable')
+            && !document.activeElement.disabled
+            && !document.activeElement.classList.contains('empty')) {
           document.activeElement.click();
+        }
+        break;
+      case 'Escape':
+        if (screen === 'menu' || screen === 'category') {
+          if (history.length) { screen = 'answer'; render(); }
         }
         break;
       default: return;
@@ -441,7 +501,8 @@
     e.preventDefault();
   });
 
-  renderTop(); renderChat(); renderActions();
+  /* initial */
+  render();
 </script>
 </body>
 </html>
