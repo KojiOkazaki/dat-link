@@ -29,17 +29,22 @@ serves them as-is. No build step.
 (OpenAI-compatible). The phone must therefore expose llama.cpp at a public
 HTTPS URL. Cloudflare Tunnel is the simplest path.
 
-In Termux on the phone:
+On a Mac or in Termux on the phone:
 
 ```sh
-pkg install cloudflared
-./llama-server -m models/gemma-...gguf -c 4096 --port 8080
+brew install llama.cpp cloudflared
+llama-server -m ~/models/gemma-4-e2b-it-Q8_0.gguf -c 8192 --port 8080
 # In another shell
 cloudflared tunnel --url http://localhost:8080
 ```
 
 `cloudflared` prints something like
 `https://random-words.trycloudflare.com`. Use that as `LLAMA_URL`.
+
+The server is tuned for Gemma 4 — it uses the native `system` role and
+the recommended sampling (`temperature=1.0`, `top_p=0.95`, `top_k=64`).
+Older Gemma 2 / Gemma 3 models will still respond, but Gemma 4 E2B/E4B
+is the intended target.
 
 ### 2. Deploy to Heroku
 
