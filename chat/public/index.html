@@ -27,6 +27,7 @@
     grid-template-rows: 38px 1fr auto;
     padding: 18px 24px 22px;
     gap: 14px;
+    position: relative;
   }
 
   /* ---------- top bar ---------- */
@@ -63,7 +64,33 @@
     justify-content: center;
     text-align: center;
     gap: 14px;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    position: relative;
+  }
+  .content::-webkit-scrollbar { display: none; }
+
+  .scroll-hint {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #7cf6c8;
+    font-size: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+    text-shadow: 0 0 8px #7cf6c8;
+    z-index: 5;
+  }
+  .scroll-hint.up   { top: 62px; }
+  .scroll-hint.down { /* placed dynamically above the grid */
+                      bottom: 240px; }
+  .scroll-hint.on   { opacity: 0.65; animation: float 1.6s ease-in-out infinite; }
+  @keyframes float {
+    50% { transform: translate(-50%, 3px); }
   }
   .label {
     font-size: 11px;
@@ -82,8 +109,10 @@
     text-wrap: balance;
     animation: rise 0.32s cubic-bezier(.2,.7,.2,1);
   }
-  .msg.long  { font-size: 26px; line-height: 1.4; }
-  .msg.xlong { font-size: 22px; line-height: 1.45; }
+  .msg.long    { font-size: 26px; line-height: 1.4; }
+  .msg.xlong   { font-size: 22px; line-height: 1.45; }
+  .msg.xxlong  { font-size: 18px; line-height: 1.5; }
+  .msg.xxxlong { font-size: 16px; line-height: 1.55; text-align: left; }
   .msg.hint  { color: #ffe8a8; font-weight: 300; }
   .msg.hint .lead { color: #ffce5b; letter-spacing: 0.2em; font-size: 11px;
                     display: block; margin-bottom: 6px; }
@@ -186,6 +215,8 @@
   </header>
 
   <main class="content" id="content"></main>
+  <div class="scroll-hint up"   id="hintUp">▲</div>
+  <div class="scroll-hint down" id="hintDown">▼</div>
 
   <div class="grid" id="grid"></div>
 
@@ -222,9 +253,20 @@
 
   function msgSizeClass(text) {
     const n = (text || '').length;
+    if (n > 260) return 'xxxlong';
+    if (n > 180) return 'xxlong';
     if (n > 110) return 'xlong';
     if (n > 60)  return 'long';
     return '';
+  }
+
+  function updateScrollHints() {
+    const c = $('content');
+    const hasOverflow = c.scrollHeight > c.clientHeight + 1;
+    const atTop      = c.scrollTop <= 1;
+    const atBottom   = c.scrollTop + c.clientHeight >= c.scrollHeight - 1;
+    $('hintUp').classList.toggle('on',   hasOverflow && !atTop);
+    $('hintDown').classList.toggle('on', hasOverflow && !atBottom);
   }
 
   /* ---------- main content ---------- */
@@ -388,7 +430,14 @@
   function render() {
     renderContent();
     renderGrid();
+    requestAnimationFrame(() => {
+      $('content').scrollTop = 0;
+      updateScrollHints();
+    });
   }
+
+  $('content').addEventListener('scroll', updateScrollHints);
+  window.addEventListener('resize', updateScrollHints);
 
   /* ---------- API ---------- */
   async function pickReply(text) {
@@ -478,31 +527,52 @@
   connect();
 
   /* ---------- D-pad (2x2 grid aware) ---------- */
+  // Try to scroll the main content area; returns true if it actually scrolled.
+  function tryScrollContent(dir) {
+    const c = $('content');
+    if (c.scrollHeight <= c.clientHeight + 1) return false;
+    const step = Math.round(c.clientHeight * 0.55);
+    if (dir === 'up' && c.scrollTop > 1) {
+      c.scrollTop = Math.max(0, c.scrollTop - step);
+      return true;
+    }
+    if (dir === 'down' && c.scrollTop + c.clientHeight < c.scrollHeight - 1) {
+      c.scrollTop = Math.min(c.scrollHeight, c.scrollTop + step);
+      return true;
+    }
+    return false;
+  }
+
   function navigate(dir) {
     const all = Array.from(grid.querySelectorAll('.focusable:not(:disabled):not(.empty)'));
     if (!all.length) return;
     const cur = all.indexOf(document.activeElement);
     if (cur === -1) { all[0].focus(); return; }
 
-    // Map grid index to row/col assuming 2 cols
     const allCells = Array.from(grid.querySelectorAll('.focusable'));
     const idxInGrid = allCells.indexOf(document.activeElement);
-    const row = Math.floor(idxInGrid / 2);
-    const col = idxInGrid % 2;
+    const cols = 2;
+    const rows = Math.ceil(allCells.length / cols);
+    const row = Math.floor(idxInGrid / cols);
+    const col = idxInGrid % cols;
+
+    // From top row + ArrowUp, or bottom row + ArrowDown, give scrolling
+    // the long-form content priority before wrapping focus.
+    if (dir === 'up'   && row === 0        && tryScrollContent('up'))   return;
+    if (dir === 'down' && row === rows - 1 && tryScrollContent('down')) return;
 
     let targetIdx;
     if (dir === 'left' || dir === 'right') {
-      targetIdx = row * 2 + (col === 0 ? 1 : 0);
-    } else { // up/down: swap row (in 2-row grid up==down)
-      const otherRow = (row + 1) % Math.ceil(allCells.length / 2);
-      targetIdx = otherRow * 2 + col;
+      targetIdx = row * cols + (col === 0 ? 1 : 0);
+    } else {
+      const otherRow = (row + (dir === 'down' ? 1 : -1) + rows) % rows;
+      targetIdx = otherRow * cols + col;
     }
     const candidate = allCells[targetIdx];
     if (candidate && !candidate.disabled && !candidate.classList.contains('empty')) {
       candidate.focus();
       return;
     }
-    // Fallback: linear next/prev among interactive
     const delta = (dir === 'right' || dir === 'down') ? 1 : -1;
     const next = all[(cur + delta + all.length) % all.length];
     next.focus();
