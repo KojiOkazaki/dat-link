@@ -199,20 +199,28 @@ function buildMessages(systemContent, slice) {
 
 async function generateSuggestions() {
   try {
-    const recent = history.slice(-6)
-      .filter(m => m.kind !== 'hint' && m.kind !== 'end')
+    const conv = history.filter(m => m.kind !== 'hint' && m.kind !== 'end');
+    if (!conv.length) return [];
+
+    // Pull out the most recent interviewer turn — that's what the candidate
+    // is actually answering. Suggestions must hang off this directly.
+    const lastQ = [...conv].reverse().find(m => m.role === 'assistant');
+    if (!lastQ) return [];
+
+    const flow = conv.slice(-6)
       .map(m => (m.role === 'assistant' ? '面接官' : '候補者') + ': ' + m.content)
       .join('\n');
 
     const userPrompt =
       'テーマ: ' + CATEGORIES[category].focus +
-      (recent ? '\n\n直前のやり取り:\n' + recent : '') +
-      '\n\n候補者の高品質な返答候補を必ず2つ、JSON配列のみで出力してください。形式は厳密に ["回答A", "回答B"]。';
+      '\n\nこれまでの会話の流れ:\n' + flow +
+      '\n\n面接官が今投げかけた質問:\n「' + lastQ.content + '」\n\n' +
+      'この質問に対する候補者の返答候補を、会話の流れと矛盾せず、質問の意図に直接答える形で必ず2つ作成してください。形式は厳密に ["回答A", "回答B"] のJSON配列のみ。';
 
     const txt = await callLlama([
       { role: 'system', content: suggSystemPrompt(category) },
       { role: 'user',   content: userPrompt },
-    ], 300, 0.5);
+    ], 350, 0.4);
 
     const m = txt.match(/\[[\s\S]*?\]/);
     if (!m) return [];

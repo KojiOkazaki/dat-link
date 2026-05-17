@@ -68,7 +68,7 @@
     overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
     position: relative;
   }
   .content::-webkit-scrollbar { display: none; }
@@ -152,14 +152,17 @@
     grid-auto-rows: 88px;
     gap: 10px;
   }
+  .grid[data-cols="3"] { grid-template-columns: 1fr 1fr 1fr; }
+  .grid[data-cols="3"] .focusable.cat { font-size: 17px; padding: 8px 6px; }
+
   .focusable {
     background: rgba(255, 255, 255, 0.025);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 14px;
-    padding: 10px 18px;
+    border-radius: 12px;
+    padding: 8px 14px;
     font-family: inherit;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 300;
     line-height: 1.35;
     letter-spacing: 0.01em;
@@ -189,21 +192,15 @@
     pointer-events: none;
   }
   .focusable.sys {
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 0.22em;
     color: #8a93a3;
   }
   .focusable.sys:focus { color: #7cf6c8; }
   .focusable.cat {
-    font-size: 22px;
-    font-weight: 400;
-    letter-spacing: 0.06em;
-  }
-  .focusable.scroll {
     font-size: 18px;
-    letter-spacing: 0.18em;
-    color: #7cf6c8;
-    border-color: rgba(124, 246, 200, 0.35);
+    font-weight: 400;
+    letter-spacing: 0.04em;
   }
   .focusable.full {
     grid-column: 1 / -1;
@@ -275,7 +272,7 @@
 
   function stepScroll(dir) {
     const c = $('content');
-    const step = 60;
+    const step = Math.round(c.clientHeight * 0.35); // ~35% of viewport per swipe
     if (dir === 'down') c.scrollTop = Math.min(c.scrollHeight, c.scrollTop + step);
     else                c.scrollTop = Math.max(0, c.scrollTop - step);
   }
@@ -399,38 +396,24 @@
     return b;
   }
 
-  function scrollBtn() {
-    return btn('▼ もっと見る', {
-      cls: 'scroll full',
-      key: 'scroll-down',
-      onClick: () => {
-        stepScroll('down');
-        // give the smooth scroll a frame, then refresh button state
-        requestAnimationFrame(() => {
-          renderGrid();
-          updateScrollHints();
-        });
-      },
-    });
-  }
-
   function renderGrid() {
     const prevKey = document.activeElement && document.activeElement.dataset
                     ? document.activeElement.dataset.key : null;
     grid.innerHTML = '';
 
     let buttons = [];
+    let cols    = 2;
 
     if (screen === 'category' || screen === 'ended') {
+      // 3 categories on a single horizontal row so the feedback or
+      // category headline above has room to breathe.
+      cols = 3;
       buttons = CATS.map(c => btn(c.label, {
-        cls: 'cat full',
+        cls: 'cat',
         key: 'cat-' + c.id,
         disabled: busy,
         onClick: () => switchCategory(c.id),
       }));
-      if (screen === 'ended' && canScrollDown()) {
-        buttons.unshift(scrollBtn());
-      }
     } else if (screen === 'menu') {
       buttons = [
         btn('HINT',     { cls: 'sys', key: 'hint',  disabled: busy, onClick: askHint }),
@@ -439,7 +422,6 @@
         btn('CANCEL',   { cls: 'sys', key: 'back',  onClick: () => { screen = 'answer'; render(); } }),
       ];
     } else {
-      // screen === 'answer' (or 'loading' fallback)
       const s = suggestions.slice(0, 2);
       buttons = s.map((txt, i) => btn(txt, {
         key: 'sg-' + i,
@@ -454,14 +436,11 @@
         key: 'menu',
         onClick: () => { screen = 'menu'; render(); },
       }));
-      if (canScrollDown()) {
-        buttons.push(scrollBtn());
-      }
     }
 
+    grid.dataset.cols = String(cols);
     buttons.forEach(b => grid.appendChild(b));
 
-    // restore focus
     const all = Array.from(grid.querySelectorAll('.focusable:not(:disabled):not(.empty)'));
     if (!all.length) return;
     let target = prevKey ? all.find(b => b.dataset.key === prevKey) : null;
@@ -475,9 +454,6 @@
     requestAnimationFrame(() => {
       if (!opts || opts.resetScroll !== false) $('content').scrollTop = 0;
       updateScrollHints();
-      // The scroll button only renders when overflow exists, so on first
-      // paint we may need to add it now that we know the real layout.
-      renderGrid();
     });
   }
 
@@ -630,12 +606,31 @@
     }
   }
 
+  // Up/Down swipes from the Neural Band scroll the long content first
+  // and only navigate focus once the content is fully read. Left/Right
+  // always moves focus.
+  function handleVertical(dir) {
+    const c = $('content');
+    const overflow = c.scrollHeight > c.clientHeight + 1;
+    if (overflow) {
+      if (dir === 'down' && c.scrollTop + c.clientHeight < c.scrollHeight - 2) {
+        stepScroll('down');
+        return;
+      }
+      if (dir === 'up' && c.scrollTop > 2) {
+        stepScroll('up');
+        return;
+      }
+    }
+    navigate(dir);
+  }
+
   document.addEventListener('keydown', e => {
     switch (e.key) {
-      case 'ArrowUp':    navigate('up');    break;
-      case 'ArrowDown':  navigate('down');  break;
-      case 'ArrowLeft':  navigate('left');  break;
-      case 'ArrowRight': navigate('right'); break;
+      case 'ArrowUp':    handleVertical('up');   break;
+      case 'ArrowDown':  handleVertical('down'); break;
+      case 'ArrowLeft':  navigate('left');       break;
+      case 'ArrowRight': navigate('right');      break;
       case 'Enter':
         if (document.activeElement && document.activeElement.classList.contains('focusable')
             && !document.activeElement.disabled
