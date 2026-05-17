@@ -225,7 +225,7 @@
 <div class="stage">
 
   <header class="topbar">
-    <div class="brand">INTERVIEW</div>
+    <div class="brand">面接</div>
     <span class="dot" id="dot"></span>
   </header>
 
@@ -254,6 +254,44 @@
   let busy        = false;
   let screen      = 'loading';   // loading | category | answer | menu
   let echoText    = '';          // last user-picked reply, shown while waiting
+
+  /* ---------- TTS (Web Speech Synthesis, ja-JP) ---------- */
+  // Speaks interviewer messages, hints, and feedback in Japanese through
+  // the glasses' bone-conduction speakers. Cancels in-flight speech when
+  // the user picks a reply so the next AI turn isn't talked over.
+  let ttsVoice = null;
+  function pickJapaneseVoice() {
+    if (!('speechSynthesis' in window)) return;
+    const voices = speechSynthesis.getVoices();
+    if (!voices.length) return;
+    ttsVoice = voices.find(v => v.lang === 'ja-JP')
+            || voices.find(v => v.lang && v.lang.startsWith('ja'))
+            || null;
+  }
+  if ('speechSynthesis' in window) {
+    pickJapaneseVoice();
+    speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', pickJapaneseVoice);
+  }
+
+  function speakJa(text) {
+    if (!('speechSynthesis' in window)) return;
+    if (!text) return;
+    try { speechSynthesis.cancel(); } catch (_) {}
+    const clean = text.replace(/^HINT:\s*/, '').replace(/[【】]/g, '、');
+    const u = new SpeechSynthesisUtterance(clean);
+    u.lang  = 'ja-JP';
+    u.rate  = 1.0;
+    u.pitch = 1.0;
+    u.volume = 1.0;
+    if (ttsVoice) u.voice = ttsVoice;
+    speechSynthesis.speak(u);
+  }
+
+  function stopSpeaking() {
+    if ('speechSynthesis' in window) {
+      try { speechSynthesis.cancel(); } catch (_) {}
+    }
+  }
 
   /* ---------- helpers ---------- */
   function setStatus(s) { $('dot').className = 'dot ' + s; }
@@ -307,7 +345,7 @@
     if (screen === 'loading') {
       const h = document.createElement('div');
       h.className = 'subhead';
-      h.textContent = 'CONNECTING…';
+      h.textContent = '接続中…';
       content.appendChild(h);
       return;
     }
@@ -315,13 +353,13 @@
     if (screen === 'category') {
       const lead = document.createElement('div');
       lead.className = 'label';
-      lead.textContent = 'CHOOSE YOUR FOCUS';
+      lead.textContent = 'テーマを選んでください';
       const head = document.createElement('div');
       head.className = 'headline';
-      head.textContent = 'Interview';
+      head.textContent = '模擬面接';
       const sub = document.createElement('div');
       sub.className = 'subhead';
-      sub.textContent = 'GEMMA · POWERED BY YOUR PHONE';
+      sub.textContent = 'Gemma · スマホ連携';
       content.appendChild(lead);
       content.appendChild(head);
       content.appendChild(sub);
@@ -331,14 +369,14 @@
     if (screen === 'menu') {
       const lead = document.createElement('div');
       lead.className = 'label';
-      lead.textContent = 'MENU';
+      lead.textContent = 'メニュー';
       const head = document.createElement('div');
       head.className = 'headline';
       head.textContent = '…';
       const sub = document.createElement('div');
       sub.className = 'subhead';
       const cat = CATS.find(c => c.id === stateObj.category);
-      sub.textContent = (cat ? cat.label.toUpperCase() : '—') + ' · Q' + (stateObj.questionNum || 0);
+      sub.textContent = (cat ? cat.label : '—') + ' · 第' + (stateObj.questionNum || 0) + '問';
       content.appendChild(lead);
       content.appendChild(head);
       content.appendChild(sub);
@@ -349,15 +387,15 @@
       const endMsg = [...history].reverse().find(m => m.kind === 'end');
       const lead = document.createElement('div');
       lead.className = 'label end';
-      lead.textContent = 'FEEDBACK';
+      lead.textContent = 'フィードバック';
       content.appendChild(lead);
       const body = document.createElement('div');
       body.className = 'msg end ' + msgSizeClass(endMsg ? endMsg.content : '');
-      body.textContent = endMsg ? endMsg.content : '(no feedback)';
+      body.textContent = endMsg ? endMsg.content : '(フィードバックがありません)';
       content.appendChild(body);
       const sub = document.createElement('div');
       sub.className = 'subhead';
-      sub.textContent = '別カテゴリでもう一度';
+      sub.textContent = '別のテーマでもう一度';
       content.appendChild(sub);
       return;
     }
@@ -367,7 +405,7 @@
     if (!m) {
       const e = document.createElement('div');
       e.className = 'subhead';
-      e.textContent = 'WAITING FOR INTERVIEWER…';
+      e.textContent = '面接官の応答を待っています…';
       content.appendChild(e);
       return;
     }
@@ -375,7 +413,7 @@
     const kindClass = m.kind === 'hint' ? ' hint' : (m.kind === 'end' ? ' end' : '');
     const lead = document.createElement('div');
     lead.className = 'label' + (m.kind === 'end' ? ' end' : '');
-    lead.textContent = m.kind === 'hint' ? 'HINT' : (m.kind === 'end' ? 'FEEDBACK' : 'INTERVIEWER');
+    lead.textContent = m.kind === 'hint' ? 'ヒント' : (m.kind === 'end' ? 'フィードバック' : '面接官');
     content.appendChild(lead);
 
     const body = document.createElement('div');
@@ -430,10 +468,10 @@
       }));
     } else if (screen === 'menu') {
       buttons = [
-        btn('HINT',     { cls: 'sys', key: 'hint',  disabled: busy, onClick: askHint }),
-        btn('END',      { cls: 'sys', key: 'end',   disabled: busy, onClick: endInterview }),
-        btn('CATEGORY', { cls: 'sys', key: 'cat',   onClick: () => { screen = 'category'; render(); } }),
-        btn('CANCEL',   { cls: 'sys', key: 'back',  onClick: () => { screen = 'answer'; render(); } }),
+        btn('ヒント',     { cls: 'sys', key: 'hint',  disabled: busy, onClick: askHint }),
+        btn('終了',       { cls: 'sys', key: 'end',   disabled: busy, onClick: endInterview }),
+        btn('テーマ変更', { cls: 'sys', key: 'cat',   onClick: () => { screen = 'category'; render(); } }),
+        btn('戻る',       { cls: 'sys', key: 'back',  onClick: () => { screen = 'answer'; render(); } }),
       ];
     } else {
       const s = suggestions.slice(0, 2);
@@ -446,7 +484,7 @@
       while (buttons.length < 2) {
         buttons.push(placeholderBtn('sg-' + buttons.length));
       }
-      buttons.push(btn('MENU', {
+      buttons.push(btn('メニュー', {
         cls: 'sys full',
         key: 'menu',
         onClick: () => { screen = 'menu'; render(); },
@@ -482,6 +520,7 @@
   async function pickReply(text) {
     if (busy) return;
     busy = true;
+    stopSpeaking();
     echoText = text;
     suggestions = [];
     setStatus('thinking');
@@ -511,6 +550,7 @@
 
   async function switchCategory(cat) {
     if (busy) return;
+    stopSpeaking();
     busy = true; setStatus('thinking'); screen = 'answer'; echoText = '';
     render();
     try {
@@ -553,6 +593,8 @@
           setStatus('live');
           if (m.message.kind === 'end' || stateObj.ended) screen = 'ended';
           else if (screen !== 'menu' && screen !== 'category') screen = 'answer';
+          // Speak the interviewer's turn aloud through the glasses speakers.
+          speakJa(m.message.content);
         }
         render();
       } else if (m.type === 'suggestions') {
