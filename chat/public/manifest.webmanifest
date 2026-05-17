@@ -1,0 +1,10 @@
+{
+  "name": "Interview",
+  "short_name": "Interview",
+  "description": "Mock-interview chat for Meta Ray-Ban Display, backed by a phone-side local LLM.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}

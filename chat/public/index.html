@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+<title>Interview</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 600px;
+    height: 600px;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue",
+                 "Hiragino Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage {
+    width: 600px;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 20px 18px;
+    gap: 10px;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .title {
+    font-size: 15px;
+    letter-spacing: 0.28em;
+    color: #7cf6c8;
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: #8a93a3;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #555;
+    transition: all 0.3s ease;
+  }
+  .dot.live      { background: #7cf6c8; box-shadow: 0 0 8px #7cf6c8; }
+  .dot.thinking  { background: #ffce5b; box-shadow: 0 0 8px #ffce5b;
+                   animation: pulse 1s infinite; }
+  .dot.error     { background: #ff5b6e; box-shadow: 0 0 8px #ff5b6e; }
+  @keyframes pulse { 50% { opacity: 0.4; } }
+
+  /* ---------- chat ---------- */
+  .chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: hidden;
+    position: relative;
+    padding: 4px 2px;
+  }
+  .chat-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: flex-end;
+    min-height: 100%;
+  }
+  .msg {
+    max-width: 92%;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 19px;
+    line-height: 1.45;
+    font-weight: 300;
+    border: 1px solid rgba(124, 246, 200, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    word-break: break-word;
+    animation: rise 0.25s ease-out;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .msg.user {
+    align-self: flex-end;
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+  }
+  .msg.assistant {
+    align-self: flex-start;
+    color: #e8fff4;
+  }
+  .msg.hint {
+    border-color: rgba(255, 206, 91, 0.4);
+    background: rgba(255, 206, 91, 0.06);
+    color: #ffe8a8;
+    font-size: 17px;
+  }
+  .msg .who {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: #7cf6c8;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .msg.user .who { color: #cfd6e0; text-align: right; }
+  .msg.hint .who { color: #ffce5b; }
+
+  .empty {
+    align-self: center;
+    margin: auto;
+    font-size: 16px;
+    color: #555;
+    letter-spacing: 0.2em;
+  }
+
+  /* ---------- actions ---------- */
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+  }
+  .focusable {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+    border: 1px solid rgba(124, 246, 200, 0.25);
+    border-radius: 12px;
+    min-height: 88px;
+    padding: 8px 14px;
+    font-size: 17px;
+    font-family: inherit;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    line-height: 1.35;
+    cursor: pointer;
+    text-align: center;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: all 150ms ease;
+    word-break: break-word;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .focusable:focus {
+    outline: none;
+    border-color: #7cf6c8;
+    color: #7cf6c8;
+    background: rgba(124, 246, 200, 0.1);
+    box-shadow: 0 0 20px rgba(124, 246, 200, 0.4);
+  }
+  .focusable.sys {
+    font-size: 14px;
+    letter-spacing: 0.2em;
+    color: #8a93a3;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  .focusable.sys:focus { color: #7cf6c8; border-color: #7cf6c8; }
+  .focusable:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="topbar">
+    <div class="title">INTERVIEW</div>
+    <div class="status">
+      <span class="dot" id="dot"></span>
+      <span id="statusTxt">CONNECTING</span>
+    </div>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="chat-inner" id="chatInner">
+      <div class="empty">…</div>
+    </div>
+  </div>
+
+  <div class="actions" id="actions"></div>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const chatInner = $('chatInner');
+  const actions   = $('actions');
+
+  let history     = [];
+  let suggestions = [];
+  let busy        = false;
+
+  /* ---------- rendering ---------- */
+  function renderChat() {
+    chatInner.innerHTML = '';
+    if (!history.length) {
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = '…';
+      chatInner.appendChild(e);
+      return;
+    }
+    // Only show last few messages to fit viewport
+    const recent = history.slice(-4);
+    for (const m of recent) {
+      const div = document.createElement('div');
+      div.className = 'msg ' + m.role + (m.kind === 'hint' ? ' hint' : '');
+      const who = document.createElement('span');
+      who.className = 'who';
+      who.textContent = m.role === 'user'
+        ? 'YOU'
+        : (m.kind === 'hint' ? 'HINT' : 'INTERVIEWER');
+      const body = document.createElement('div');
+      body.textContent = m.content.replace(/^HINT:\s*/, '');
+      div.appendChild(who);
+      div.appendChild(body);
+      chatInner.appendChild(div);
+    }
+  }
+
+  function renderActions() {
+    actions.innerHTML = '';
+    const focusedKey = document.activeElement && document.activeElement.dataset
+                       ? document.activeElement.dataset.key : null;
+
+    // Suggestion row (up to 3 in a flex row, vertical when text is long)
+    if (suggestions.length) {
+      const row = document.createElement('div');
+      row.className = 'row';
+      suggestions.forEach((s, i) => {
+        const b = document.createElement('button');
+        b.className = 'focusable';
+        b.dataset.key = 'sugg-' + i;
+        b.textContent = s;
+        b.disabled = busy;
+        b.addEventListener('click', () => sendText(s));
+        row.appendChild(b);
+      });
+      actions.appendChild(row);
+    }
+
+    // System row: HINT / RESET
+    const sys = document.createElement('div');
+    sys.className = 'row';
+    const hint = document.createElement('button');
+    hint.className = 'focusable sys';
+    hint.dataset.key = 'hint';
+    hint.textContent = 'HINT';
+    hint.disabled = busy;
+    hint.addEventListener('click', askHint);
+    sys.appendChild(hint);
+
+    const reset = document.createElement('button');
+    reset.className = 'focusable sys';
+    reset.dataset.key = 'reset';
+    reset.textContent = 'RESET';
+    reset.disabled = busy;
+    reset.addEventListener('click', resetChat);
+    sys.appendChild(reset);
+    actions.appendChild(sys);
+
+    // Restore focus
+    const all = actions.querySelectorAll('.focusable:not(:disabled)');
+    if (!all.length) return;
+    let next = all[0];
+    if (focusedKey) {
+      const match = actions.querySelector(`[data-key="${focusedKey}"]`);
+      if (match && !match.disabled) next = match;
+    }
+    next.focus();
+  }
+
+  function setStatus(state, text) {
+    const dot = $('dot');
+    dot.className = 'dot ' + state;
+    $('statusTxt').textContent = text;
+  }
+
+  /* ---------- API ---------- */
+  async function sendText(text) {
+    if (busy) return;
+    busy = true;
+    setStatus('thinking', 'THINKING');
+    renderActions();
+    try {
+      await fetch('/api/say', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+    } catch (e) {
+      setStatus('error', 'OFFLINE');
+    }
+  }
+  async function askHint() {
+    if (busy) return;
+    busy = true;
+    setStatus('thinking', 'HINT');
+    renderActions();
+    try { await fetch('/api/hint', { method: 'POST' }); }
+    catch (e) { setStatus('error', 'OFFLINE'); }
+  }
+  async function resetChat() {
+    if (busy) return;
+    busy = true;
+    try { await fetch('/api/start', { method: 'POST' }); }
+    catch (e) { setStatus('error', 'OFFLINE'); }
+  }
+
+  /* ---------- SSE ---------- */
+  function connect() {
+    const es = new EventSource('/api/events');
+    es.onopen = () => setStatus('live', 'LIVE');
+    es.onerror = () => {
+      setStatus('error', 'RECONNECTING');
+      setTimeout(() => { try { es.close(); } catch{} connect(); }, 2000);
+    };
+    es.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch { return; }
+      if (m.type === 'snapshot') {
+        history     = m.history     || [];
+        suggestions = m.suggestions || [];
+        busy = false;
+        setStatus('live', 'LIVE');
+        renderChat();
+        renderActions();
+        // Auto-start when server is fresh
+        if (!history.length) fetch('/api/start', { method: 'POST' }).catch(()=>{});
+      } else if (m.type === 'append') {
+        history.push(m.message);
+        renderChat();
+        if (m.message.role === 'assistant') {
+          busy = false;
+          setStatus('live', 'LIVE');
+        }
+      } else if (m.type === 'suggestions') {
+        suggestions = m.suggestions || [];
+        busy = false;
+        setStatus('live', 'LIVE');
+        renderActions();
+      }
+    };
+  }
+  connect();
+
+  /* ---------- D-pad nav ---------- */
+  function moveFocus(dir) {
+    const list = Array.from(actions.querySelectorAll('.focusable:not(:disabled)'));
+    if (!list.length) return;
+    const cur = list.indexOf(document.activeElement);
+    let next;
+    if (cur === -1) next = 0;
+    else next = (cur + (dir > 0 ? 1 : -1) + list.length) % list.length;
+    list[next].focus();
+  }
+
+  document.addEventListener('keydown', e => {
+    switch (e.key) {
+      case 'ArrowDown':
+      case 'ArrowRight': moveFocus(+1); break;
+      case 'ArrowUp':
+      case 'ArrowLeft':  moveFocus(-1); break;
+      case 'Enter':
+        if (document.activeElement && document.activeElement.classList.contains('focusable')) {
+          document.activeElement.click();
+        }
+        break;
+      default: return;
+    }
+    e.preventDefault();
+  });
+</script>
+</body>
+</html>
