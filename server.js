@@ -226,7 +226,7 @@ async function generateSuggestions() {
     if (!m) return [];
     let arr;
     try { arr = JSON.parse(m[0]); } catch { return []; }
-    return Array.isArray(arr) ? arr.slice(0, 2).map(s => String(s).slice(0, 80)) : [];
+    return Array.isArray(arr) ? arr.slice(0, 2).map(s => String(s).slice(0, 60)) : [];
   } catch (_) {
     return [];
   }

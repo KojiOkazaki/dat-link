@@ -24,9 +24,9 @@
     width: 600px;
     height: 600px;
     display: grid;
-    grid-template-rows: 38px 1fr auto;
-    padding: 18px 24px 22px;
-    gap: 14px;
+    grid-template-rows: 30px 1fr auto;
+    padding: 12px 20px 16px;
+    gap: 10px;
     position: relative;
   }
 
@@ -61,15 +61,18 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* flex-start avoids the well-known flex+overflow centering bug where
+       the top of the content gets clipped beyond reach of scrolling. */
+    justify-content: flex-start;
     text-align: center;
-    gap: 14px;
+    gap: 6px;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
     scroll-behavior: smooth;
     position: relative;
+    padding: 8px 0 4px;
   }
   .content::-webkit-scrollbar { display: none; }
 
@@ -93,26 +96,28 @@
     50% { transform: translate(-50%, 3px); }
   }
   .label {
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 0.32em;
     color: #7cf6c8;
     text-transform: uppercase;
-    opacity: 0.85;
+    opacity: 0.7;
+    margin: 0;
   }
   .msg {
-    font-size: 24px;
+    font-size: 19px;
     font-weight: 300;
     line-height: 1.42;
     letter-spacing: 0.01em;
     color: #fff;
     max-width: 100%;
     text-wrap: balance;
+    padding: 0 6px;
     animation: rise 0.32s cubic-bezier(.2,.7,.2,1);
   }
-  .msg.long    { font-size: 22px; line-height: 1.45; }
-  .msg.xlong   { font-size: 19px; line-height: 1.5; }
-  .msg.xxlong  { font-size: 17px; line-height: 1.55; text-align: left; }
-  .msg.xxxlong { font-size: 15px; line-height: 1.6;  text-align: left; }
+  .msg.long    { font-size: 18px; line-height: 1.45; }
+  .msg.xlong   { font-size: 17px; line-height: 1.5;  text-align: left; }
+  .msg.xxlong  { font-size: 16px; line-height: 1.55; text-align: left; }
+  .msg.xxxlong { font-size: 16px; line-height: 1.6;  text-align: left; }
   .msg.hint  { color: #ffe8a8; font-weight: 300; }
   .msg.hint .lead { color: #ffce5b; letter-spacing: 0.2em; font-size: 11px;
                     display: block; margin-bottom: 6px; }
@@ -134,13 +139,13 @@
   .echo::before { content: "› "; color: #7cf6c8; opacity: 0.6; }
 
   .headline {
-    font-size: 38px;
+    font-size: 28px;
     font-weight: 200;
     letter-spacing: 0.04em;
     line-height: 1.2;
   }
   .subhead {
-    font-size: 13px;
+    font-size: 12px;
     color: #555;
     letter-spacing: 0.18em;
   }
@@ -149,22 +154,22 @@
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-auto-rows: 88px;
-    gap: 10px;
+    grid-auto-rows: auto;
+    gap: 8px;
   }
   .grid[data-cols="3"] { grid-template-columns: 1fr 1fr 1fr; }
-  .grid[data-cols="3"] .focusable.cat { font-size: 17px; padding: 8px 6px; }
+  .grid[data-cols="3"] .focusable.cat { font-size: 15px; padding: 6px 4px; min-height: 72px; }
 
   .focusable {
     background: rgba(255, 255, 255, 0.025);
     color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 12px;
-    padding: 8px 14px;
+    padding: 6px 12px;
     font-family: inherit;
-    font-size: 17px;
+    font-size: 14px;
     font-weight: 300;
-    line-height: 1.35;
+    line-height: 1.4;
     letter-spacing: 0.01em;
     cursor: pointer;
     text-align: center;
@@ -174,6 +179,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    min-height: 72px;
     -webkit-backdrop-filter: blur(20px);
     backdrop-filter: blur(20px);
   }
@@ -191,14 +197,22 @@
     cursor: default;
     pointer-events: none;
   }
+  .focusable.chip {
+    /* big enough to hold a full 60-char Japanese suggestion */
+    min-height: 116px;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 8px 12px;
+  }
   .focusable.sys {
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 0.22em;
     color: #8a93a3;
+    min-height: 60px;
   }
   .focusable.sys:focus { color: #7cf6c8; }
   .focusable.cat {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 400;
     letter-spacing: 0.04em;
   }
@@ -424,6 +438,7 @@
     } else {
       const s = suggestions.slice(0, 2);
       buttons = s.map((txt, i) => btn(txt, {
+        cls: 'chip',
         key: 'sg-' + i,
         disabled: busy,
         onClick: () => pickReply(txt),
