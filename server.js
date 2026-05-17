@@ -351,6 +351,36 @@ app.post('/api/reset', (req, res) => {
   res.json({ ok: true });
 });
 
+// Server-side TTS: proxy to Google Translate's public TTS endpoint and
+// stream the MP3 back. This avoids depending on whatever voices the
+// glasses' browser happens to have, so audio always plays through the
+// device that loaded the page (i.e. the MRBD speakers, not the Mac).
+app.get('/api/tts', async (req, res) => {
+  const text = String(req.query.text || '').slice(0, 200).trim();
+  if (!text) return res.status(400).send('empty');
+  const lang = String(req.query.lang || 'ja').slice(0, 8);
+  const url  = 'https://translate.googleapis.com/translate_tts'
+             + '?ie=UTF-8&client=tw-ob'
+             + '&tl=' + encodeURIComponent(lang)
+             + '&q='  + encodeURIComponent(text);
+  try {
+    const r = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/537.36',
+        'Accept':     'audio/mpeg, */*',
+      },
+    });
+    if (!r.ok) return res.status(502).send('tts upstream ' + r.status);
+    const buf = Buffer.from(await r.arrayBuffer());
+    res.set('Content-Type',  'audio/mpeg');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.set('Content-Length', String(buf.length));
+    res.send(buf);
+  } catch (e) {
+    res.status(500).send(e.message);
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     ok:        true,

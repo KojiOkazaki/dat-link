@@ -255,42 +255,74 @@
   let screen      = 'loading';   // loading | category | answer | menu
   let echoText    = '';          // last user-picked reply, shown while waiting
 
-  /* ---------- TTS (Web Speech Synthesis, ja-JP) ---------- */
-  // Speaks interviewer messages, hints, and feedback in Japanese through
-  // the glasses' bone-conduction speakers. Cancels in-flight speech when
-  // the user picks a reply so the next AI turn isn't talked over.
-  let ttsVoice = null;
-  function pickJapaneseVoice() {
-    if (!('speechSynthesis' in window)) return;
-    const voices = speechSynthesis.getVoices();
-    if (!voices.length) return;
-    ttsVoice = voices.find(v => v.lang === 'ja-JP')
-            || voices.find(v => v.lang && v.lang.startsWith('ja'))
-            || null;
-  }
-  if ('speechSynthesis' in window) {
-    pickJapaneseVoice();
-    speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', pickJapaneseVoice);
+  /* ---------- TTS (server-streamed MP3 → glasses speakers) ---------- */
+  // Audio is requested from /api/tts as MP3 and played through a single
+  // persistent <audio> element. Whatever device loaded the page (the
+  // glasses) is the one that plays the sound, so MRBD always speaks
+  // even when there is no Japanese voice installed in its browser.
+  // ttsEnabled is per-browser (localStorage) so the Mac preview tab
+  // can be silenced without affecting the MRBD app.
+  let ttsToken  = 0;
+  let ttsEnabled = (() => {
+    try { return localStorage.getItem('tts') !== 'off'; }
+    catch { return true; }
+  })();
+  const ttsPlayer = new Audio();
+  ttsPlayer.preload = 'auto';
+
+  function setTtsEnabled(on) {
+    ttsEnabled = !!on;
+    try { localStorage.setItem('tts', ttsEnabled ? 'on' : 'off'); } catch {}
+    if (!ttsEnabled) stopSpeaking();
   }
 
-  function speakJa(text) {
-    if (!('speechSynthesis' in window)) return;
-    if (!text) return;
-    try { speechSynthesis.cancel(); } catch (_) {}
-    const clean = text.replace(/^HINT:\s*/, '').replace(/[【】]/g, '、');
-    const u = new SpeechSynthesisUtterance(clean);
-    u.lang  = 'ja-JP';
-    u.rate  = 1.0;
-    u.pitch = 1.0;
-    u.volume = 1.0;
-    if (ttsVoice) u.voice = ttsVoice;
-    speechSynthesis.speak(u);
+  function splitJaForTTS(text, maxLen = 180) {
+    const cleaned = text.replace(/^HINT:\s*/, '').replace(/[【】]/g, '、').trim();
+    if (cleaned.length <= maxLen) return [cleaned];
+    const parts = cleaned.split(/(?<=[。！？\n])/);
+    const out = [];
+    let cur = '';
+    for (const p of parts) {
+      if ((cur + p).length > maxLen) {
+        if (cur.trim()) out.push(cur);
+        cur = p;
+      } else {
+        cur += p;
+      }
+    }
+    if (cur.trim()) out.push(cur);
+    return out;
+  }
+
+  async function speakJa(text) {
+    if (!text || !ttsEnabled) return;
+    stopSpeaking();
+    const myToken = ++ttsToken;
+    const chunks  = splitJaForTTS(text);
+    for (const chunk of chunks) {
+      if (myToken !== ttsToken) return;          // user interrupted
+      if (!chunk.trim()) continue;
+      ttsPlayer.src = '/api/tts?text=' + encodeURIComponent(chunk);
+      try {
+        await ttsPlayer.play();
+        await new Promise((resolve) => {
+          ttsPlayer.onended = resolve;
+          ttsPlayer.onerror = resolve;
+        });
+      } catch (_) {
+        // Autoplay block or network error — bail out quietly.
+        return;
+      }
+    }
   }
 
   function stopSpeaking() {
-    if ('speechSynthesis' in window) {
-      try { speechSynthesis.cancel(); } catch (_) {}
-    }
+    ttsToken++;
+    try {
+      ttsPlayer.pause();
+      ttsPlayer.removeAttribute('src');
+      ttsPlayer.load();
+    } catch (_) {}
   }
 
   /* ---------- helpers ---------- */
@@ -472,6 +504,10 @@
         btn('終了',       { cls: 'sys', key: 'end',   disabled: busy, onClick: endInterview }),
         btn('テーマ変更', { cls: 'sys', key: 'cat',   onClick: () => { screen = 'category'; render(); } }),
         btn('戻る',       { cls: 'sys', key: 'back',  onClick: () => { screen = 'answer'; render(); } }),
+        btn('音声 ' + (ttsEnabled ? 'ON' : 'OFF'), {
+          cls: 'sys full', key: 'tts',
+          onClick: () => { setTtsEnabled(!ttsEnabled); renderGrid(); },
+        }),
       ];
     } else {
       const s = suggestions.slice(0, 2);
