@@ -87,6 +87,9 @@
   .msg.hint  { color: #ffe8a8; font-weight: 300; }
   .msg.hint .lead { color: #ffce5b; letter-spacing: 0.2em; font-size: 11px;
                     display: block; margin-bottom: 6px; }
+  .msg.end   { color: #ffe8a8; font-weight: 300; white-space: pre-line;
+               text-align: left; max-width: 92%; }
+  .label.end { color: #ffce5b; }
   @keyframes rise {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -269,6 +272,23 @@
       return;
     }
 
+    if (screen === 'ended') {
+      const endMsg = [...history].reverse().find(m => m.kind === 'end');
+      const lead = document.createElement('div');
+      lead.className = 'label end';
+      lead.textContent = 'FEEDBACK';
+      content.appendChild(lead);
+      const body = document.createElement('div');
+      body.className = 'msg end ' + msgSizeClass(endMsg ? endMsg.content : '');
+      body.textContent = endMsg ? endMsg.content : '(no feedback)';
+      content.appendChild(body);
+      const sub = document.createElement('div');
+      sub.className = 'subhead';
+      sub.textContent = '別カテゴリでもう一度';
+      content.appendChild(sub);
+      return;
+    }
+
     // screen === 'answer'
     const m = lastAssistant();
     if (!m) {
@@ -279,14 +299,15 @@
       return;
     }
 
+    const kindClass = m.kind === 'hint' ? ' hint' : (m.kind === 'end' ? ' end' : '');
     const lead = document.createElement('div');
-    lead.className = 'label';
-    lead.textContent = m.kind === 'hint' ? 'HINT' : 'INTERVIEWER';
+    lead.className = 'label' + (m.kind === 'end' ? ' end' : '');
+    lead.textContent = m.kind === 'hint' ? 'HINT' : (m.kind === 'end' ? 'FEEDBACK' : 'INTERVIEWER');
     content.appendChild(lead);
 
     const body = document.createElement('div');
     const text = m.content.replace(/^HINT:\s*/, '');
-    body.className = 'msg ' + msgSizeClass(text) + (m.kind === 'hint' ? ' hint' : '');
+    body.className = 'msg ' + msgSizeClass(text) + kindClass;
     body.textContent = text;
     content.appendChild(body);
 
@@ -323,7 +344,7 @@
 
     let buttons = [];
 
-    if (screen === 'category') {
+    if (screen === 'category' || screen === 'ended') {
       buttons = CATS.map(c => btn(c.label, {
         cls: 'cat',
         key: 'cat-' + c.id,
@@ -333,7 +354,7 @@
     } else if (screen === 'menu') {
       buttons = [
         btn('HINT',     { cls: 'sys', key: 'hint',  disabled: busy, onClick: askHint }),
-        btn('RESET',    { cls: 'sys', key: 'reset', disabled: busy, onClick: () => switchCategory(stateObj.category) }),
+        btn('END',      { cls: 'sys', key: 'end',   disabled: busy, onClick: endInterview }),
         btn('CATEGORY', { cls: 'sys', key: 'cat',   onClick: () => { screen = 'category'; render(); } }),
         btn('CANCEL',   { cls: 'sys', key: 'back',  onClick: () => { screen = 'answer'; render(); } }),
       ];
@@ -393,6 +414,13 @@
     catch { setStatus('error'); busy = false; render(); }
   }
 
+  async function endInterview() {
+    if (busy) return;
+    busy = true; setStatus('thinking'); screen = 'answer'; render();
+    try { await fetch('/api/end', { method: 'POST' }); }
+    catch { setStatus('error'); busy = false; render(); }
+  }
+
   async function switchCategory(cat) {
     if (busy) return;
     busy = true; setStatus('thinking'); screen = 'answer'; echoText = '';
@@ -424,7 +452,8 @@
         busy = false;
         echoText = '';
         setStatus('live');
-        if (!history.length) screen = 'category';
+        if (stateObj.ended)        screen = 'ended';
+        else if (!history.length)  screen = 'category';
         else if (screen === 'loading') screen = 'answer';
         render();
       } else if (m.type === 'append') {
@@ -434,7 +463,8 @@
           busy = false;
           echoText = '';
           setStatus('live');
-          if (screen !== 'menu' && screen !== 'category') screen = 'answer';
+          if (m.message.kind === 'end' || stateObj.ended) screen = 'ended';
+          else if (screen !== 'menu' && screen !== 'category') screen = 'answer';
         }
         render();
       } else if (m.type === 'suggestions') {
