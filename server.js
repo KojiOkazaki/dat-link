@@ -138,12 +138,67 @@ async function callLlama(messages, maxTokens = 400, temperature = 0.7) {
   }
 }
 
+// Gemma's chat template forbids the `system` role and requires strict
+// user/assistant alternation starting with `user`. Build a single-user
+// prompt that folds the system context, any leading interviewer turns,
+// and the rest of the conversation into a valid sequence.
+function buildLlmMessages(extra) {
+  const sys = BASE_PROMPT
+            + '\n\n今回のテーマ: ' + CATEGORIES[category].focus
+            + (extra ? '\n\n' + extra : '');
+
+  const conv = history.filter(m => m.kind !== 'hint');
+  if (!conv.length) {
+    return [{ role: 'user', content: sys + '\n\n面接を開始してください。最初の質問だけを1つ、150文字以内で。' }];
+  }
+
+  let i = 0;
+  let preamble = '';
+  while (i < conv.length && conv[i].role === 'assistant') {
+    preamble += (preamble ? '\n\n' : '') + '面接官の発言: ' + conv[i].content;
+    i++;
+  }
+  if (i >= conv.length) {
+    return [{ role: 'user', content: sys + '\n\n' + preamble + '\n\n候補者の回答を待っています。' }];
+  }
+
+  const out = [{
+    role: 'user',
+    content: sys
+           + (preamble ? '\n\n---\n' + preamble : '')
+           + '\n\n---\n候補者の発言: ' + conv[i].content,
+  }];
+  i++;
+
+  let lastRole = 'user';
+  while (i < conv.length) {
+    const m = conv[i];
+    if (m.role !== lastRole) {
+      out.push({ role: m.role, content: m.content });
+      lastRole = m.role;
+    } else {
+      out[out.length - 1].content += '\n\n' + m.content;
+    }
+    i++;
+  }
+  return out;
+}
+
 async function generateSuggestions() {
   try {
-    const txt = await callLlama([
-      { role: 'system', content: SUGG_PROMPT + '\n\nテーマ: ' + CATEGORIES[category].focus },
-      ...history.slice(-6).map(({ role, content }) => ({ role, content })),
-    ], 250, 0.5);
+    const recent = history.slice(-6)
+      .filter(m => m.kind !== 'hint')
+      .map(m => (m.role === 'assistant' ? '面接官' : '候補者') + ': ' + m.content)
+      .join('\n\n');
+
+    const txt = await callLlama([{
+      role: 'user',
+      content: SUGG_PROMPT
+             + '\n\nテーマ: ' + CATEGORIES[category].focus
+             + (recent ? '\n\n直前の会話:\n' + recent : '')
+             + '\n\n候補者の次の発言候補をちょうど5つ、JSON配列のみで出力してください。',
+    }], 250, 0.5);
+
     const m = txt.match(/\[[\s\S]*\]/);
     if (!m) return [];
     const arr = JSON.parse(m[0]);
@@ -189,10 +244,7 @@ app.post('/api/say', async (req, res) => {
   broadcast({ type: 'suggestions', suggestions });
 
   try {
-    const reply = await callLlama([
-      { role: 'system', content: BASE_PROMPT + '\n\n今回のテーマ: ' + CATEGORIES[category].focus },
-      ...history.map(({ role, content }) => ({ role, content })),
-    ]);
+    const reply = await callLlama(buildLlmMessages());
     questionNum += 1;
     const aiMsg = { role: 'assistant', content: reply || '（応答が空でした）', ts: Date.now() };
     history.push(aiMsg);
@@ -215,8 +267,7 @@ app.post('/api/hint', async (req, res) => {
   if (!lastQ) return res.status(400).json({ error: 'no question yet' });
   try {
     const hint = await callLlama([
-      { role: 'system', content: HINT_PROMPT },
-      { role: 'user',   content: `面接官の質問:\n${lastQ.content}` },
+      { role: 'user', content: HINT_PROMPT + '\n\n面接官の質問:\n' + lastQ.content },
     ], 250, 0.4);
     const aiMsg = {
       role: 'assistant',
