@@ -128,13 +128,21 @@ async function callLlama(messages, maxTokens = 400, temperature = 1.0, topP = 0.
         temperature,
         top_p:       topP,
         top_k:       topK,
-        stream: false,
+        stream:      false,
+        // Disable Gemma 4 thinking mode: with it on, the model spends
+        // the entire budget on reasoning_content and returns an empty
+        // assistant message. E2B/E4B support a clean disable.
+        chat_template_kwargs: { enable_thinking: false },
       }),
       signal: ctrl.signal,
     });
     if (!r.ok) throw new Error(`llama ${r.status}`);
     const j = await r.json();
-    return (j.choices?.[0]?.message?.content || '').trim();
+    const m = j.choices?.[0]?.message;
+    const content = (m?.content || '').trim();
+    if (content) return content;
+    // Fallback: some servers still emit a thinking block when content is empty.
+    return (m?.reasoning_content || '').trim();
   } finally {
     clearTimeout(to);
   }
