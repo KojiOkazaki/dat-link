@@ -5,6 +5,10 @@ backed by a Mac-side `llama.cpp` Gemma 4 server. Sibling of the original
 `Interview` (Japanese) app — same architecture, retuned for American
 candidates.
 
+> **For day-to-day operation, troubleshooting, the API reference, and
+> all upstream documentation links, read [MANUAL.md](./MANUAL.md).**
+> This README is just the quick start.
+
 ```
 [Mac]
   llama-server -m gemma-4-E2B-it-Q8_0.gguf -c 8192 --port 8080
