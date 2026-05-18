@@ -109,6 +109,13 @@ let questionNum = 0;
 let startedAt   = null;
 let ended       = false;
 let sseClients  = [];
+let lastError   = null;
+
+function recordError(where, e) {
+  const msg = e && e.message ? e.message : String(e);
+  lastError = { where, message: msg, at: new Date().toISOString() };
+  console.error(`[${where}] ${msg}`);
+}
 
 function state() {
   return { category, questionNum, startedAt, ended, categoryName: CATEGORIES[category].name };
@@ -271,6 +278,7 @@ app.post('/api/say', async (req, res) => {
     history.push(aiMsg);
     broadcast({ type: 'append', message: aiMsg, state: state() });
   } catch (e) {
+    recordError('/api/say', e);
     const err = { role: 'assistant', content: `(error: ${e.message})`, ts: Date.now() };
     history.push(err);
     broadcast({ type: 'append', message: err, state: state() });
@@ -307,6 +315,7 @@ app.post('/api/end', async (req, res) => {
     broadcast({ type: 'suggestions', suggestions });
     res.json({ ok: true });
   } catch (e) {
+    recordError('/api/end', e);
     res.status(502).json({ error: e.message });
   }
 });
@@ -330,6 +339,7 @@ app.post('/api/hint', async (req, res) => {
     broadcast({ type: 'append', message: aiMsg, state: state() });
     res.json({ ok: true });
   } catch (e) {
+    recordError('/api/hint', e);
     res.status(502).json({ error: e.message });
   }
 });
@@ -374,10 +384,34 @@ app.get('/api/tts', async (req, res) => {
   }
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  // Probe the configured llama endpoint with a short timeout so an
+  // operator can curl this and see exactly what's broken.
+  let llamaOk = null;
+  let llamaStatus = null;
+  let llamaProbeError = null;
+  if (LLAMA_URL) {
+    const ctrl = new AbortController();
+    const to   = setTimeout(() => ctrl.abort(), 3000);
+    try {
+      const r = await fetch(`${LLAMA_URL}/v1/models`, { signal: ctrl.signal });
+      llamaStatus = r.status;
+      llamaOk     = r.ok;
+    } catch (e) {
+      llamaOk         = false;
+      llamaProbeError = e.message;
+    } finally {
+      clearTimeout(to);
+    }
+  }
   res.json({
     ok:        true,
     hasLlama:  !!LLAMA_URL,
+    llamaUrl:  LLAMA_URL || null,
+    llamaOk,
+    llamaStatus,
+    llamaProbeError,
+    lastError,
     model:     MODEL,
     messages:  history.length,
     listeners: sseClients.length,
