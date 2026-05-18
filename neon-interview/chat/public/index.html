@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+<title>NeonInterview</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+  :root {
+    --bg:       #000;
+    --fg:       #e6f7ff;
+    --mute:     #5b6678;
+    --cyan:     #00f0ff;
+    --magenta:  #ff2bd0;
+    --yellow:   #fbff00;
+    --green:    #00ff9f;
+    --red:      #ff0044;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 600px;
+    height: 600px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'JetBrains Mono', 'Fira Code', 'IBM Plex Mono',
+                 'SF Mono', Menlo, Consolas, monospace;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  /* Subtle scan-line + grid overlay across the whole viewport */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0 2px,
+        rgba(255, 255, 255, 0.025) 2px 3px
+      ),
+      radial-gradient(
+        ellipse at center,
+        transparent 60%,
+        rgba(0, 0, 0, 0.55) 100%
+      );
+    mix-blend-mode: screen;
+  }
+
+  .stage {
+    width: 600px;
+    height: 600px;
+    display: grid;
+    grid-template-rows: 32px 1fr auto;
+    padding: 12px 20px 16px;
+    gap: 10px;
+    position: relative;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.18);
+    padding-bottom: 4px;
+  }
+  .brand {
+    font-size: 11px;
+    letter-spacing: 0.5em;
+    font-weight: 700;
+    color: var(--cyan);
+    text-shadow:
+      0 0 6px rgba(0, 240, 255, 0.7),
+      -1px 0 rgba(255, 43, 208, 0.5),
+       1px 0 rgba(0, 240, 255, 0.5);
+  }
+  .brand .accent { color: var(--magenta); }
+  .status-cluster {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 9px;
+    letter-spacing: 0.28em;
+    color: var(--mute);
+  }
+  .status-cluster .id { color: var(--cyan); opacity: 0.7; }
+  .dot {
+    width: 8px;
+    height: 8px;
+    background: #1a1f29;
+    transition: all 0.3s ease;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+  .dot.live     { background: var(--cyan);    box-shadow: 0 0 10px var(--cyan); }
+  .dot.thinking { background: var(--yellow);  box-shadow: 0 0 10px var(--yellow);
+                  animation: pulse 1.1s ease-in-out infinite; }
+  .dot.error    { background: var(--red);     box-shadow: 0 0 10px var(--red); }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+
+  /* ---------- main content ---------- */
+  .content {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    gap: 6px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    position: relative;
+    padding: 8px 0 4px;
+  }
+  .content::-webkit-scrollbar { display: none; }
+
+  .scroll-hint {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--cyan);
+    font-size: 14px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease;
+    text-shadow: 0 0 8px var(--cyan);
+    z-index: 5;
+  }
+  .scroll-hint.up   { top: 64px; }
+  .scroll-hint.down { bottom: 240px; }
+  .scroll-hint.on   { opacity: 0.8; animation: float 1.6s ease-in-out infinite; }
+  @keyframes float {
+    50% { transform: translate(-50%, 3px); }
+  }
+
+  .label {
+    font-size: 10px;
+    letter-spacing: 0.42em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin: 0;
+    font-weight: 600;
+  }
+  .label::before { content: '> '; opacity: 0.6; }
+
+  .msg {
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1.42;
+    letter-spacing: 0.005em;
+    color: var(--fg);
+    max-width: 100%;
+    text-wrap: balance;
+    padding: 0 6px;
+    animation: rise 0.32s cubic-bezier(.2,.7,.2,1);
+  }
+  .msg.long    { font-size: 18px; line-height: 1.45; }
+  .msg.xlong   { font-size: 17px; line-height: 1.5;  text-align: left; }
+  .msg.xxlong  { font-size: 16px; line-height: 1.5;  text-align: left; }
+  .msg.xxxlong { font-size: 15px; line-height: 1.55; text-align: left; }
+  .msg.hint  { color: #fff9c4; font-weight: 400; }
+  .msg.hint .lead { color: var(--yellow); letter-spacing: 0.2em; font-size: 11px;
+                    display: block; margin-bottom: 6px; }
+  .msg.end   { color: #d4ffe9; font-weight: 400; white-space: pre-line;
+               text-align: left; max-width: 92%; }
+  .label.end   { color: var(--green); }
+  .label.hint  { color: var(--yellow); }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .echo {
+    font-size: 13px;
+    color: var(--mute);
+    letter-spacing: 0.04em;
+    max-width: 90%;
+    text-wrap: balance;
+  }
+  .echo::before { content: "› "; color: var(--magenta); opacity: 0.8; }
+
+  .headline {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: var(--fg);
+    text-shadow:
+      -1.5px 0 rgba(255, 43, 208, 0.65),
+       1.5px 0 rgba(0, 240, 255, 0.65);
+    animation: glitch 4s steps(1) infinite;
+  }
+  @keyframes glitch {
+    0%, 92%, 100% { transform: translate(0, 0); }
+    93% { transform: translate(-1px, 0); }
+    94% { transform: translate( 1px, 0); }
+    95% { transform: translate(0, 1px); }
+    96% { transform: translate(-1px, -1px); }
+  }
+  .subhead {
+    font-size: 11px;
+    color: var(--mute);
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+  .subhead .ok { color: var(--cyan); }
+
+  /* ---------- action grid ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+    gap: 8px;
+  }
+  .grid[data-cols="3"] { grid-template-columns: 1fr 1fr 1fr; }
+  .grid[data-cols="3"] .focusable.cat {
+    font-size: 14px; padding: 6px 4px; min-height: 76px;
+    letter-spacing: 0.2em;
+  }
+
+  .focusable {
+    background: rgba(0, 240, 255, 0.04);
+    color: var(--fg);
+    border: 1px solid rgba(0, 240, 255, 0.22);
+    /* HUD-style notched corners. Sharp, not rounded. */
+    clip-path: polygon(
+      0 12px, 12px 0,
+      100% 0, 100% calc(100% - 12px),
+      calc(100% - 12px) 100%, 0 100%
+    );
+    padding: 6px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    text-align: center;
+    transition: all 130ms cubic-bezier(.2,.7,.2,1);
+    word-break: break-word;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 88px;
+    position: relative;
+  }
+  .focusable::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 4px;
+    height: 1px;
+    background: rgba(0, 240, 255, 0.15);
+    transition: all 130ms ease;
+  }
+  .focusable:focus {
+    outline: none;
+    border-color: var(--magenta);
+    color: var(--magenta);
+    background: rgba(255, 43, 208, 0.10);
+    box-shadow:
+      0 0 0 1px var(--magenta),
+      0 0 24px rgba(255, 43, 208, 0.45),
+      inset 0 0 18px rgba(255, 43, 208, 0.10);
+    text-shadow: 0 0 6px rgba(255, 43, 208, 0.7);
+  }
+  .focusable:focus::after {
+    background: var(--magenta);
+    box-shadow: 0 0 8px var(--magenta);
+  }
+  .focusable:disabled,
+  .focusable.empty {
+    opacity: 0.18;
+    cursor: default;
+    pointer-events: none;
+  }
+  .focusable.chip {
+    min-height: 116px;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 10px 14px;
+    letter-spacing: 0.01em;
+    font-weight: 400;
+  }
+  .focusable.sys {
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    color: var(--mute);
+    min-height: 64px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .focusable.sys:focus { color: var(--magenta); }
+  .focusable.cat {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .focusable.full {
+    grid-column: 1 / -1;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <header class="topbar">
+    <div class="brand">NEON<span class="accent">//</span>INTERVIEW</div>
+    <div class="status-cluster">
+      <span class="id">SYS·EN-US</span>
+      <span class="dot" id="dot"></span>
+    </div>
+  </header>
+
+  <main class="content" id="content"></main>
+  <div class="scroll-hint up"   id="hintUp">▲</div>
+  <div class="scroll-hint down" id="hintDown">▼</div>
+
+  <div class="grid" id="grid"></div>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const content = $('content');
+  const grid    = $('grid');
+
+  const CATS = [
+    { id: 'behavioral', label: 'BEHAV'  },
+    { id: 'technical',  label: 'TECH'   },
+    { id: 'case',       label: 'CASE'   },
+  ];
+
+  let history     = [];
+  let suggestions = [];
+  let stateObj    = { category: 'behavioral', questionNum: 0 };
+  let busy        = false;
+  let screen      = 'loading';   // loading | category | answer | menu | ended
+  let echoText    = '';
+
+  /* ---------- TTS (server-streamed MP3, en-US) ---------- */
+  let ttsToken  = 0;
+  let ttsEnabled = (() => {
+    try { return localStorage.getItem('tts') !== 'off'; }
+    catch { return true; }
+  })();
+  const ttsPlayer = new Audio();
+  ttsPlayer.preload = 'auto';
+
+  function setTtsEnabled(on) {
+    ttsEnabled = !!on;
+    try { localStorage.setItem('tts', ttsEnabled ? 'on' : 'off'); } catch {}
+    if (!ttsEnabled) stopSpeaking();
+  }
+
+  function splitEnForTTS(text, maxLen = 180) {
+    const cleaned = text.replace(/^HINT:\s*/, '').trim();
+    if (cleaned.length <= maxLen) return [cleaned];
+    const parts = cleaned.split(/(?<=[.!?\n])\s+/);
+    const out = [];
+    let cur = '';
+    for (const p of parts) {
+      if ((cur + ' ' + p).length > maxLen) {
+        if (cur.trim()) out.push(cur);
+        cur = p;
+      } else {
+        cur = cur ? cur + ' ' + p : p;
+      }
+    }
+    if (cur.trim()) out.push(cur);
+    return out;
+  }
+
+  async function speakEn(text) {
+    if (!text || !ttsEnabled) return;
+    stopSpeaking();
+    const myToken = ++ttsToken;
+    const chunks  = splitEnForTTS(text);
+    for (const chunk of chunks) {
+      if (myToken !== ttsToken) return;
+      if (!chunk.trim()) continue;
+      ttsPlayer.src = '/api/tts?lang=en&text=' + encodeURIComponent(chunk);
+      try {
+        await ttsPlayer.play();
+        await new Promise((resolve) => {
+          ttsPlayer.onended = resolve;
+          ttsPlayer.onerror = resolve;
+        });
+      } catch (_) {
+        return;
+      }
+    }
+  }
+
+  function stopSpeaking() {
+    ttsToken++;
+    try {
+      ttsPlayer.pause();
+      ttsPlayer.removeAttribute('src');
+      ttsPlayer.load();
+    } catch (_) {}
+  }
+
+  /* ---------- helpers ---------- */
+  function setStatus(s) { $('dot').className = 'dot ' + s; }
+
+  function lastAssistant() {
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].role === 'assistant') return history[i];
+    }
+    return null;
+  }
+
+  function msgSizeClass(text) {
+    const n = (text || '').length;
+    if (n > 320) return 'xxxlong';
+    if (n > 220) return 'xxlong';
+    if (n > 130) return 'xlong';
+    if (n > 70)  return 'long';
+    return '';
+  }
+
+  function canScrollDown() {
+    const c = $('content');
+    return c.scrollHeight > c.clientHeight + 1
+        && c.scrollTop + c.clientHeight < c.scrollHeight - 1;
+  }
+  function canScrollUp() {
+    return $('content').scrollTop > 1;
+  }
+  function stepScroll(dir) {
+    const c = $('content');
+    const step = Math.round(c.clientHeight * 0.35);
+    if (dir === 'down') c.scrollTop = Math.min(c.scrollHeight, c.scrollTop + step);
+    else                c.scrollTop = Math.max(0, c.scrollTop - step);
+  }
+  function updateScrollHints() {
+    const c = $('content');
+    const hasOverflow = c.scrollHeight > c.clientHeight + 1;
+    const atTop      = c.scrollTop <= 1;
+    const atBottom   = c.scrollTop + c.clientHeight >= c.scrollHeight - 1;
+    $('hintUp').classList.toggle('on',   hasOverflow && !atTop);
+    $('hintDown').classList.toggle('on', hasOverflow && !atBottom);
+  }
+
+  /* ---------- main content ---------- */
+  function renderContent() {
+    content.innerHTML = '';
+
+    if (screen === 'loading') {
+      const h = document.createElement('div');
+      h.className = 'subhead';
+      h.textContent = 'CONNECTING…';
+      content.appendChild(h);
+      return;
+    }
+
+    if (screen === 'category') {
+      const lead = document.createElement('div');
+      lead.className = 'label';
+      lead.textContent = 'SELECT ROUND';
+      const head = document.createElement('div');
+      head.className = 'headline';
+      head.textContent = 'MOCK INTERVIEW';
+      const sub = document.createElement('div');
+      sub.className = 'subhead';
+      sub.innerHTML = '<span class="ok">GEMMA·4</span> · LOCAL LLM · EN-US';
+      content.appendChild(lead);
+      content.appendChild(head);
+      content.appendChild(sub);
+      return;
+    }
+
+    if (screen === 'menu') {
+      const lead = document.createElement('div');
+      lead.className = 'label';
+      lead.textContent = 'MENU';
+      const head = document.createElement('div');
+      head.className = 'headline';
+      head.textContent = '— · —';
+      const sub = document.createElement('div');
+      sub.className = 'subhead';
+      const cat = CATS.find(c => c.id === stateObj.category);
+      sub.textContent = (cat ? cat.label : '—') + ' · Q' + (stateObj.questionNum || 0);
+      content.appendChild(lead);
+      content.appendChild(head);
+      content.appendChild(sub);
+      return;
+    }
+
+    if (screen === 'ended') {
+      const endMsg = [...history].reverse().find(m => m.kind === 'end');
+      const lead = document.createElement('div');
+      lead.className = 'label end';
+      lead.textContent = 'FEEDBACK';
+      content.appendChild(lead);
+      const body = document.createElement('div');
+      body.className = 'msg end ' + msgSizeClass(endMsg ? endMsg.content : '');
+      body.textContent = endMsg ? endMsg.content : '(no feedback)';
+      content.appendChild(body);
+      const sub = document.createElement('div');
+      sub.className = 'subhead';
+      sub.textContent = 'PICK A ROUND TO RUN IT AGAIN';
+      content.appendChild(sub);
+      return;
+    }
+
+    // screen === 'answer'
+    const m = lastAssistant();
+    if (!m) {
+      const e = document.createElement('div');
+      e.className = 'subhead';
+      e.textContent = 'WAITING FOR INTERVIEWER…';
+      content.appendChild(e);
+      return;
+    }
+
+    const kindClass = m.kind === 'hint' ? ' hint' : (m.kind === 'end' ? ' end' : '');
+    const lead = document.createElement('div');
+    lead.className = 'label' + (m.kind === 'end' ? ' end' : (m.kind === 'hint' ? ' hint' : ''));
+    lead.textContent = m.kind === 'hint' ? 'HINT' : (m.kind === 'end' ? 'FEEDBACK' : 'INTERVIEWER');
+    content.appendChild(lead);
+
+    const body = document.createElement('div');
+    const text = m.content.replace(/^HINT:\s*/, '');
+    body.className = 'msg ' + msgSizeClass(text) + kindClass;
+    body.textContent = text;
+    content.appendChild(body);
+
+    if (busy && echoText) {
+      const e = document.createElement('div');
+      e.className = 'echo';
+      e.textContent = echoText.length > 48 ? echoText.slice(0, 48) + '…' : echoText;
+      content.appendChild(e);
+    }
+  }
+
+  /* ---------- action grid ---------- */
+  function btn(text, opts) {
+    const b = document.createElement('button');
+    b.className = 'focusable' + (opts.cls ? ' ' + opts.cls : '');
+    b.dataset.key = opts.key;
+    b.textContent = text;
+    if (opts.disabled) b.disabled = true;
+    if (opts.onClick)  b.addEventListener('click', opts.onClick);
+    return b;
+  }
+
+  function placeholderBtn(key) {
+    const b = document.createElement('div');
+    b.className = 'focusable empty';
+    b.dataset.key = key;
+    return b;
+  }
+
+  function renderGrid() {
+    const prevKey = document.activeElement && document.activeElement.dataset
+                    ? document.activeElement.dataset.key : null;
+    grid.innerHTML = '';
+
+    let buttons = [];
+    let cols    = 2;
+
+    if (screen === 'category' || screen === 'ended') {
+      cols = 3;
+      buttons = CATS.map(c => btn(c.label, {
+        cls: 'cat',
+        key: 'cat-' + c.id,
+        disabled: busy,
+        onClick: () => switchCategory(c.id),
+      }));
+    } else if (screen === 'menu') {
+      buttons = [
+        btn('HINT',  { cls: 'sys', key: 'hint', disabled: busy, onClick: askHint }),
+        btn('END',   { cls: 'sys', key: 'end',  disabled: busy, onClick: endInterview }),
+        btn('ROUND', { cls: 'sys', key: 'cat',  onClick: () => { screen = 'category'; render(); } }),
+        btn('BACK',  { cls: 'sys', key: 'back', onClick: () => { screen = 'answer'; render(); } }),
+        btn('VOICE · ' + (ttsEnabled ? 'ON' : 'OFF'), {
+          cls: 'sys full', key: 'tts',
+          onClick: () => { setTtsEnabled(!ttsEnabled); renderGrid(); },
+        }),
+      ];
+    } else {
+      const s = suggestions.slice(0, 2);
+      buttons = s.map((txt, i) => btn(txt, {
+        cls: 'chip',
+        key: 'sg-' + i,
+        disabled: busy,
+        onClick: () => pickReply(txt),
+      }));
+      while (buttons.length < 2) {
+        buttons.push(placeholderBtn('sg-' + buttons.length));
+      }
+      buttons.push(btn('MENU', {
+        cls: 'sys full',
+        key: 'menu',
+        onClick: () => { screen = 'menu'; render(); },
+      }));
+    }
+
+    grid.dataset.cols = String(cols);
+    buttons.forEach(b => grid.appendChild(b));
+
+    const all = Array.from(grid.querySelectorAll('.focusable:not(:disabled):not(.empty)'));
+    if (!all.length) return;
+    let target = prevKey ? all.find(b => b.dataset.key === prevKey) : null;
+    if (!target) target = all[0];
+    target.focus();
+  }
+
+  function render(opts) {
+    renderContent();
+    renderGrid();
+    requestAnimationFrame(() => {
+      if (!opts || opts.resetScroll !== false) $('content').scrollTop = 0;
+      updateScrollHints();
+    });
+  }
+
+  $('content').addEventListener('scroll', updateScrollHints);
+  window.addEventListener('resize', () => {
+    updateScrollHints();
+    renderGrid();
+  });
+
+  /* ---------- API ---------- */
+  async function pickReply(text) {
+    if (busy) return;
+    busy = true;
+    stopSpeaking();
+    echoText = text;
+    suggestions = [];
+    setStatus('thinking');
+    render();
+    try {
+      await fetch('/api/say', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+    } catch { setStatus('error'); busy = false; render(); }
+  }
+
+  async function askHint() {
+    if (busy) return;
+    busy = true; setStatus('thinking'); screen = 'answer'; render();
+    try { await fetch('/api/hint', { method: 'POST' }); }
+    catch { setStatus('error'); busy = false; render(); }
+  }
+
+  async function endInterview() {
+    if (busy) return;
+    busy = true; setStatus('thinking'); screen = 'answer'; render();
+    try { await fetch('/api/end', { method: 'POST' }); }
+    catch { setStatus('error'); busy = false; render(); }
+  }
+
+  async function switchCategory(cat) {
+    if (busy) return;
+    stopSpeaking();
+    busy = true; setStatus('thinking'); screen = 'answer'; echoText = '';
+    render();
+    try {
+      await fetch('/api/category', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: cat }),
+      });
+    } catch { setStatus('error'); busy = false; render(); }
+  }
+
+  /* ---------- SSE ---------- */
+  function connect() {
+    const es = new EventSource('/api/events');
+    es.onopen  = () => setStatus('live');
+    es.onerror = () => {
+      setStatus('error');
+      setTimeout(() => { try { es.close(); } catch {} connect(); }, 2000);
+    };
+    es.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch { return; }
+
+      if (m.type === 'snapshot') {
+        history     = m.history     || [];
+        suggestions = m.suggestions || [];
+        if (m.state) stateObj = m.state;
+        busy = false;
+        echoText = '';
+        setStatus('live');
+        if (stateObj.ended)        screen = 'ended';
+        else if (!history.length)  screen = 'category';
+        else if (screen === 'loading') screen = 'answer';
+        render();
+      } else if (m.type === 'append') {
+        history.push(m.message);
+        if (m.state) stateObj = m.state;
+        if (m.message.role === 'assistant') {
+          busy = false;
+          echoText = '';
+          setStatus('live');
+          if (m.message.kind === 'end' || stateObj.ended) screen = 'ended';
+          else if (screen !== 'menu' && screen !== 'category') screen = 'answer';
+          speakEn(m.message.content);
+        }
+        render();
+      } else if (m.type === 'suggestions') {
+        suggestions = m.suggestions || [];
+        busy = false;
+        setStatus('live');
+        renderGrid();
+      }
+    };
+  }
+  connect();
+
+  /* ---------- D-pad ---------- */
+  function navigate(dir) {
+    const cells = Array.from(grid.querySelectorAll('.focusable:not(:disabled):not(.empty)'));
+    if (!cells.length) return;
+    const cur = document.activeElement;
+    if (!cells.includes(cur)) { cells[0].focus(); return; }
+
+    const rects = cells.map(c => c.getBoundingClientRect());
+    const rows = [];
+    rects.forEach((r, i) => {
+      const row = rows.find(rr => Math.abs(rects[rr[0]].top - r.top) < 10);
+      if (row) row.push(i);
+      else rows.push([i]);
+    });
+    rows.sort((a, b) => rects[a[0]].top - rects[b[0]].top);
+    rows.forEach(r => r.sort((a, b) => rects[a].left - rects[b].left));
+
+    const curIdx = cells.indexOf(cur);
+    let curRow = -1, curCol = -1;
+    for (let i = 0; i < rows.length; i++) {
+      const j = rows[i].indexOf(curIdx);
+      if (j !== -1) { curRow = i; curCol = j; break; }
+    }
+    if (curRow === -1) { cells[0].focus(); return; }
+
+    const c = $('content');
+    const overflow = c.scrollHeight > c.clientHeight + 1;
+    if (dir === 'up' && curRow === 0 && overflow && c.scrollTop > 1) {
+      stepScroll('up'); return;
+    }
+    if (dir === 'down' && curRow === rows.length - 1
+        && overflow && c.scrollTop + c.clientHeight < c.scrollHeight - 1) {
+      stepScroll('down'); return;
+    }
+
+    if (dir === 'up' || dir === 'down') {
+      const targetRow = (curRow + (dir === 'down' ? 1 : -1) + rows.length) % rows.length;
+      const curCenter = rects[curIdx].left + rects[curIdx].width / 2;
+      let best = rows[targetRow][0], bestDist = Infinity;
+      for (const t of rows[targetRow]) {
+        const center = rects[t].left + rects[t].width / 2;
+        const d = Math.abs(curCenter - center);
+        if (d < bestDist) { bestDist = d; best = t; }
+      }
+      cells[best].focus();
+    } else {
+      const row = rows[curRow];
+      const ci  = row.indexOf(curIdx);
+      const t   = (ci + (dir === 'right' ? 1 : -1) + row.length) % row.length;
+      cells[row[t]].focus();
+    }
+  }
+
+  function handleVertical(dir) {
+    const c = $('content');
+    const overflow = c.scrollHeight > c.clientHeight + 1;
+    if (overflow) {
+      if (dir === 'down' && c.scrollTop + c.clientHeight < c.scrollHeight - 2) {
+        stepScroll('down');
+        return;
+      }
+      if (dir === 'up' && c.scrollTop > 2) {
+        stepScroll('up');
+        return;
+      }
+    }
+    navigate(dir);
+  }
+
+  document.addEventListener('keydown', e => {
+    switch (e.key) {
+      case 'ArrowUp':    handleVertical('up');   break;
+      case 'ArrowDown':  handleVertical('down'); break;
+      case 'ArrowLeft':  navigate('left');       break;
+      case 'ArrowRight': navigate('right');      break;
+      case 'Enter':
+        if (document.activeElement && document.activeElement.classList.contains('focusable')
+            && !document.activeElement.disabled
+            && !document.activeElement.classList.contains('empty')) {
+          document.activeElement.click();
+        }
+        break;
+      case 'Escape':
+        if (screen === 'menu' || screen === 'category') {
+          if (history.length) { screen = 'answer'; render(); }
+        }
+        break;
+      default: return;
+    }
+    e.preventDefault();
+  });
+
+  render();
+</script>
+</body>
+</html>

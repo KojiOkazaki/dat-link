@@ -1,0 +1,10 @@
+{
+  "name": "NeonInterview",
+  "short_name": "NeonInterview",
+  "description": "Cyberpunk English mock-interview chat for Meta Ray-Ban Display, backed by a local llama.cpp Gemma 4 server.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#00f0ff"
+}
