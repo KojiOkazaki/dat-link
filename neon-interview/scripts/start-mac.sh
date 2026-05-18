@@ -75,9 +75,25 @@ echo
 echo "  llama-server :  pid $LLAMA_PID   log $LLAMA_LOG"
 echo "  cloudflared  :  pid $TUNNEL_PID  log $TUNNEL_LOG"
 echo "  public URL   :  $URL"
-echo
-echo "  to wire Heroku to this URL:"
-echo "    heroku config:set -a neon-interview LLAMA_URL=$URL"
+
+# If heroku CLI is logged in, push the new URL into the configured app
+# automatically. Override the app name with HEROKU_APP=<name> if needed.
+HEROKU_APP="${HEROKU_APP:-neon-interview}"
+if command -v heroku >/dev/null 2>&1 && heroku auth:whoami >/dev/null 2>&1; then
+  echo
+  echo "updating Heroku app '$HEROKU_APP' LLAMA_URL..."
+  if heroku config:set -a "$HEROKU_APP" LLAMA_URL="$URL" >/dev/null; then
+    echo "  Heroku LLAMA_URL updated"
+  else
+    echo "  heroku config:set failed - run manually:"
+    echo "    heroku config:set -a $HEROKU_APP LLAMA_URL=$URL"
+  fi
+else
+  echo
+  echo "  heroku CLI not logged in - run manually:"
+  echo "    heroku config:set -a $HEROKU_APP LLAMA_URL=$URL"
+fi
+
 echo
 echo "  to stop everything:"
 echo "    pkill -f llama-server; pkill -f cloudflared"
