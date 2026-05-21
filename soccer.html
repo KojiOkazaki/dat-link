@@ -20,11 +20,7 @@
     user-select: none;
   }
 
-  .stage {
-    width: 600px;
-    height: 600px;
-    position: relative;
-  }
+  .stage { width: 600px; height: 600px; position: relative; }
 
   /* =====================================================
      Top bar
@@ -36,77 +32,69 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24px;
+    padding: 0 18px;
     z-index: 30;
   }
   .topbar .title {
-    font-size: 14px;
+    font-size: 12px;
     letter-spacing: 0.22em;
     color: #7cf6c8;
   }
   .mode-pill {
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 0.24em;
     color: #000;
     background: #7cf6c8;
-    padding: 4px 10px;
-    border-radius: 10px;
-    margin-left: 10px;
+    padding: 3px 8px;
+    border-radius: 8px;
+    margin-left: 8px;
   }
-  .scorebox {
+  .matchScore {
     display: flex;
-    gap: 14px;
+    align-items: center;
+    gap: 6px;
     font-size: 11px;
     letter-spacing: 0.18em;
     color: #8a93a3;
   }
-  .scorebox b {
+  .matchScore .you,
+  .matchScore .cpu {
+    font-size: 18px;
+    font-weight: 300;
     color: #fff;
-    font-weight: 400;
     font-variant-numeric: tabular-nums;
-    margin-left: 5px;
-    font-size: 13px;
+    min-width: 16px;
+    text-align: center;
+  }
+  .matchScore .you { color: #7cf6c8; }
+  .matchScore .cpu { color: #ff8a99; }
+  .matchScore .vs { color: #2a2f3a; font-size: 11px; }
+  .turnInfo {
+    font-size: 10px;
+    color: #8a93a3;
+    letter-spacing: 0.2em;
+    margin-left: 8px;
   }
 
   /* =====================================================
-     Pitch (the actual playfield)
+     Pitch
   ===================================================== */
   .pitch {
     position: absolute;
-    top: 44px;
-    left: 0;
-    right: 0;
-    bottom: 56px;
-    background:
-      radial-gradient(ellipse at 50% 22%, #0c2418 0%, #07140d 55%, #04090a 100%);
+    top: 44px; left: 0; right: 0; bottom: 56px;
+    background: radial-gradient(ellipse at 50% 22%, #0c2418 0%, #07140d 55%, #04090a 100%);
     overflow: hidden;
   }
-  /* perspective lines on grass */
   .pitch::before {
     content: "";
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background:
       radial-gradient(ellipse at 50% 26%, transparent 0%, rgba(124,246,200,0.05) 40%, transparent 70%),
       linear-gradient(180deg, transparent 0%, transparent 40%, rgba(255,255,255,0.04) 100%);
     pointer-events: none;
   }
-  /* perspective converging lines */
-  .pitch::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-      linear-gradient(to top right, transparent 49.5%, rgba(255,255,255,0.04) 49.8%, rgba(255,255,255,0.04) 50.2%, transparent 50.5%),
-      linear-gradient(to top left,  transparent 49.5%, rgba(255,255,255,0.04) 49.8%, rgba(255,255,255,0.04) 50.2%, transparent 50.5%);
-    background-size: 100% 100%;
-    pointer-events: none;
-  }
 
-  /* =====================================================
-     Goal (positioned at top of pitch)
-     pitch is 500px tall. Goal area top: 30px → 170px
-  ===================================================== */
+  /* Goal */
   .goal {
     position: absolute;
     top: 28px;
@@ -114,58 +102,35 @@
     width: 420px;
     height: 150px;
   }
-  .goal svg {
-    width: 100%;
-    height: 100%;
-    overflow: visible;
-  }
+  .goal svg { width: 100%; height: 100%; overflow: visible; }
   .goal .post {
-    stroke: #ffffff;
-    stroke-width: 4;
-    fill: none;
-    stroke-linejoin: round;
-    stroke-linecap: round;
+    stroke: #fff; stroke-width: 4; fill: none;
+    stroke-linejoin: round; stroke-linecap: round;
     filter: drop-shadow(0 0 6px rgba(255,255,255,0.45));
   }
-  .goal .net {
-    stroke: rgba(255,255,255,0.22);
-    stroke-width: 1;
-    fill: none;
-  }
-  .goal .net-fill {
-    fill: rgba(255,255,255,0.04);
-  }
+  .goal .net { stroke: rgba(255,255,255,0.22); stroke-width: 1; fill: none; }
+  .goal .net-fill { fill: rgba(255,255,255,0.04); }
+
   .penaltyBox {
     position: absolute;
     top: 168px;
-    left: 60px;
-    right: 60px;
+    left: 60px; right: 60px;
     height: 200px;
     pointer-events: none;
   }
   .penaltyBox svg { width: 100%; height: 100%; overflow: visible; }
-  .penaltyBox path {
-    stroke: rgba(255,255,255,0.18);
-    stroke-width: 2;
-    fill: none;
-  }
+  .penaltyBox path { stroke: rgba(255,255,255,0.18); stroke-width: 2; fill: none; }
   .penaltySpot {
     position: absolute;
-    left: 50%;
-    top: 360px;
-    width: 6px;
-    height: 6px;
+    left: 50%; top: 360px;
+    width: 6px; height: 6px;
     border-radius: 50%;
     background: #fff;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 6px rgba(255,255,255,0.6);
   }
 
-  /* =====================================================
-     3x3 aim/dive grid overlay on goal mouth
-     Goal mouth visually y = 30 to 145 in pitch coords
-     Grid: y=38 (top) to y=140 (bottom), width 320 centered
-  ===================================================== */
+  /* 3x3 grid */
   .aimGrid {
     position: absolute;
     top: 38px;
@@ -183,7 +148,6 @@
     border: 1.5px dashed rgba(124, 246, 200, 0.16);
     border-radius: 4px;
     transition: all 0.12s ease;
-    position: relative;
   }
   .aimCell.target {
     border-color: #7cf6c8;
@@ -192,27 +156,20 @@
     box-shadow: 0 0 14px rgba(124, 246, 200, 0.45) inset,
                 0 0 14px rgba(124, 246, 200, 0.35);
   }
-  /* in keeper mode, cells take a different accent */
   .keepMode .aimCell.target {
     border-color: #ffd54a;
     background: rgba(255, 213, 74, 0.18);
     box-shadow: 0 0 14px rgba(255, 213, 74, 0.45) inset,
                 0 0 14px rgba(255, 213, 74, 0.35);
   }
-  .aimCell.locked {
-    border-style: solid;
-    opacity: 0.85;
-  }
+  .aimCell.locked { border-style: solid; opacity: 0.85; }
 
-  /* =====================================================
-     Goalkeeper (in the goal mouth)
-  ===================================================== */
+  /* Goalkeeper */
   .keeper {
     position: absolute;
     top: 60px;
     left: 50%;
-    width: 52px;
-    height: 86px;
+    width: 52px; height: 86px;
     transform: translateX(-50%);
     transition: transform 0.22s cubic-bezier(0.4, 0.8, 0.4, 1);
     z-index: 5;
@@ -220,48 +177,37 @@
   }
   .keeper svg { width: 100%; height: 100%; }
 
-  /* =====================================================
-     Striker (kicker)
-  ===================================================== */
+  /* Striker */
   .striker {
     position: absolute;
     bottom: 70px;
     left: 50%;
-    width: 86px;
-    height: 132px;
+    width: 86px; height: 132px;
     transform: translateX(-50%) translateX(-46px);
     z-index: 3;
     pointer-events: none;
     transition: transform 0.15s ease;
   }
   .striker svg { width: 100%; height: 100%; }
-  .striker.kicking {
-    transform: translateX(-50%) translateX(-46px) translateX(-6px);
-  }
+  .striker.kicking { transform: translateX(-50%) translateX(-46px) translateX(-6px); }
 
-  /* =====================================================
-     Ball
-  ===================================================== */
+  /* Ball */
   .ball {
     position: absolute;
     bottom: 60px;
     left: 50%;
-    width: 36px;
-    height: 36px;
+    width: 36px; height: 36px;
     transform: translateX(-50%);
     z-index: 6;
     pointer-events: none;
     will-change: transform;
   }
   .ball svg { width: 100%; height: 100%; }
-
-  /* ball shadow on ground */
   .ballShadow {
     position: absolute;
     bottom: 50px;
     left: 50%;
-    width: 24px;
-    height: 6px;
+    width: 24px; height: 6px;
     background: radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 70%);
     transform: translateX(-50%);
     z-index: 2;
@@ -269,20 +215,17 @@
     will-change: transform, opacity;
   }
 
-  /* =====================================================
-     Power meter
-  ===================================================== */
+  /* Power meter */
   .powerWrap {
     position: absolute;
-    right: 14px;
-    top: 30px;
-    bottom: 60px;
+    right: 14px; top: 30px; bottom: 60px;
     width: 14px;
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(124,246,200,0.3);
     border-radius: 8px;
     overflow: hidden;
     z-index: 8;
+    transition: opacity 0.2s ease;
   }
   .powerFill {
     position: absolute;
@@ -291,7 +234,6 @@
     background: linear-gradient(180deg, #ff5b6e 0%, #ffd54a 50%, #7cf6c8 100%);
     transition: height 0.08s linear;
   }
-  /* sweet-spot markings */
   .powerWrap::after {
     content: "";
     position: absolute;
@@ -304,28 +246,52 @@
   }
   .powerLabel {
     position: absolute;
-    right: 32px;
-    top: 30px;
+    right: 32px; top: 30px;
     font-size: 9px;
     letter-spacing: 0.25em;
     color: #7cf6c8;
     writing-mode: vertical-rl;
     z-index: 8;
+    transition: opacity 0.2s ease;
   }
-  .powerWrap.hidden, .powerLabel.hidden { opacity: 0.25; }
+  .powerWrap.hidden, .powerLabel.hidden { opacity: 0.18; }
 
-  /* =====================================================
-     Status + result flash
-  ===================================================== */
+  /* attempt dots (shows 1..5 with goal/miss) */
+  .attemptDots {
+    position: absolute;
+    bottom: 8px; left: 14px;
+    display: flex;
+    gap: 6px;
+    z-index: 8;
+  }
+  .attemptDots .row {
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .attemptDots .row .label {
+    font-size: 8px;
+    letter-spacing: 0.18em;
+    color: #8a93a3;
+    margin-bottom: 2px;
+  }
+  .attemptDots .row .dots { display: flex; gap: 5px; }
+  .attemptDots .d {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #2a2f3a;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .attemptDots .d.score   { background: #7cf6c8; box-shadow: 0 0 6px #7cf6c8; }
+  .attemptDots .d.fail    { background: #ff5b6e; box-shadow: 0 0 5px #ff5b6e; }
+  .attemptDots .youRow .label { color: #7cf6c8; }
+  .attemptDots .cpuRow .label { color: #ff8a99; }
+
+  /* Bottom status */
   .bottom {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 4px;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 4px;
     z-index: 20;
   }
   .status {
@@ -345,14 +311,12 @@
     letter-spacing: 0.3em;
   }
 
+  /* Result flash */
   .flash {
     position: absolute;
     inset: 44px 0 56px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 92px;
-    font-weight: 200;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 92px; font-weight: 200;
     letter-spacing: 0.06em;
     opacity: 0;
     pointer-events: none;
@@ -364,63 +328,60 @@
   .flash.miss  { color: #ff5b6e; text-shadow: 0 0 24px #ff5b6e; }
   .flash.saved { color: #ffd54a; text-shadow: 0 0 24px #ffd54a; }
 
-  /* =====================================================
-     Menu (mode select)
-  ===================================================== */
-  .menu {
+  /* Overlay screens (menu / halftime / fulltime) */
+  .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.78);
+    background: rgba(0,0,0,0.82);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     flex-direction: column;
     z-index: 50;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.22s ease;
+    padding: 20px;
   }
-  .menu.hidden { opacity: 0; pointer-events: none; }
-  .menu .big {
-    font-size: 44px;
+  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .overlay .big {
+    font-size: 40px;
     font-weight: 200;
     letter-spacing: 0.12em;
     color: #7cf6c8;
     text-shadow: 0 0 24px rgba(124,246,200,0.35);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
-  .menu .sub {
-    font-size: 14px;
+  .overlay .sub {
+    font-size: 13px;
     letter-spacing: 0.32em;
     color: #8a93a3;
-    margin-bottom: 32px;
+    margin-bottom: 26px;
   }
-  .menu .modes {
-    display: flex;
-    gap: 20px;
+  .overlay .menuHint {
+    margin-top: 22px;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: #2a2f3a;
   }
+
+  /* mode select */
+  .modes { display: flex; gap: 20px; }
   .modeBtn {
-    width: 200px;
-    height: 200px;
+    width: 180px; height: 180px;
     border: 2px solid #2a2f3a;
-    border-radius: 18px;
+    border-radius: 16px;
     background: rgba(255,255,255,0.02);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 6px;
     cursor: pointer;
     transition: all 0.18s ease;
+    padding: 12px;
   }
-  .modeBtn .icon {
-    font-size: 64px;
-    line-height: 1;
-  }
-  .modeBtn .label {
-    font-size: 18px;
-    letter-spacing: 0.22em;
-    color: #cfd6e0;
+  .modeBtn .icon { font-size: 56px; line-height: 1; }
+  .modeBtn .label { font-size: 14px; letter-spacing: 0.18em; color: #cfd6e0; }
+  .modeBtn .sub2 {
+    font-size: 10px; letter-spacing: 0.18em; color: #8a93a3;
+    margin-top: 4px; text-align: center;
   }
   .modeBtn.target {
     border-color: #7cf6c8;
@@ -428,24 +389,72 @@
     box-shadow: 0 0 24px rgba(124,246,200,0.35);
   }
   .modeBtn.target .label { color: #7cf6c8; }
-  .menu .menuHint {
-    margin-top: 28px;
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: #2a2f3a;
-  }
 
-  /* =====================================================
-     "Back to menu" indicator
-  ===================================================== */
+  /* half-time / full-time content */
+  .matchSummary {
+    display: flex; align-items: center; justify-content: center;
+    gap: 32px;
+    margin-bottom: 18px;
+  }
+  .matchSummary .side {
+    display: flex; flex-direction: column; align-items: center;
+    min-width: 110px;
+  }
+  .matchSummary .side .name {
+    font-size: 11px; letter-spacing: 0.28em; color: #8a93a3;
+    margin-bottom: 6px;
+  }
+  .matchSummary .side .val {
+    font-size: 72px; font-weight: 200; line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .matchSummary .you .name { color: #7cf6c8; }
+  .matchSummary .you .val  { color: #7cf6c8; text-shadow: 0 0 20px rgba(124,246,200,0.4); }
+  .matchSummary .cpu .name { color: #ff8a99; }
+  .matchSummary .cpu .val  { color: #ff8a99; text-shadow: 0 0 18px rgba(255,138,153,0.35); }
+  .matchSummary .dash {
+    font-size: 32px; color: #2a2f3a;
+  }
+  .summaryDots {
+    display: flex; flex-direction: column; gap: 4px;
+    margin-bottom: 18px;
+  }
+  .summaryDots .row { display: flex; gap: 8px; align-items: center; }
+  .summaryDots .row .lbl {
+    font-size: 10px; letter-spacing: 0.22em;
+    color: #8a93a3; width: 46px;
+  }
+  .summaryDots .row .dots { display: flex; gap: 6px; }
+  .summaryDots .row.you .lbl { color: #7cf6c8; }
+  .summaryDots .row.cpu .lbl { color: #ff8a99; }
+  .summaryDots .d {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: #2a2f3a;
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .summaryDots .d.score { background: #7cf6c8; box-shadow: 0 0 6px #7cf6c8; }
+  .summaryDots .d.fail  { background: #ff5b6e; box-shadow: 0 0 5px #ff5b6e; }
+  .summaryDots .row.cpu .d.score { background: #ff8a99; box-shadow: 0 0 6px #ff8a99; }
+  .summaryDots .row.cpu .d.fail  { background: #2a2f3a; box-shadow: none; }
+
+  .verdict {
+    font-size: 26px;
+    letter-spacing: 0.24em;
+    margin-bottom: 10px;
+    font-weight: 200;
+  }
+  .verdict.win  { color: #7cf6c8; text-shadow: 0 0 18px rgba(124,246,200,0.5); }
+  .verdict.lose { color: #ff5b6e; text-shadow: 0 0 18px rgba(255,91,110,0.5); }
+  .verdict.draw { color: #ffd54a; }
+
   .backBadge {
     position: absolute;
-    left: 14px;
-    top: 8px;
+    left: 12px; bottom: 4px;
     font-size: 9px;
     letter-spacing: 0.22em;
     color: #2a2f3a;
-    z-index: 31;
+    z-index: 21;
   }
   .backBadge b { color: #8a93a3; font-weight: 400; }
 </style>
@@ -456,22 +465,20 @@
   <!-- ===== Top bar ===== -->
   <div class="topbar">
     <div style="display:flex; align-items:center;">
-      <div class="title">SOCCER · PK</div>
+      <div class="title">PK</div>
       <div class="mode-pill" id="modePill">SHOOT</div>
+      <div class="turnInfo" id="turnInfo">1 / 5</div>
     </div>
-    <div class="scorebox" id="scorebox">
-      <div>GOAL<b id="sGoal">0</b></div>
-      <div>SHOT<b id="sShot">0</b></div>
-      <div>STREAK<b id="sStreak">0</b></div>
+    <div class="matchScore">
+      <span class="cpu" id="cpuScore">0</span>
+      <span class="vs">VS</span>
+      <span class="you" id="youScore">0</span>
     </div>
   </div>
-
-  <div class="backBadge" id="backBadge"><b>M</b> · MENU</div>
 
   <!-- ===== Pitch ===== -->
   <div class="pitch" id="pitch">
 
-    <!-- penalty box (perspective) -->
     <div class="penaltyBox">
       <svg viewBox="0 0 300 200" preserveAspectRatio="none">
         <path d="M 0 200 L 50 0 L 250 0 L 300 200" />
@@ -480,12 +487,9 @@
     </div>
     <div class="penaltySpot"></div>
 
-    <!-- Goal frame -->
     <div class="goal">
       <svg viewBox="0 0 420 150" preserveAspectRatio="none">
-        <!-- back net fill -->
         <path class="net-fill" d="M 40 20 L 380 20 L 380 110 L 40 110 Z" />
-        <!-- net vertical -->
         <g class="net">
           <line x1="80"  y1="20" x2="80"  y2="110" />
           <line x1="120" y1="20" x2="120" y2="110" />
@@ -496,29 +500,24 @@
           <line x1="320" y1="20" x2="320" y2="110" />
           <line x1="360" y1="20" x2="360" y2="110" />
         </g>
-        <!-- net horizontal -->
         <g class="net">
           <line x1="40" y1="40"  x2="380" y2="40" />
           <line x1="40" y1="60"  x2="380" y2="60" />
           <line x1="40" y1="80"  x2="380" y2="80" />
           <line x1="40" y1="100" x2="380" y2="100" />
         </g>
-        <!-- side net (perspective) -->
         <g class="net">
           <line x1="10"  y1="148" x2="40"  y2="110" />
           <line x1="410" y1="148" x2="380" y2="110" />
           <line x1="10"  y1="148" x2="40"  y2="20" />
           <line x1="410" y1="148" x2="380" y2="20" />
         </g>
-        <!-- crossbar + posts -->
         <path class="post" d="M 40 110 L 40 20 L 380 20 L 380 110" />
-        <!-- ground extension of posts -->
         <line class="post" x1="40"  y1="110" x2="10"  y2="148" />
         <line class="post" x1="380" y1="110" x2="410" y2="148" />
       </svg>
     </div>
 
-    <!-- 3x3 aim grid -->
     <div class="aimGrid" id="aimGrid">
       <div class="aimCell" data-cell="0"></div>
       <div class="aimCell" data-cell="1"></div>
@@ -531,29 +530,21 @@
       <div class="aimCell" data-cell="8"></div>
     </div>
 
-    <!-- Goalkeeper -->
     <div class="keeper" id="keeper">
       <svg viewBox="0 0 52 86">
-        <!-- gloves -->
         <circle cx="6"  cy="44" r="6" fill="#ffd54a"/>
         <circle cx="46" cy="44" r="6" fill="#ffd54a"/>
-        <!-- arms -->
         <rect x="6"  y="42" width="18" height="6" fill="#fff"/>
         <rect x="28" y="42" width="18" height="6" fill="#fff"/>
-        <!-- body -->
         <rect x="16" y="28" width="20" height="34" rx="4" fill="#7cf6c8"/>
-        <!-- head -->
         <circle cx="26" cy="16" r="10" fill="#fff"/>
-        <!-- legs -->
         <rect x="18" y="62" width="6" height="20" fill="#fff"/>
         <rect x="28" y="62" width="6" height="20" fill="#fff"/>
       </svg>
     </div>
 
-    <!-- Ball shadow (stays on ground line, fades) -->
     <div class="ballShadow" id="ballShadow"></div>
 
-    <!-- Ball -->
     <div class="ball" id="ball">
       <svg viewBox="0 0 36 36">
         <circle cx="18" cy="18" r="16" fill="#fff" stroke="#000" stroke-width="1.5"/>
@@ -564,57 +555,99 @@
       </svg>
     </div>
 
-    <!-- Striker silhouette -->
     <div class="striker" id="striker">
       <svg viewBox="0 0 86 132">
-        <!-- head -->
         <circle cx="43" cy="18" r="12" fill="#cfd6e0"/>
-        <!-- torso -->
         <rect x="28" y="30" width="30" height="44" rx="6" fill="#cfd6e0"/>
-        <!-- arms -->
         <rect x="6"  y="48" width="22" height="9" fill="#cfd6e0"/>
         <rect x="58" y="48" width="22" height="9" fill="#cfd6e0"/>
-        <!-- standing leg -->
         <rect x="32" y="74" width="10" height="40" fill="#cfd6e0"/>
-        <!-- kicking leg -->
         <rect x="46" y="74" width="10" height="32" fill="#cfd6e0"/>
         <rect x="46" y="100" width="22" height="9" fill="#cfd6e0"/>
-        <!-- boot -->
         <ellipse cx="68" cy="112" rx="10" ry="5" fill="#7cf6c8"/>
       </svg>
     </div>
 
-    <!-- Power meter -->
     <div class="powerLabel" id="powerLabel">POWER</div>
     <div class="powerWrap" id="powerWrap">
       <div class="powerFill" id="powerFill"></div>
     </div>
 
-    <!-- Result flash overlay -->
+    <!-- Attempt dots overlay (YOU + CPU rows) -->
+    <div class="attemptDots">
+      <div class="row youRow">
+        <div class="label">YOU</div>
+        <div class="dots" id="youDots">
+          <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
+        </div>
+      </div>
+      <div class="row cpuRow" style="margin-left:14px;">
+        <div class="label">CPU</div>
+        <div class="dots" id="cpuDots">
+          <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="flash" id="flash"></div>
   </div>
 
   <!-- ===== Bottom status ===== -->
   <div class="bottom">
-    <div class="status" id="status">— SELECT MODE —</div>
-    <div class="hint" id="hint">← → ↑ ↓  AIM  ·  ⏎  SHOOT  ·  M  MENU</div>
+    <div class="status" id="status">— PRESS ⏎ —</div>
+    <div class="hint" id="hint">← →  CHOOSE  ·  ⏎  START</div>
   </div>
+  <div class="backBadge"><b>M</b> · MENU</div>
 
-  <!-- ===== Menu (mode select) ===== -->
-  <div class="menu" id="menu">
+  <!-- ===== Menu (pick first role) ===== -->
+  <div class="overlay" id="menu">
     <div class="big">SOCCER · PK</div>
-    <div class="sub">SELECT MODE</div>
+    <div class="sub">5 vs 5 SHOOTOUT</div>
     <div class="modes" id="modeButtons">
       <div class="modeBtn target" data-mode="shoot">
         <div class="icon">⚽</div>
-        <div class="label">SHOOT</div>
+        <div class="label">SHOOT FIRST</div>
+        <div class="sub2">5 KICKS, THEN SAVE</div>
       </div>
       <div class="modeBtn" data-mode="keep">
         <div class="icon">🧤</div>
-        <div class="label">SAVE</div>
+        <div class="label">SAVE FIRST</div>
+        <div class="sub2">5 SAVES, THEN KICK</div>
       </div>
     </div>
     <div class="menuHint">← →  ·  ⏎  START</div>
+  </div>
+
+  <!-- ===== Half-time ===== -->
+  <div class="overlay hidden" id="halftime">
+    <div class="big">HALF TIME</div>
+    <div class="sub" id="htSub">SWITCH ROLES</div>
+    <div class="matchSummary">
+      <div class="side you"><div class="name">YOU</div><div class="val" id="htYou">0</div></div>
+      <div class="dash">—</div>
+      <div class="side cpu"><div class="name">CPU</div><div class="val" id="htCpu">0</div></div>
+    </div>
+    <div class="summaryDots">
+      <div class="row you"><div class="lbl">YOU</div><div class="dots" id="htYouDots"></div></div>
+      <div class="row cpu"><div class="lbl">CPU</div><div class="dots" id="htCpuDots"></div></div>
+    </div>
+    <div class="menuHint">⏎  CONTINUE</div>
+  </div>
+
+  <!-- ===== Full-time ===== -->
+  <div class="overlay hidden" id="fulltime">
+    <div class="big" id="ftBig">FULL TIME</div>
+    <div class="verdict" id="ftVerdict">— DRAW —</div>
+    <div class="matchSummary">
+      <div class="side you"><div class="name">YOU</div><div class="val" id="ftYou">0</div></div>
+      <div class="dash">—</div>
+      <div class="side cpu"><div class="name">CPU</div><div class="val" id="ftCpu">0</div></div>
+    </div>
+    <div class="summaryDots">
+      <div class="row you"><div class="lbl">YOU</div><div class="dots" id="ftYouDots"></div></div>
+      <div class="row cpu"><div class="lbl">CPU</div><div class="dots" id="ftCpuDots"></div></div>
+    </div>
+    <div class="menuHint">⏎  REMATCH  ·  M  MENU</div>
   </div>
 </div>
 
@@ -624,75 +657,72 @@
 const $ = id => document.getElementById(id);
 
 /* =====================================================
-   Cell geometry (px in pitch coords)
-   Pitch element is 600w × 500h (after top/bottom bars).
-   aimGrid: top:38, left:140, width:320, height:110, gap:3
-   Cell size: (320 - 6) / 3 ≈ 104.66 wide, (110 - 6)/3 ≈ 34.66 tall
-   Cell centers:
-     col x = 140 + 52.3, 140 + 160, 140 + 267.7
-           = 192, 300, 408
-     row y = 38 + 17.3, 38 + 55, 38 + 92.7
-           = 55, 93, 131
+   Geometry
 ===================================================== */
 const COL_X = [192, 300, 408];
 const ROW_Y = [55, 93, 131];
+const cellCenter = i => ({ x: COL_X[i % 3], y: ROW_Y[Math.floor(i / 3)] });
 
-function cellCenter(i) {
-  return { x: COL_X[i % 3], y: ROW_Y[Math.floor(i / 3)] };
-}
-
-// Ball start (top-left coords of ball element after translateX(-50%))
-// Ball is 36×36, positioned bottom:60, left:50%, transform translateX(-50%)
-// Pitch is 500 tall, so ball top = 500 - 60 - 36 = 404; center = 422
-// Ball x center = 300 (pitch is 600 wide)
-const BALL_START = { x: 300, y: 422 };
-
-// Keeper element: top:60, left:50%, width:52, height:86
-// Keeper center x = 300, top = 60, center y = 60 + 43 = 103
-const KEEPER_HOME = { x: 300, y: 103 };
+const BALL_START   = { x: 300, y: 422 };
+const KEEPER_HOME  = { x: 300, y: 103 };
 
 /* =====================================================
    State
 ===================================================== */
 const state = {
-  scene: 'menu',          // 'menu' | 'shoot' | 'keep'
+  scene: 'menu',          // 'menu' | 'play' | 'halftime' | 'fulltime'
   menuPick: 0,            // 0 = shoot, 1 = keep
-  aim: 4,                 // currently selected cell (shooter)
-  dive: 4,                // currently selected dive cell (keeper)
+  role: 'shoot',          // current user role: 'shoot' | 'keep'
+  firstRole: 'shoot',
+  phase: 1,               // 1 | 2 | 'sd'
+  turn: 0,                // 0-indexed turn within phase
+  maxTurns: 5,
+  active: false,
+  aim: 4,
+  dive: 4,
   power: 0.5,
   powerDir: 1,
-  active: false,          // shot in progress
-  score: {
-    shoot: { goals: 0, shots: 0, streak: 0 },
-    keep:  { saves: 0, faced: 0, streak: 0 },
-  },
+  you: 0, cpu: 0,
+  // history of each attempt: { who: 'you'|'cpu', outcome: 'goal'|'fail' }
+  history: { you: [], cpu: [] },
+  // sudden death sub-round tracker (each round = you shoot + you save once)
+  sdRound: 0,
 };
 
 /* =====================================================
-   Rendering
+   Render helpers
 ===================================================== */
 const cells = Array.from(document.querySelectorAll('.aimCell'));
 const modeButtons = Array.from(document.querySelectorAll('.modeBtn'));
 
 function renderGrid() {
-  const which = state.scene === 'keep' ? state.dive : state.aim;
+  const which = state.role === 'keep' ? state.dive : state.aim;
   cells.forEach((c, i) => c.classList.toggle('target', i === which));
 }
 
 function renderScore() {
-  if (state.scene === 'keep') {
-    $('sGoal').parentElement.firstChild.textContent = 'SAVE';
-    $('sShot').parentElement.firstChild.textContent = 'FACE';
-    $('sGoal').textContent   = state.score.keep.saves;
-    $('sShot').textContent   = state.score.keep.faced;
-    $('sStreak').textContent = state.score.keep.streak;
+  $('youScore').textContent = state.you;
+  $('cpuScore').textContent = state.cpu;
+  // turn info
+  if (state.phase === 'sd') {
+    $('turnInfo').textContent = 'SD · R' + (state.sdRound + 1);
   } else {
-    $('sGoal').parentElement.firstChild.textContent = 'GOAL';
-    $('sShot').parentElement.firstChild.textContent = 'SHOT';
-    $('sGoal').textContent   = state.score.shoot.goals;
-    $('sShot').textContent   = state.score.shoot.shots;
-    $('sStreak').textContent = state.score.shoot.streak;
+    $('turnInfo').textContent = (state.turn + 1) + ' / ' + state.maxTurns;
   }
+}
+
+function renderAttemptDots() {
+  const youDots = $('youDots').children;
+  const cpuDots = $('cpuDots').children;
+  for (let i = 0; i < 5; i++) {
+    [youDots[i], cpuDots[i]].forEach(d => d.className = 'd');
+  }
+  state.history.you.forEach((h, i) => {
+    if (i < 5) youDots[i].classList.add(h === 'goal' ? 'score' : 'fail');
+  });
+  state.history.cpu.forEach((h, i) => {
+    if (i < 5) cpuDots[i].classList.add(h === 'goal' ? 'score' : 'fail');
+  });
 }
 
 function renderPower() {
@@ -703,27 +733,6 @@ function renderMenuPick() {
   modeButtons.forEach((b, i) => b.classList.toggle('target', i === state.menuPick));
 }
 
-/* =====================================================
-   Power oscillation
-===================================================== */
-let lastT = performance.now();
-function tick(t) {
-  const dt = Math.min(0.05, (t - lastT) / 1000);
-  lastT = t;
-  // Power oscillates only in SHOOT mode when not active
-  if (state.scene === 'shoot' && !state.active) {
-    state.power += state.powerDir * dt * 0.85;
-    if (state.power >= 1) { state.power = 1; state.powerDir = -1; }
-    if (state.power <= 0) { state.power = 0; state.powerDir = 1; }
-    renderPower();
-  }
-  requestAnimationFrame(tick);
-}
-requestAnimationFrame(t => { lastT = t; tick(t); });
-
-/* =====================================================
-   Setting status / flash
-===================================================== */
 function setStatus(text, cls) {
   const s = $('status');
   s.textContent = text;
@@ -737,10 +746,27 @@ function flash(text, cls) {
 }
 
 /* =====================================================
+   Power oscillation (only while user is about to shoot)
+===================================================== */
+let lastT = performance.now();
+function tick(t) {
+  const dt = Math.min(0.05, (t - lastT) / 1000);
+  lastT = t;
+  if (state.scene === 'play' && state.role === 'shoot' && !state.active) {
+    state.power += state.powerDir * dt * 0.85;
+    if (state.power >= 1) { state.power = 1; state.powerDir = -1; }
+    if (state.power <= 0) { state.power = 0; state.powerDir = 1; }
+    renderPower();
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(t => { lastT = t; tick(t); });
+
+/* =====================================================
    Aim navigation
 ===================================================== */
 function moveCursor(dx, dy) {
-  const key = state.scene === 'keep' ? 'dive' : 'aim';
+  const key = state.role === 'keep' ? 'dive' : 'aim';
   let x = state[key] % 3, y = Math.floor(state[key] / 3);
   x = Math.max(0, Math.min(2, x + dx));
   y = Math.max(0, Math.min(2, y + dy));
@@ -749,170 +775,7 @@ function moveCursor(dx, dy) {
 }
 
 /* =====================================================
-   Shot execution (shooter mode)
-   - Power affects ball flight speed AND visual reach
-   - Low power: ball flies slow, falls short (hits net low or doesn't reach)
-   - Sweet spot (~30%-58% of meter = within marked band): high accuracy, normal reach
-   - High power: fast but accuracy degrades (stray)
-===================================================== */
-function shoot() {
-  if (state.active) return;
-  state.active = true;
-  state.score.shoot.shots++;
-
-  const aim   = state.aim;
-  const power = state.power;
-
-  // accuracy: based on how close power is to the sweet zone [0.30, 0.58]
-  let accuracy;
-  if      (power < 0.10) accuracy = 0.10;
-  else if (power < 0.30) accuracy = 0.55;
-  else if (power < 0.58) accuracy = 0.96;
-  else if (power < 0.82) accuracy = 0.70;
-  else                   accuracy = 0.40;
-
-  // keeper guess (weighted toward middle/center)
-  const weights = [1, 1.4, 1, 1.3, 1.7, 1.3, 0.9, 1.2, 0.9];
-  const keeperCell = weightedPick(weights);
-
-  // intended landing cell (after possible stray)
-  let landed = aim;
-  const strayed = Math.random() > accuracy;
-  if (strayed) {
-    const offsets = [-1, 1, -3, 3].filter(d => {
-      const n = aim + d;
-      if (n < 0 || n > 8) return false;
-      if (Math.abs(d) === 1 && Math.floor(n/3) !== Math.floor(aim/3)) return false;
-      return true;
-    });
-    if (offsets.length) landed = aim + offsets[Math.floor(Math.random() * offsets.length)];
-  }
-
-  // very weak shot: doesn't reach the goal at all
-  const tooWeak = power < 0.12;
-  // very wild shot: flies wide/over
-  const tooWild = strayed && (power > 0.92 || power < 0.06);
-
-  // animate striker plant + kick
-  $('striker').classList.add('kicking');
-  setTimeout(() => $('striker').classList.remove('kicking'), 220);
-
-  // animate keeper dive
-  diveKeeper(keeperCell, 280);
-
-  // Ball flight
-  flyBall({
-    fromX: BALL_START.x,
-    fromY: BALL_START.y,
-    toCell: landed,
-    power,
-    tooWeak,
-    tooWild,
-    onArrive: () => {
-      let outcome;
-      if (tooWild)                  outcome = 'miss';
-      else if (tooWeak)             outcome = 'saved';     // keeper picks up
-      else if (landed === keeperCell) outcome = 'saved';
-      else                          outcome = 'goal';
-
-      finishShoot(outcome);
-    },
-  });
-}
-
-function finishShoot(outcome) {
-  if (outcome === 'goal')      { state.score.shoot.goals++; state.score.shoot.streak++; flash('GOAL!', 'goal');  setStatus('GOAL!', 'goal'); }
-  else if (outcome === 'saved'){ state.score.shoot.streak = 0;                          flash('SAVED', 'saved'); setStatus('SAVED', 'saved'); }
-  else                         { state.score.shoot.streak = 0;                          flash('MISS',  'miss');  setStatus('MISS', 'miss'); }
-  renderScore();
-  setTimeout(() => resetRound('shoot'), 1200);
-}
-
-/* =====================================================
-   Keeper mode round
-   - Player pre-selects dive cell with arrows
-   - Press Enter → "STRIKER READY..." → AI shoots
-   - Keeper dives to player's selection
-   - Result revealed
-===================================================== */
-function diveCommit() {
-  if (state.active) return;
-  state.active = true;
-  state.score.keep.faced++;
-
-  // lock visual
-  cells[state.dive].classList.add('locked');
-
-  setStatus('STRIKER READY…', 'hint');
-
-  setTimeout(() => {
-    setStatus('HERE IT COMES!', 'hint');
-
-    // AI striker picks aim + power (corners more common)
-    const aiWeights = [1.3, 0.7, 1.3, 1.2, 0.6, 1.2, 1.4, 0.8, 1.4];
-    const aiAim = weightedPick(aiWeights);
-    const aiPower = 0.35 + Math.random() * 0.5; // 0.35..0.85
-
-    // AI accuracy: pretty good
-    const aiAccuracy = 0.85;
-    let landed = aiAim;
-    if (Math.random() > aiAccuracy) {
-      const offsets = [-1, 1, -3, 3].filter(d => {
-        const n = aiAim + d;
-        if (n < 0 || n > 8) return false;
-        if (Math.abs(d) === 1 && Math.floor(n/3) !== Math.floor(aiAim/3)) return false;
-        return true;
-      });
-      if (offsets.length) landed = aiAim + offsets[Math.floor(Math.random() * offsets.length)];
-    }
-
-    const wide = Math.random() < 0.06; // rare AI miss
-
-    $('striker').classList.add('kicking');
-    setTimeout(() => $('striker').classList.remove('kicking'), 220);
-
-    // Keeper dives to player's pre-selected cell, timed during ball flight
-    diveKeeper(state.dive, 260);
-
-    flyBall({
-      fromX: BALL_START.x,
-      fromY: BALL_START.y,
-      toCell: landed,
-      power: aiPower,
-      tooWeak: false,
-      tooWild: wide,
-      onArrive: () => {
-        let outcome;
-        if (wide)                       outcome = 'miss';   // AI missed → save credit? no, just goal-miss
-        else if (landed === state.dive) outcome = 'saved';
-        else                            outcome = 'goal';
-
-        // From keeper's POV: SAVED is good
-        if (outcome === 'saved') {
-          state.score.keep.saves++;
-          state.score.keep.streak++;
-          flash('SAVED!', 'saved');
-          setStatus('GREAT SAVE!', 'saved');
-        } else if (outcome === 'miss') {
-          // AI's shot went wide — counts as a save for you
-          state.score.keep.saves++;
-          state.score.keep.streak++;
-          flash('WIDE!', 'miss');
-          setStatus('WIDE — LUCKY!', 'miss');
-        } else {
-          state.score.keep.streak = 0;
-          flash('GOAL', 'goal');
-          setStatus('CONCEDED', 'goal');
-        }
-        renderScore();
-        setTimeout(() => resetRound('keep'), 1300);
-      },
-    });
-  }, 700);
-}
-
-/* =====================================================
-   Shared animation helpers
+   Animation helpers
 ===================================================== */
 function diveKeeper(cell, delay) {
   setTimeout(() => {
@@ -925,41 +788,31 @@ function diveKeeper(cell, delay) {
   }, delay);
 }
 
-function flyBall({ fromX, fromY, toCell, power, tooWeak, tooWild, onArrive }) {
-  const ball = $('ball');
+function flyBall({ toCell, power, tooWeak, tooWild, onArrive }) {
+  const ball   = $('ball');
   const shadow = $('ballShadow');
   const target = cellCenter(toCell);
 
-  // If too weak: ball lands well short (still in front of goal)
-  // If too wild: ball flies past goal (over or wide)
   let endX = target.x;
   let endY = target.y;
   if (tooWeak) {
-    // land roughly halfway, on ground (low)
-    endY = fromY - (fromY - target.y) * 0.35;
+    endY = BALL_START.y - (BALL_START.y - target.y) * 0.35;
     endX = target.x + (Math.random() * 40 - 20);
   }
   if (tooWild) {
-    // overshoot above or wide
     if (Math.random() < 0.5) {
-      endY = target.y - 50;                        // over the bar
+      endY = target.y - 50;
       endX = target.x + (Math.random() * 60 - 30);
     } else {
-      endX = target.x + (Math.random() < 0.5 ? -160 : 160); // wide
+      endX = target.x + (Math.random() < 0.5 ? -160 : 160);
       endY = target.y + 20;
     }
   }
 
-  const dx = endX - fromX;
-  const dy = endY - fromY;
-
-  // power-based flight time: high power = fast (350ms), low = slow (1100ms)
+  const dx = endX - BALL_START.x;
+  const dy = endY - BALL_START.y;
   const ms = Math.round(1200 - power * 850);
-
-  // end scale shrinks with distance (perspective)
   const endScale = tooWeak ? 0.75 : 0.45;
-
-  // arc: midpoint is higher than linear interp (up arc)
   const arcLift = tooWeak ? 30 : 70 + power * 60;
   const midX = dx * 0.5;
   const midY = dy * 0.5 - arcLift;
@@ -968,33 +821,31 @@ function flyBall({ fromX, fromY, toCell, power, tooWeak, tooWild, onArrive }) {
   ball.getAnimations().forEach(a => a.cancel());
   ball.animate(
     [
-      { transform: `translateX(-50%) translate(0, 0) scale(1)` },
+      { transform: 'translateX(-50%) translate(0, 0) scale(1)' },
       { transform: `translateX(-50%) translate(${midX}px, ${midY}px) scale(${midScale})` },
       { transform: `translateX(-50%) translate(${dx}px, ${dy}px) scale(${endScale})` },
     ],
     { duration: ms, easing: 'cubic-bezier(0.25, 0.55, 0.5, 1)', fill: 'forwards' }
   );
 
-  // shadow: tracks horizontal motion, fades + shrinks as ball goes up
   shadow.getAnimations().forEach(a => a.cancel());
   shadow.animate(
     [
-      { transform: `translateX(-50%) translate(0, 0) scale(1)`, opacity: 0.8 },
+      { transform: 'translateX(-50%) translate(0, 0) scale(1)', opacity: 0.8 },
       { transform: `translateX(-50%) translate(${midX}px, ${-dy * 0.05}px) scale(0.65)`, opacity: 0.45 },
       { transform: `translateX(-50%) translate(${dx}px, ${-dy * 0.08}px) scale(0.4)`,   opacity: 0.2 },
     ],
     { duration: ms, easing: 'cubic-bezier(0.25, 0.55, 0.5, 1)', fill: 'forwards' }
   );
 
-  // trail dots along the path
+  // trail
   const trailCount = 5;
   for (let i = 1; i <= trailCount; i++) {
     setTimeout(() => spawnTrail(
-      fromX + dx * (i / (trailCount + 1)),
-      fromY + dy * (i / (trailCount + 1)) - arcLift * Math.sin(Math.PI * i / (trailCount + 1)),
+      BALL_START.x + dx * (i / (trailCount + 1)),
+      BALL_START.y + dy * (i / (trailCount + 1)) - arcLift * Math.sin(Math.PI * i / (trailCount + 1)),
     ), (ms / (trailCount + 1)) * i);
   }
-
   setTimeout(onArrive, ms);
 }
 
@@ -1028,64 +879,305 @@ function weightedPick(weights) {
 }
 
 /* =====================================================
-   Reset round
+   YOU shoot (user kicks)
 ===================================================== */
-function resetRound(mode) {
-  // restore ball/keeper/shadow
-  const ball = $('ball');   ball.getAnimations().forEach(a => a.cancel());
-  const sh   = $('ballShadow'); sh.getAnimations().forEach(a => a.cancel());
-  ball.style.transform = 'translateX(-50%)';
-  sh.style.transform   = 'translateX(-50%)';
-  sh.style.opacity = '0.8';
-  $('keeper').style.transform = 'translateX(-50%)';
-  cells.forEach(c => c.classList.remove('locked'));
-  state.active = false;
-  if (mode === 'shoot') setStatus('AIM & SHOOT', '');
-  else                  setStatus('PICK YOUR DIVE', '');
+function shoot() {
+  if (state.active) return;
+  state.active = true;
+
+  const aim   = state.aim;
+  const power = state.power;
+
+  // accuracy by sweet spot (~30%-58%)
+  let accuracy;
+  if      (power < 0.10) accuracy = 0.10;
+  else if (power < 0.30) accuracy = 0.55;
+  else if (power < 0.58) accuracy = 0.96;
+  else if (power < 0.82) accuracy = 0.70;
+  else                   accuracy = 0.40;
+
+  const keeperWeights = [1, 1.4, 1, 1.3, 1.7, 1.3, 0.9, 1.2, 0.9];
+  const keeperCell = weightedPick(keeperWeights);
+
+  let landed = aim;
+  const strayed = Math.random() > accuracy;
+  if (strayed) {
+    const offsets = [-1, 1, -3, 3].filter(d => {
+      const n = aim + d;
+      if (n < 0 || n > 8) return false;
+      if (Math.abs(d) === 1 && Math.floor(n/3) !== Math.floor(aim/3)) return false;
+      return true;
+    });
+    if (offsets.length) landed = aim + offsets[Math.floor(Math.random() * offsets.length)];
+  }
+
+  const tooWeak = power < 0.12;
+  const tooWild = strayed && (power > 0.92 || power < 0.06);
+
+  $('striker').classList.add('kicking');
+  setTimeout(() => $('striker').classList.remove('kicking'), 220);
+  diveKeeper(keeperCell, 280);
+
+  flyBall({
+    toCell: landed, power, tooWeak, tooWild,
+    onArrive: () => {
+      let outcome;
+      if (tooWild)                    outcome = 'miss';
+      else if (tooWeak)               outcome = 'saved';
+      else if (landed === keeperCell) outcome = 'saved';
+      else                            outcome = 'goal';
+
+      if (outcome === 'goal') {
+        state.you++;
+        state.history.you.push('goal');
+        flash('GOAL!', 'goal'); setStatus('GOAL!', 'goal');
+      } else if (outcome === 'saved') {
+        state.history.you.push('fail');
+        flash('SAVED', 'saved'); setStatus('SAVED', 'saved');
+      } else {
+        state.history.you.push('fail');
+        flash('MISS', 'miss'); setStatus('MISS', 'miss');
+      }
+      renderScore();
+      renderAttemptDots();
+      setTimeout(advanceTurn, 1300);
+    },
+  });
 }
 
 /* =====================================================
-   Mode switching
+   YOU keep (CPU shoots)
 ===================================================== */
-function openMenu() {
-  state.scene = 'menu';
-  $('menu').classList.remove('hidden');
-  state.menuPick = 0;
-  renderMenuPick();
+function keep() {
+  if (state.active) return;
+  state.active = true;
+  cells[state.dive].classList.add('locked');
+
+  setStatus('STRIKER READY…', 'hint');
+
+  setTimeout(() => {
+    setStatus('HERE IT COMES!', 'hint');
+
+    const aiWeights = [1.3, 0.7, 1.3, 1.2, 0.6, 1.2, 1.4, 0.8, 1.4];
+    const aiAim = weightedPick(aiWeights);
+    const aiPower = 0.40 + Math.random() * 0.45;
+
+    let landed = aiAim;
+    if (Math.random() > 0.85) {
+      const offsets = [-1, 1, -3, 3].filter(d => {
+        const n = aiAim + d;
+        if (n < 0 || n > 8) return false;
+        if (Math.abs(d) === 1 && Math.floor(n/3) !== Math.floor(aiAim/3)) return false;
+        return true;
+      });
+      if (offsets.length) landed = aiAim + offsets[Math.floor(Math.random() * offsets.length)];
+    }
+
+    const wide = Math.random() < 0.07;
+
+    $('striker').classList.add('kicking');
+    setTimeout(() => $('striker').classList.remove('kicking'), 220);
+    diveKeeper(state.dive, 260);
+
+    flyBall({
+      toCell: landed, power: aiPower, tooWeak: false, tooWild: wide,
+      onArrive: () => {
+        let outcome;
+        if (wide)                       outcome = 'miss';
+        else if (landed === state.dive) outcome = 'saved';
+        else                            outcome = 'goal';
+
+        if (outcome === 'goal') {
+          state.cpu++;
+          state.history.cpu.push('goal');
+          flash('GOAL', 'goal'); setStatus('CONCEDED', 'goal');
+        } else if (outcome === 'saved') {
+          state.history.cpu.push('fail');
+          flash('SAVED!', 'saved'); setStatus('GREAT SAVE!', 'saved');
+        } else {
+          state.history.cpu.push('fail');
+          flash('WIDE', 'miss'); setStatus('WIDE — LUCKY!', 'miss');
+        }
+        renderScore();
+        renderAttemptDots();
+        setTimeout(advanceTurn, 1300);
+      },
+    });
+  }, 700);
 }
 
-function startMode(mode) {
-  state.scene = mode;
-  $('menu').classList.add('hidden');
-  $('stage').classList.toggle('keepMode', mode === 'keep');
+/* =====================================================
+   Match flow
+===================================================== */
+function startMatch(firstRole) {
+  state.firstRole = firstRole;
+  state.role      = firstRole;
+  state.phase     = 1;
+  state.turn      = 0;
+  state.you = 0; state.cpu = 0;
+  state.history = { you: [], cpu: [] };
+  state.sdRound = 0;
+  state.scene = 'play';
 
-  // reset ball + keeper
-  $('ball').style.transform = 'translateX(-50%)';
+  $('menu').classList.add('hidden');
+  $('halftime').classList.add('hidden');
+  $('fulltime').classList.add('hidden');
+
+  startRound();
+}
+
+function startRound() {
+  // reset visuals
+  $('ball').getAnimations().forEach(a => a.cancel());
+  $('ballShadow').getAnimations().forEach(a => a.cancel());
+  $('ball').style.transform   = 'translateX(-50%)';
   $('ballShadow').style.transform = 'translateX(-50%)';
+  $('ballShadow').style.opacity = '0.8';
   $('keeper').style.transform = 'translateX(-50%)';
   cells.forEach(c => c.classList.remove('locked'));
   state.active = false;
 
   // mode-specific UI
-  if (mode === 'shoot') {
+  if (state.role === 'shoot') {
     state.aim = 4;
+    $('stage').classList.remove('keepMode');
     $('modePill').textContent = 'SHOOT';
     $('modePill').style.background = '#7cf6c8';
     $('powerWrap').classList.remove('hidden');
     $('powerLabel').classList.remove('hidden');
     setStatus('AIM & SHOOT', '');
-    $('hint').textContent = '← → ↑ ↓  AIM  ·  ⏎  SHOOT  ·  M  MENU';
+    $('hint').textContent = '← → ↑ ↓  AIM  ·  ⏎  SHOOT';
   } else {
     state.dive = 4;
+    $('stage').classList.add('keepMode');
     $('modePill').textContent = 'SAVE';
     $('modePill').style.background = '#ffd54a';
     $('powerWrap').classList.add('hidden');
     $('powerLabel').classList.add('hidden');
     setStatus('PICK YOUR DIVE', '');
-    $('hint').textContent = '← → ↑ ↓  DIVE  ·  ⏎  READY  ·  M  MENU';
+    $('hint').textContent = '← → ↑ ↓  DIVE  ·  ⏎  READY';
   }
   renderGrid();
   renderScore();
+  renderAttemptDots();
+}
+
+function advanceTurn() {
+  state.turn++;
+
+  if (state.phase === 'sd') {
+    handleSDProgress();
+    return;
+  }
+
+  if (state.turn < state.maxTurns) {
+    startRound();
+    return;
+  }
+
+  // Phase finished
+  if (state.phase === 1) {
+    showHalftime();
+  } else {
+    // Phase 2 done — check tied
+    if (state.you === state.cpu) {
+      startSuddenDeath();
+    } else {
+      showFulltime();
+    }
+  }
+}
+
+function showHalftime() {
+  state.scene = 'halftime';
+  $('htYou').textContent = state.you;
+  $('htCpu').textContent = state.cpu;
+  fillDots($('htYouDots'), state.history.you, state.maxTurns);
+  fillDots($('htCpuDots'), state.history.cpu, state.maxTurns);
+  $('halftime').classList.remove('hidden');
+}
+
+function continueFromHalftime() {
+  // Swap role for phase 2
+  state.phase = 2;
+  state.turn  = 0;
+  state.role  = (state.firstRole === 'shoot') ? 'keep' : 'shoot';
+  state.scene = 'play';
+  $('halftime').classList.add('hidden');
+  // attempt dots already capture per-role progress; they re-render
+  startRound();
+}
+
+function startSuddenDeath() {
+  state.phase = 'sd';
+  state.sdRound = 0;
+  // In sudden death we always do: 1 shoot + 1 save per round
+  // Start with whichever was the user's first role (variety)
+  state.role = state.firstRole;
+  state.turn = 0;
+  state.scene = 'play';
+  setStatus('SUDDEN DEATH', 'hint');
+  setTimeout(startRound, 500);
+}
+
+function handleSDProgress() {
+  // After each SD attempt:
+  //   If first attempt of round done → flip role
+  //   If second attempt of round done → check if leading; if equal, next round
+  // We track within-round attempts with a simple parity on state.turn (0/1)
+  const attemptInRound = state.turn % 2; // 0 just finished, now 1 due; 0 means start of next round
+
+  if (attemptInRound === 1) {
+    // Second attempt of round just finished
+    if (state.you !== state.cpu) {
+      showFulltime();
+      return;
+    }
+    // Tied → new round
+    state.sdRound++;
+    state.role = state.firstRole;
+    setStatus('SUDDEN DEATH · R' + (state.sdRound + 1), 'hint');
+    setTimeout(startRound, 600);
+  } else {
+    // First attempt done → flip role for second attempt
+    state.role = (state.role === 'shoot') ? 'keep' : 'shoot';
+    setTimeout(startRound, 500);
+  }
+}
+
+function showFulltime() {
+  state.scene = 'fulltime';
+  $('ftYou').textContent = state.you;
+  $('ftCpu').textContent = state.cpu;
+  fillDots($('ftYouDots'), state.history.you, Math.max(5, state.history.you.length));
+  fillDots($('ftCpuDots'), state.history.cpu, Math.max(5, state.history.cpu.length));
+
+  const v = $('ftVerdict');
+  if (state.you > state.cpu)      { v.textContent = '— YOU WIN! —';  v.className = 'verdict win';  $('ftBig').textContent = 'VICTORY'; }
+  else if (state.you < state.cpu) { v.textContent = '— YOU LOSE —';  v.className = 'verdict lose'; $('ftBig').textContent = 'DEFEAT';  }
+  else                            { v.textContent = '— DRAW —';      v.className = 'verdict draw'; $('ftBig').textContent = 'FULL TIME'; }
+
+  $('fulltime').classList.remove('hidden');
+}
+
+function fillDots(container, history, total) {
+  container.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'd';
+    if (history[i] === 'goal') d.classList.add('score');
+    else if (history[i])       d.classList.add('fail');
+    container.appendChild(d);
+  }
+}
+
+function openMenu() {
+  state.scene = 'menu';
+  $('halftime').classList.add('hidden');
+  $('fulltime').classList.add('hidden');
+  $('menu').classList.remove('hidden');
+  state.menuPick = state.firstRole === 'keep' ? 1 : 0;
+  renderMenuPick();
 }
 
 /* =====================================================
@@ -1094,7 +1186,7 @@ function startMode(mode) {
 document.addEventListener('keydown', e => {
   const k = e.key;
 
-  // M = open menu (always available)
+  // M = open menu (always available, abandons current match)
   if (k === 'm' || k === 'M') {
     if (state.active) return;
     openMenu();
@@ -1106,12 +1198,23 @@ document.addEventListener('keydown', e => {
     if (k === 'ArrowLeft')  { state.menuPick = 0; renderMenuPick(); e.preventDefault(); }
     if (k === 'ArrowRight') { state.menuPick = 1; renderMenuPick(); e.preventDefault(); }
     if (k === 'Enter') {
-      startMode(state.menuPick === 0 ? 'shoot' : 'keep');
+      startMatch(state.menuPick === 0 ? 'shoot' : 'keep');
       e.preventDefault();
     }
     return;
   }
 
+  if (state.scene === 'halftime') {
+    if (k === 'Enter') { continueFromHalftime(); e.preventDefault(); }
+    return;
+  }
+
+  if (state.scene === 'fulltime') {
+    if (k === 'Enter') { startMatch(state.firstRole); e.preventDefault(); }
+    return;
+  }
+
+  // scene === 'play'
   if (state.active) return;
 
   switch (k) {
@@ -1121,8 +1224,8 @@ document.addEventListener('keydown', e => {
     case 'ArrowDown':  moveCursor( 0, 1); break;
     case 'Enter':
     case ' ':
-      if (state.scene === 'shoot') shoot();
-      else                          diveCommit();
+      if (state.role === 'shoot') shoot();
+      else                          keep();
       break;
     default: return;
   }
@@ -1135,8 +1238,8 @@ document.addEventListener('keydown', e => {
 cells.forEach((c, i) => {
   c.style.pointerEvents = 'auto';
   c.addEventListener('click', () => {
-    if (state.scene === 'menu' || state.active) return;
-    if (state.scene === 'shoot') state.aim = i;
+    if (state.scene !== 'play' || state.active) return;
+    if (state.role === 'shoot') state.aim = i;
     else                          state.dive = i;
     renderGrid();
   });
@@ -1145,13 +1248,13 @@ modeButtons.forEach((b, i) => {
   b.addEventListener('click', () => {
     state.menuPick = i;
     renderMenuPick();
-    startMode(b.dataset.mode);
+    startMatch(b.dataset.mode);
   });
 });
 $('pitch').addEventListener('dblclick', () => {
-  if (state.scene === 'menu' || state.active) return;
-  if (state.scene === 'shoot') shoot();
-  else                          diveCommit();
+  if (state.scene !== 'play' || state.active) return;
+  if (state.role === 'shoot') shoot();
+  else                          keep();
 });
 
 /* =====================================================
@@ -1159,6 +1262,7 @@ $('pitch').addEventListener('dblclick', () => {
 ===================================================== */
 renderGrid();
 renderScore();
+renderAttemptDots();
 renderPower();
 renderMenuPick();
 </script>
