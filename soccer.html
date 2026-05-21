@@ -83,7 +83,7 @@
     overflow: hidden;
   }
 
-  /* Goal: simple solid rectangle outline, no SVG, no filters */
+  /* Goal: simple solid rectangle outline, no SVG, no filters, no background */
   .goal {
     position: absolute;
     top: 36px;
@@ -91,8 +91,10 @@
     width: 380px;
     height: 130px;
     border: 3px solid #ffffff;
-    background: #04150e;
+    background: transparent;
+    background-clip: padding-box;
     z-index: 2;
+    box-sizing: border-box;
   }
 
   /* horizontal goal line under the goal */
@@ -137,6 +139,9 @@
   ===================================================== */
   .cursor {
     position: absolute;
+    /* Initial position = center cell (300, 100). JS updates on every render. */
+    left: 300px;
+    top: 100px;
     width: 110px;
     height: 36px;
     border: 2px solid #7cf6c8;
@@ -146,6 +151,8 @@
                 border-color 0.12s ease, background 0.12s ease;
     z-index: 5;
     pointer-events: none;
+    /* hidden until play starts (JS un-hides) */
+    visibility: hidden;
   }
   .cursor.keep {
     border-color: #ffd54a;
@@ -707,6 +714,7 @@ function renderCursor() {
   cur.style.left = c.x + 'px';
   cur.style.top  = c.y + 'px';
   cur.classList.toggle('keep', state.role === 'keep');
+  cur.style.visibility = (state.scene === 'play') ? 'visible' : 'hidden';
 }
 
 function renderScore() {
@@ -1073,6 +1081,7 @@ function advanceTurn() {
 
 function showHalftime() {
   state.scene = 'halftime';
+  $('cursor').style.visibility = 'hidden';
   $('htYou').textContent = state.you;
   $('htCpu').textContent = state.cpu;
   fillDots($('htYouDots'), state.history.you, state.maxTurns);
@@ -1115,6 +1124,7 @@ function handleSDProgress() {
 
 function showFulltime() {
   state.scene = 'fulltime';
+  $('cursor').style.visibility = 'hidden';
   $('ftYou').textContent = state.you;
   $('ftCpu').textContent = state.cpu;
   fillDots($('ftYouDots'), state.history.you, Math.max(5, state.history.you.length));
@@ -1140,6 +1150,7 @@ function fillDots(container, history, total) {
 
 function openMenu() {
   state.scene = 'menu';
+  $('cursor').style.visibility = 'hidden';
   $('halftime').classList.add('hidden');
   $('fulltime').classList.add('hidden');
   $('menu').classList.remove('hidden');
