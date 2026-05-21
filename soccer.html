@@ -63,11 +63,12 @@
   }
   .matchScore .you,
   .matchScore .cpu {
-    font-size: 20px;
-    font-weight: 400;
+    font-size: 26px;
+    font-weight: 300;
     font-variant-numeric: tabular-nums;
-    min-width: 18px;
+    min-width: 22px;
     text-align: center;
+    line-height: 1;
   }
   .matchScore .you { color: #7cf6c8; }
   .matchScore .cpu { color: #ff8a99; }
@@ -127,6 +128,20 @@
     background: #0a2a1c;
     z-index: 1;
   }
+  /* Net pattern — thin solid lines forming a grid */
+  .net-v, .net-h {
+    position: absolute;
+    background: #1a4a3a;
+    z-index: 1;
+  }
+  .net-v { width: 1px; top: 40px; height: 126px; }
+  .net-v.v1 { left: 200px; }
+  .net-v.v2 { left: 300px; }
+  .net-v.v3 { left: 400px; }
+  .net-h { height: 1px; left: 112px; width: 376px; }
+  .net-h.h1 { top: 82px;  }
+  .net-h.h2 { top: 124px; }
+
   /* Goal line directly under goal */
   .goalLine {
     position: absolute;
@@ -136,14 +151,34 @@
     background: #2a3540;
     z-index: 1;
   }
-  /* Penalty spot */
+  /* Penalty area — outer box, sides go from goal line (y=170) to pb-top */
+  .pb-top, .pb-side {
+    position: absolute;
+    background: #2a4a3a;
+    z-index: 1;
+  }
+  .pb-top  { top: 296px; left: 70px;  width: 460px; height: 2px; }
+  .pb-side { top: 170px; width: 2px;  height: 128px; }
+  .pb-side.left  { left: 70px;  }
+  .pb-side.right { left: 528px; }
+  /* Goal area — inner 6-yard-style box */
+  .ga-top, .ga-side {
+    position: absolute;
+    background: #1a3a2a;
+    z-index: 1;
+  }
+  .ga-top  { top: 212px; left: 190px; width: 220px; height: 2px; }
+  .ga-side { top: 170px; width: 2px;  height: 44px; }
+  .ga-side.left  { left: 190px; }
+  .ga-side.right { left: 408px; }
+  /* Penalty spot — at 2/3 depth between goal line and penalty box top */
   .penaltySpot {
     position: absolute;
     left: 50%;
-    top: 360px;
-    width: 8px; height: 8px;
+    top: 254px;
+    width: 6px; height: 6px;
     border-radius: 50%;
-    background: #fff;
+    background: #5a7a6a;
     transform: translate(-50%, -50%);
     z-index: 1;
   }
@@ -167,17 +202,35 @@
   }
   .dot.active {
     display: block;
-    width: 30px;
-    height: 30px;
+    width: 38px;
+    height: 38px;
     background: #7cf6c8;
   }
-  .keepMode .dot.active {
-    background: #ffd54a;
+  /* Hollow ring effect: pitch-colored disc cut into the center */
+  .dot.active::after {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #0a2a1c;
+    transform: translate(-50%, -50%);
   }
-  .dot.locked {
-    width: 34px;
-    height: 34px;
+  /* Bright center pip */
+  .dot.active::before {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #ffffff;
+    transform: translate(-50%, -50%);
+    z-index: 2;
   }
+  .keepMode .dot.active        { background: #ffd54a; }
+  .keepMode .dot.active::after { background: #1a3a2a; }
+  .dot.locked        { width: 46px; height: 46px; }
+  .dot.locked::after { width: 24px; height: 24px; }
   /* Absolute positions for each cell (cell center) */
   .dot[data-cell="0"] { left: 170px; top: 58px;  }
   .dot[data-cell="1"] { left: 300px; top: 58px;  }
@@ -215,6 +268,18 @@
     border-radius: 50%;
     transform: translateX(-50%);
   }
+  /* eyes */
+  .keeper .head::before,
+  .keeper .head::after {
+    content: "";
+    position: absolute;
+    width: 3px; height: 3px;
+    background: #082018;
+    top: 6px;
+    border-radius: 50%;
+  }
+  .keeper .head::before { left: 4px;  }
+  .keeper .head::after  { right: 4px; }
   .keeper .legL,
   .keeper .legR {
     position: absolute;
@@ -559,6 +624,19 @@
 
     <!-- Net background, drawn before goal frame so frame is on top -->
     <div class="netBg"></div>
+    <!-- Net pattern lines -->
+    <div class="net-v v1"></div>
+    <div class="net-v v2"></div>
+    <div class="net-v v3"></div>
+    <div class="net-h h1"></div>
+    <div class="net-h h2"></div>
+    <!-- Field markings: goal area + penalty area + goal line -->
+    <div class="ga-top"></div>
+    <div class="ga-side left"></div>
+    <div class="ga-side right"></div>
+    <div class="pb-top"></div>
+    <div class="pb-side left"></div>
+    <div class="pb-side right"></div>
     <div class="goalLine"></div>
     <div class="penaltySpot"></div>
 
