@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+<title>Soccer PK</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 600px;
+    height: 600px;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue",
+                 "Hiragino Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  .stage {
+    width: 600px;
+    height: 600px;
+    position: relative;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    z-index: 10;
+  }
+  .topbar .title {
+    font-size: 16px;
+    letter-spacing: 0.22em;
+    color: #7cf6c8;
+  }
+  .scorebox {
+    display: flex;
+    gap: 18px;
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    color: #8a93a3;
+  }
+  .scorebox b {
+    color: #fff;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    margin-left: 6px;
+  }
+
+  /* ---------- pitch ---------- */
+  .pitch {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    right: 0;
+    bottom: 56px;
+    background:
+      radial-gradient(ellipse at 50% 30%, #0c2418 0%, #07140d 60%, #04090a 100%);
+    overflow: hidden;
+  }
+
+  /* perspective lines on the grass */
+  .pitch::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(124,246,200,0.05) 0%, transparent 35%),
+      repeating-linear-gradient(180deg,
+        rgba(255,255,255,0.025) 0px,
+        rgba(255,255,255,0.025) 20px,
+        transparent 20px,
+        transparent 40px);
+    pointer-events: none;
+  }
+
+  /* ---------- goal (3D-ish trapezoid) ---------- */
+  .goal {
+    position: absolute;
+    top: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 420px;
+    height: 170px;
+  }
+  .goal svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .goal .post {
+    stroke: #ffffff;
+    stroke-width: 4;
+    fill: none;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.35));
+  }
+  .goal .net {
+    stroke: rgba(255,255,255,0.18);
+    stroke-width: 1;
+    fill: none;
+  }
+  .goal .penaltyBox {
+    stroke: rgba(255,255,255,0.25);
+    stroke-width: 2;
+    fill: none;
+  }
+
+  /* ---------- 3x3 aim grid ---------- */
+  .aimGrid {
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 380px;
+    height: 140px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    pointer-events: none;
+    z-index: 4;
+  }
+  .aimCell {
+    border: 1.5px dashed rgba(124, 246, 200, 0.18);
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+  .aimCell.target {
+    border-color: #7cf6c8;
+    border-style: solid;
+    background: rgba(124, 246, 200, 0.12);
+    box-shadow: 0 0 16px rgba(124, 246, 200, 0.4);
+  }
+
+  /* ---------- goalkeeper ---------- */
+  .keeper {
+    position: absolute;
+    top: 92px;
+    left: 50%;
+    width: 56px;
+    height: 92px;
+    transform: translateX(-50%);
+    transition: transform 0.18s cubic-bezier(0.5, 0.8, 0.5, 1);
+    z-index: 5;
+    pointer-events: none;
+  }
+  .keeper svg { width: 100%; height: 100%; }
+
+  /* ---------- ball ---------- */
+  .ball {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    transform: translateX(-50%);
+    z-index: 6;
+    transition: none;
+    pointer-events: none;
+  }
+  .ball svg { width: 100%; height: 100%; }
+
+  /* ---------- player (kicker) silhouette ---------- */
+  .kicker {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    width: 70px;
+    height: 110px;
+    transform: translateX(-50%) translateX(-40px);
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0.85;
+  }
+  .kicker svg { width: 100%; height: 100%; }
+
+  /* ---------- power meter ---------- */
+  .powerWrap {
+    position: absolute;
+    right: 18px;
+    top: 60px;
+    bottom: 80px;
+    width: 14px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(124,246,200,0.25);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 5;
+  }
+  .powerFill {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, #ff5b6e 0%, #ffd54a 50%, #7cf6c8 100%);
+    transition: height 0.1s linear;
+  }
+  .powerLabel {
+    position: absolute;
+    right: 36px;
+    top: 60px;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: #7cf6c8;
+    writing-mode: vertical-rl;
+    z-index: 5;
+  }
+
+  /* ---------- bottom hint / status ---------- */
+  .bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 8;
+  }
+  .status {
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    color: #cfd6e0;
+    min-height: 18px;
+    text-align: center;
+  }
+  .status.goal  { color: #7cf6c8; text-shadow: 0 0 12px #7cf6c8; }
+  .status.miss  { color: #ff5b6e; text-shadow: 0 0 10px #ff5b6e; }
+  .status.saved { color: #ffd54a; text-shadow: 0 0 10px #ffd54a; }
+  .hint {
+    font-size: 11px;
+    color: #2a2f3a;
+    letter-spacing: 0.3em;
+  }
+
+  /* ---------- result flash ---------- */
+  .flash {
+    position: absolute;
+    inset: 44px 0 56px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 96px;
+    font-weight: 200;
+    letter-spacing: 0.08em;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+    transition: opacity 0.25s ease;
+  }
+  .flash.show { opacity: 1; }
+  .flash.goal  { color: #7cf6c8; text-shadow: 0 0 30px #7cf6c8; }
+  .flash.miss  { color: #ff5b6e; text-shadow: 0 0 24px #ff5b6e; }
+  .flash.saved { color: #ffd54a; text-shadow: 0 0 24px #ffd54a; }
+
+  /* ---------- ball trail ---------- */
+  .trail {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.7);
+    z-index: 5;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="topbar">
+    <div class="title">SOCCER · PK</div>
+    <div class="scorebox">
+      <div>GOAL<b id="sGoal">0</b></div>
+      <div>SHOT<b id="sShot">0</b></div>
+      <div>STREAK<b id="sStreak">0</b></div>
+    </div>
+  </div>
+
+  <div class="pitch">
+    <!-- Goal frame -->
+    <div class="goal">
+      <svg viewBox="0 0 420 170" preserveAspectRatio="none">
+        <!-- penalty box outline (perspective) -->
+        <path class="penaltyBox" d="M 30 168 L 100 60 L 320 60 L 390 168" />
+        <!-- net (vertical) -->
+        <g class="net">
+          <line x1="60"  y1="20" x2="60"  y2="120" />
+          <line x1="100" y1="20" x2="100" y2="120" />
+          <line x1="140" y1="20" x2="140" y2="120" />
+          <line x1="180" y1="20" x2="180" y2="120" />
+          <line x1="220" y1="20" x2="220" y2="120" />
+          <line x1="260" y1="20" x2="260" y2="120" />
+          <line x1="300" y1="20" x2="300" y2="120" />
+          <line x1="340" y1="20" x2="340" y2="120" />
+        </g>
+        <!-- net (horizontal) -->
+        <g class="net">
+          <line x1="30" y1="40"  x2="370" y2="40" />
+          <line x1="30" y1="60"  x2="370" y2="60" />
+          <line x1="30" y1="80"  x2="370" y2="80" />
+          <line x1="30" y1="100" x2="370" y2="100" />
+        </g>
+        <!-- posts and crossbar -->
+        <path class="post" d="M 30 120 L 30 20 L 370 20 L 370 120" />
+        <line class="post" x1="30"  y1="120" x2="0"   y2="160" />
+        <line class="post" x1="370" y1="120" x2="400" y2="160" />
+      </svg>
+    </div>
+
+    <!-- 3x3 aim grid overlay -->
+    <div class="aimGrid" id="aimGrid">
+      <div class="aimCell" data-cell="0"></div>
+      <div class="aimCell" data-cell="1"></div>
+      <div class="aimCell" data-cell="2"></div>
+      <div class="aimCell" data-cell="3"></div>
+      <div class="aimCell target" data-cell="4"></div>
+      <div class="aimCell" data-cell="5"></div>
+      <div class="aimCell" data-cell="6"></div>
+      <div class="aimCell" data-cell="7"></div>
+      <div class="aimCell" data-cell="8"></div>
+    </div>
+
+    <!-- goalkeeper -->
+    <div class="keeper" id="keeper">
+      <svg viewBox="0 0 56 92">
+        <!-- gloves -->
+        <circle cx="6"  cy="46" r="6" fill="#ffd54a"/>
+        <circle cx="50" cy="46" r="6" fill="#ffd54a"/>
+        <!-- arms -->
+        <rect x="6"  y="44" width="20" height="6" fill="#fff"/>
+        <rect x="30" y="44" width="20" height="6" fill="#fff"/>
+        <!-- body -->
+        <rect x="18" y="30" width="20" height="36" rx="4" fill="#7cf6c8"/>
+        <!-- head -->
+        <circle cx="28" cy="18" r="10" fill="#fff"/>
+        <!-- legs -->
+        <rect x="20" y="66" width="6" height="22" fill="#fff"/>
+        <rect x="30" y="66" width="6" height="22" fill="#fff"/>
+      </svg>
+    </div>
+
+    <!-- kicker silhouette -->
+    <div class="kicker">
+      <svg viewBox="0 0 70 110">
+        <circle cx="35" cy="16" r="11" fill="#cfd6e0"/>
+        <rect x="22" y="28" width="26" height="40" rx="6" fill="#cfd6e0"/>
+        <rect x="22" y="68" width="10" height="32" fill="#cfd6e0"/>
+        <rect x="38" y="68" width="10" height="32" fill="#cfd6e0"/>
+        <rect x="6"  y="48" width="20" height="8"  fill="#cfd6e0"/>
+        <rect x="44" y="48" width="20" height="8"  fill="#cfd6e0"/>
+      </svg>
+    </div>
+
+    <!-- ball -->
+    <div class="ball" id="ball">
+      <svg viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="18" fill="#fff"
+                stroke="#000" stroke-width="1.5"/>
+        <polygon points="20,8 26,14 24,22 16,22 14,14"
+                 fill="#000"/>
+        <polygon points="8,18 14,14 16,22 12,28"  fill="#000" opacity="0.5"/>
+        <polygon points="32,18 26,14 24,22 28,28" fill="#000" opacity="0.5"/>
+        <polygon points="14,30 16,22 24,22 26,30 20,34" fill="none"
+                 stroke="#000" stroke-width="1.2"/>
+      </svg>
+    </div>
+
+    <!-- power meter -->
+    <div class="powerLabel">POWER</div>
+    <div class="powerWrap">
+      <div class="powerFill" id="powerFill"></div>
+    </div>
+
+    <!-- result flash -->
+    <div class="flash" id="flash"></div>
+  </div>
+
+  <div class="bottom">
+    <div class="status" id="status">AIM & SHOOT</div>
+    <div class="hint">← → ↑ ↓  AIM  ·  ⏎  SHOOT</div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  /* =========================================================
+     State
+  ========================================================= */
+  const state = {
+    aim: 4,          // 0..8 (3x3 grid: 0 TL, 4 center, 8 BR)
+    power: 0.5,      // 0..1
+    powerDir: 1,     // oscillation direction
+    shooting: false,
+    goals: 0,
+    shots: 0,
+    streak: 0,
+  };
+
+  const cells = Array.from(document.querySelectorAll('.aimCell'));
+
+  function renderAim() {
+    cells.forEach((c, i) => c.classList.toggle('target', i === state.aim));
+  }
+  function renderScore() {
+    $('sGoal').textContent   = state.goals;
+    $('sShot').textContent   = state.shots;
+    $('sStreak').textContent = state.streak;
+  }
+  function renderPower() {
+    $('powerFill').style.height = Math.round(state.power * 100) + '%';
+  }
+
+  /* =========================================================
+     Power oscillation (while not shooting)
+  ========================================================= */
+  let lastT = performance.now();
+  function powerLoop(t) {
+    const dt = (t - lastT) / 1000;
+    lastT = t;
+    if (!state.shooting) {
+      state.power += state.powerDir * dt * 0.8;
+      if (state.power > 1) { state.power = 1; state.powerDir = -1; }
+      if (state.power < 0) { state.power = 0; state.powerDir = 1; }
+      renderPower();
+    }
+    requestAnimationFrame(powerLoop);
+  }
+  requestAnimationFrame(t => { lastT = t; powerLoop(t); });
+
+  /* =========================================================
+     Aim controls
+  ========================================================= */
+  function moveAim(dx, dy) {
+    let x = state.aim % 3, y = Math.floor(state.aim / 3);
+    x = Math.max(0, Math.min(2, x + dx));
+    y = Math.max(0, Math.min(2, y + dy));
+    state.aim = y * 3 + x;
+    renderAim();
+  }
+
+  /* =========================================================
+     Shooting
+  ========================================================= */
+  // 3x3 grid offsets within goal mouth, in px (relative to pitch container)
+  // pitch is 600 wide. goal centered, ~380px aim grid.
+  const goalCellPos = [
+    {x: -140, y: -190}, {x: 0, y: -190}, {x: 140, y: -190},
+    {x: -140, y: -150}, {x: 0, y: -150}, {x: 140, y: -150},
+    {x: -140, y: -110}, {x: 0, y: -110}, {x: 140, y: -110},
+  ];
+
+  function shoot() {
+    if (state.shooting) return;
+    state.shooting = true;
+    state.shots++;
+
+    const aim   = state.aim;
+    const power = state.power;
+
+    // Accuracy: low power = wobbly, mid power = best, very high = harder
+    // Optimal power ~ 0.6 - 0.85
+    let accuracyFactor;
+    if (power < 0.3)        accuracyFactor = 0.35;
+    else if (power < 0.6)   accuracyFactor = 0.75;
+    else if (power < 0.85)  accuracyFactor = 0.95;
+    else                    accuracyFactor = 0.6;
+
+    // Goalkeeper picks a cell (weighted toward middle row & center column)
+    const weights = [1, 1.4, 1, 1.3, 1.8, 1.3, 0.9, 1.2, 0.9];
+    const total = weights.reduce((a, b) => a + b, 0);
+    let r = Math.random() * total, keeperCell = 0;
+    for (let i = 0; i < weights.length; i++) {
+      r -= weights[i];
+      if (r <= 0) { keeperCell = i; break; }
+    }
+
+    // Did the shot land where the player aimed?
+    const stray = Math.random() > accuracyFactor;
+    let landed = aim;
+    if (stray) {
+      const adj = [-1, 1, -3, 3].filter(d => {
+        const n = aim + d;
+        if (n < 0 || n > 8) return false;
+        // avoid wrapping rows for ±1
+        if (Math.abs(d) === 1 && Math.floor(n/3) !== Math.floor(aim/3)) return false;
+        return true;
+      });
+      if (adj.length) landed = aim + adj[Math.floor(Math.random() * adj.length)];
+    }
+
+    // Way too low power: weak shot, easily saved
+    const tooWeak = power < 0.2;
+
+    // Animate keeper dive
+    const keeperX = goalCellPos[keeperCell].x * 0.55;
+    const keeperY = (goalCellPos[keeperCell].y + 190) * 0.3;
+    const tilt = keeperX > 30 ? 18 : keeperX < -30 ? -18 : 0;
+    $('keeper').style.transform =
+      `translateX(calc(-50% + ${keeperX}px)) translateY(${keeperY}px) rotate(${tilt}deg)`;
+
+    // Animate ball
+    const targetPos = goalCellPos[landed];
+    const ball = $('ball');
+    const flightMs = 520 + (1 - power) * 400;
+
+    // ball flight via WAAPI
+    const dx = targetPos.x;
+    const dy = targetPos.y - (tooWeak ? 80 : 0); // weak shot stays low / rolls
+    const scale = 0.55; // ball shrinks (perspective)
+
+    // trail dots
+    const startX = 300, startY = 478; // approx ball start in pitch coords
+    for (let i = 1; i <= 5; i++) {
+      setTimeout(() => spawnTrail(
+        startX + (dx) * (i / 6),
+        startY + (dy + 190) * (i / 6) - 190,
+      ), (flightMs / 6) * i);
+    }
+
+    ball.animate(
+      [
+        { transform: 'translateX(-50%) translate(0, 0) scale(1)' },
+        { transform: `translateX(-50%) translate(${dx}px, ${dy}px) scale(${scale})` },
+      ],
+      { duration: flightMs, easing: 'cubic-bezier(0.3, 0.6, 0.7, 1)', fill: 'forwards' }
+    );
+
+    // Determine result
+    setTimeout(() => {
+      let outcome;
+      // Off-target if shot strayed off the 3x3 (we keep landed in 0..8 but
+      // if power is extreme + strayed, count as miss)
+      const wildMiss = stray && (power > 0.9 || power < 0.15);
+      if (wildMiss) outcome = 'miss';
+      else if (tooWeak) outcome = 'saved';
+      else if (landed === keeperCell) outcome = 'saved';
+      else outcome = 'goal';
+
+      finishShot(outcome);
+    }, flightMs);
+  }
+
+  function spawnTrail(x, y) {
+    const t = document.createElement('div');
+    t.className = 'trail';
+    t.style.left = x + 'px';
+    t.style.top  = y + 'px';
+    document.querySelector('.pitch').appendChild(t);
+    requestAnimationFrame(() => {
+      t.style.opacity = '0';
+      t.style.transform = 'scale(0.4)';
+    });
+    setTimeout(() => t.remove(), 450);
+  }
+
+  function finishShot(outcome) {
+    if (outcome === 'goal') {
+      state.goals++;
+      state.streak++;
+      setStatus('GOAL!', 'goal');
+      flash('GOAL!', 'goal');
+    } else if (outcome === 'saved') {
+      state.streak = 0;
+      setStatus('SAVED', 'saved');
+      flash('SAVED', 'saved');
+    } else {
+      state.streak = 0;
+      setStatus('MISS', 'miss');
+      flash('MISS', 'miss');
+    }
+    renderScore();
+
+    setTimeout(resetShot, 1200);
+  }
+
+  function resetShot() {
+    const ball = $('ball');
+    ball.getAnimations().forEach(a => a.cancel());
+    ball.style.transform = 'translateX(-50%)';
+    $('keeper').style.transform = 'translateX(-50%)';
+    setStatus('AIM & SHOOT', '');
+    state.shooting = false;
+  }
+
+  /* =========================================================
+     Status + flash
+  ========================================================= */
+  function setStatus(text, cls) {
+    const s = $('status');
+    s.textContent = text;
+    s.className = 'status' + (cls ? ' ' + cls : '');
+  }
+  function flash(text, cls) {
+    const f = $('flash');
+    f.textContent = text;
+    f.className = 'flash show ' + cls;
+    setTimeout(() => { f.className = 'flash'; }, 900);
+  }
+
+  /* =========================================================
+     Input
+  ========================================================= */
+  document.addEventListener('keydown', e => {
+    if (state.shooting && e.key !== 'Enter') return;
+    switch (e.key) {
+      case 'ArrowLeft':  moveAim(-1, 0); break;
+      case 'ArrowRight': moveAim( 1, 0); break;
+      case 'ArrowUp':    moveAim( 0,-1); break;
+      case 'ArrowDown':  moveAim( 0, 1); break;
+      case 'Enter':
+      case ' ':          shoot();        break;
+      default: return;
+    }
+    e.preventDefault();
+  });
+
+  // Tap a cell to aim, tap ball/center to shoot (handy for desktop preview)
+  cells.forEach((c, i) => c.style.pointerEvents = 'auto');
+  cells.forEach((c, i) => c.addEventListener('click', () => {
+    if (state.shooting) return;
+    state.aim = i;
+    renderAim();
+  }));
+  document.querySelector('.pitch').addEventListener('dblclick', shoot);
+
+  /* =========================================================
+     Init
+  ========================================================= */
+  renderAim();
+  renderScore();
+  renderPower();
+</script>
+</body>
+</html>
