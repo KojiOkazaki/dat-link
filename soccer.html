@@ -149,42 +149,45 @@
   }
 
   /* ===================================================
-     Aim grid — 9 fixed-position dots.
-     Active dot lights up. Inactive are dim small dots.
-     (No moving cursor element. No transitions. No
-      border-based frames. Fully MRBD-safe.)
+     Aim — 9 dots at FIXED absolute positions in pitch
+     coords. Inactive dots are display:none (invisible
+     AND removed from layout — cannot artifact at all).
+     No CSS grid (MRBD may not support it).
   =================================================== */
-  .aimGrid {
-    position: absolute;
-    top: 36px;
-    left: 108px;
-    width: 384px;
-    height: 134px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    place-items: center;
-    pointer-events: none;
-    z-index: 5;
-  }
   .dot {
+    position: absolute;
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #1a3a2a;
+    background: transparent;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    pointer-events: none;
+    display: none;
   }
   .dot.active {
-    width: 28px;
-    height: 28px;
+    display: block;
+    width: 30px;
+    height: 30px;
     background: #7cf6c8;
   }
   .keepMode .dot.active {
     background: #ffd54a;
   }
   .dot.locked {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
   }
+  /* Absolute positions for each cell (cell center) */
+  .dot[data-cell="0"] { left: 170px; top: 58px;  }
+  .dot[data-cell="1"] { left: 300px; top: 58px;  }
+  .dot[data-cell="2"] { left: 430px; top: 58px;  }
+  .dot[data-cell="3"] { left: 170px; top: 101px; }
+  .dot[data-cell="4"] { left: 300px; top: 101px; }
+  .dot[data-cell="5"] { left: 430px; top: 101px; }
+  .dot[data-cell="6"] { left: 170px; top: 144px; }
+  .dot[data-cell="7"] { left: 300px; top: 144px; }
+  .dot[data-cell="8"] { left: 430px; top: 144px; }
 
   /* ===================================================
      Goalkeeper (solid-only blocks)
@@ -559,18 +562,16 @@
     <div class="goalLine"></div>
     <div class="penaltySpot"></div>
 
-    <!-- 9 aim dots, fixed positions -->
-    <div class="aimGrid" id="aimGrid">
-      <div class="dot" data-cell="0"></div>
-      <div class="dot" data-cell="1"></div>
-      <div class="dot" data-cell="2"></div>
-      <div class="dot" data-cell="3"></div>
-      <div class="dot active" data-cell="4"></div>
-      <div class="dot" data-cell="5"></div>
-      <div class="dot" data-cell="6"></div>
-      <div class="dot" data-cell="7"></div>
-      <div class="dot" data-cell="8"></div>
-    </div>
+    <!-- 9 aim dots, each at a fixed absolute position; only active is shown -->
+    <div class="dot" data-cell="0"></div>
+    <div class="dot" data-cell="1"></div>
+    <div class="dot" data-cell="2"></div>
+    <div class="dot" data-cell="3"></div>
+    <div class="dot active" data-cell="4"></div>
+    <div class="dot" data-cell="5"></div>
+    <div class="dot" data-cell="6"></div>
+    <div class="dot" data-cell="7"></div>
+    <div class="dot" data-cell="8"></div>
 
     <!-- Goal frame: crossbar + 2 posts as 3 independent solid rects -->
     <div class="crossbar"></div>
@@ -723,7 +724,7 @@ const state = {
   sdRound: 0,
 };
 
-const dots = Array.from(document.querySelectorAll('.aimGrid .dot'));
+const dots = Array.from(document.querySelectorAll('.dot'));
 const modeButtons = Array.from(document.querySelectorAll('.modeBtn'));
 
 /* ===================================================
