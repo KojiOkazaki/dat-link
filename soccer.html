@@ -93,6 +93,42 @@
       radial-gradient(ellipse at 50% 25%, #0e2e22 0%, #082018 55%, #03100a 100%);
     overflow: hidden;
   }
+  /* Cyberpunk TRON-style perspective floor grid */
+  .grid-floor {
+    position: absolute;
+    left: 0; right: 0;
+    top: 180px; bottom: 0;
+    background:
+      repeating-linear-gradient(0deg,
+        transparent 0, transparent 19px,
+        rgba(0,224,255,0.10) 19px, rgba(0,224,255,0.10) 20px),
+      repeating-linear-gradient(90deg,
+        transparent 0, transparent 29px,
+        rgba(0,224,255,0.07) 29px, rgba(0,224,255,0.07) 30px);
+    -webkit-mask-image: linear-gradient(180deg,
+      transparent 0%, rgba(0,0,0,0.9) 40%, #000 100%);
+            mask-image: linear-gradient(180deg,
+      transparent 0%, rgba(0,0,0,0.9) 40%, #000 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  /* Faux perspective: two converging diagonal beams from pitch corners
+     up to where the goal posts are. Implemented with skew so the rect's
+     position is fixed (no MRBD trail). */
+  .persp-l, .persp-r {
+    position: absolute;
+    top: 170px;
+    width: 2px;
+    height: 280px;
+    background: linear-gradient(180deg,
+      rgba(0,224,255,0.6) 0%,
+      rgba(0,224,255,0.05) 100%);
+    transform-origin: top center;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .persp-l { left: 110px; transform: skewX( 24deg); }
+  .persp-r { left: 488px; transform: skewX(-24deg); }
   /* Subtle AR scan-line overlay across the whole pitch */
   .pitch::before {
     content: "";
@@ -114,7 +150,8 @@
     left: 0; right: 0;
     height: 70px;
     background: linear-gradient(180deg,
-      rgba(124,246,200,0.08) 0%,
+      rgba(124,246,200,0.12) 0%,
+      rgba(0,224,255,0.06)   50%,
       rgba(124,246,200,0)    100%);
     pointer-events: none;
     z-index: 1;
@@ -133,8 +170,11 @@
     left: 108px;
     width: 384px;
     height: 4px;
-    background: #ffffff;
-    box-shadow: 0 0 12px rgba(255,255,255,0.55), 0 0 24px rgba(124,246,200,0.25);
+    background: linear-gradient(180deg, #ffffff 0%, #b4f6ff 100%);
+    box-shadow:
+      0 0 8px  #ffffff,
+      0 0 18px rgba(0,224,255,0.7),
+      0 0 36px rgba(0,224,255,0.4);
     z-index: 2;
   }
   .post-left {
@@ -143,8 +183,11 @@
     left: 108px;
     width: 4px;
     height: 134px;
-    background: linear-gradient(180deg, #ffffff 0%, #cfd6e0 100%);
-    box-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 22px rgba(124,246,200,0.25);
+    background: linear-gradient(180deg, #ffffff 0%, #b4f6ff 50%, #7cd6e8 100%);
+    box-shadow:
+      0 0 8px  #ffffff,
+      0 0 16px rgba(0,224,255,0.6),
+      0 0 30px rgba(0,224,255,0.3);
     z-index: 2;
   }
   .post-right {
@@ -153,8 +196,11 @@
     left: 488px;
     width: 4px;
     height: 134px;
-    background: linear-gradient(180deg, #ffffff 0%, #cfd6e0 100%);
-    box-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 22px rgba(124,246,200,0.25);
+    background: linear-gradient(180deg, #ffffff 0%, #b4f6ff 50%, #7cd6e8 100%);
+    box-shadow:
+      0 0 8px  #ffffff,
+      0 0 16px rgba(0,224,255,0.6),
+      0 0 30px rgba(0,224,255,0.3);
     z-index: 2;
   }
   /* Net background — subtle gradient gives depth into the net */
@@ -311,39 +357,58 @@
     transform: translateX(-50%);
     z-index: 6;
     pointer-events: none;
-    filter: drop-shadow(0 6px 4px rgba(0,0,0,0.6));
+    filter: drop-shadow(0 6px 5px rgba(255,0,128,0.25))
+            drop-shadow(0 0 12px rgba(255,0,128,0.35));
   }
   .keeper .body {
     position: absolute;
-    top: 18px; left: 6px; right: 6px; bottom: 14px;
-    background: linear-gradient(180deg, #ffe680 0%, #ffd54a 50%, #d8a820 100%);
+    top: 18px; left: 6px; right: 6px; bottom: 12px;
+    background: linear-gradient(180deg, #2a0c1a 0%, #1a050e 100%);
+    border: 1.5px solid #ff0080;
+    border-radius: 14px 14px 4px 4px;
+    box-shadow: inset 0 0 10px rgba(255,0,128,0.45),
+                0 0 10px rgba(255,0,128,0.3);
   }
+  /* gloves: outstretched ready stance */
+  .keeper .body::before,
+  .keeper .body::after {
+    content: "";
+    position: absolute;
+    top: 12px;
+    width: 6px; height: 6px;
+    background: #ff0080;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #ff0080, 0 0 12px rgba(255,0,128,0.6);
+  }
+  .keeper .body::before { left: -8px;  }
+  .keeper .body::after  { right: -8px; }
   .keeper .head {
     position: absolute;
     top: 0; left: 50%;
     width: 18px; height: 18px;
-    background: #ffd54a;
+    background: linear-gradient(180deg, #2a0c1a 0%, #1a050e 100%);
+    border: 1.5px solid #ff0080;
     border-radius: 50%;
     transform: translateX(-50%);
+    box-shadow: 0 0 10px rgba(255,0,128,0.5);
   }
-  /* eyes */
-  .keeper .head::before,
+  /* visor line */
   .keeper .head::after {
     content: "";
     position: absolute;
-    width: 3px; height: 3px;
-    background: #082018;
-    top: 6px;
-    border-radius: 50%;
+    left: 2px; right: 2px;
+    top: 6px; height: 2px;
+    background: #ff0080;
+    box-shadow: 0 0 4px #ff0080;
   }
-  .keeper .head::before { left: 4px;  }
-  .keeper .head::after  { right: 4px; }
   .keeper .legL,
   .keeper .legR {
     position: absolute;
     bottom: 0;
     width: 7px; height: 14px;
-    background: #ffd54a;
+    background: linear-gradient(180deg, #2a0c1a 0%, #1a050e 100%);
+    border: 1px solid #ff0080;
+    border-bottom: 0;
   }
   .keeper .legL { left: 8px; }
   .keeper .legR { right: 8px; }
@@ -360,38 +425,57 @@
     transform: translateX(-50%) translateX(-44px);
     z-index: 4;
     pointer-events: none;
-    filter: drop-shadow(0 8px 5px rgba(0,0,0,0.55));
+    filter: drop-shadow(0 8px 6px rgba(0,224,255,0.25))
+            drop-shadow(0 0 14px rgba(0,224,255,0.3));
   }
   .striker .body {
     position: absolute;
-    top: 22px; left: 8px; right: 8px; bottom: 18px;
-    background: linear-gradient(180deg, #e8eef6 0%, #cfd6e0 50%, #9aa3b4 100%);
+    top: 22px; left: 10px; right: 10px; bottom: 16px;
+    background: linear-gradient(180deg, #1a2a36 0%, #0c1a26 100%);
+    border: 1.5px solid #00e0ff;
+    border-radius: 14px 14px 6px 6px;
+    box-shadow: inset 0 0 12px rgba(0,224,255,0.4),
+                0 0 10px rgba(0,224,255,0.3);
   }
-  /* Striker jersey accent stripe */
+  /* HUD chest line */
   .striker .body::after {
     content: "";
     position: absolute;
-    left: 0; right: 0;
-    top: 10px; height: 6px;
-    background: #ff5b6e;
+    left: 4px; right: 4px;
+    top: 14px; height: 2px;
+    background: #00e0ff;
+    box-shadow: 0 0 6px #00e0ff;
   }
   .striker .head {
     position: absolute;
     top: 0; left: 50%;
     width: 20px; height: 20px;
-    background: #cfd6e0;
+    background: linear-gradient(180deg, #1a2a36 0%, #0c1a26 100%);
+    border: 1.5px solid #00e0ff;
     border-radius: 50%;
     transform: translateX(-50%);
+    box-shadow: 0 0 10px rgba(0,224,255,0.5);
+  }
+  /* visor line */
+  .striker .head::after {
+    content: "";
+    position: absolute;
+    left: 2px; right: 2px;
+    top: 6px; height: 2px;
+    background: #00e0ff;
+    box-shadow: 0 0 4px #00e0ff;
   }
   .striker .legL,
   .striker .legR {
     position: absolute;
     bottom: 0;
-    width: 9px; height: 18px;
-    background: #cfd6e0;
+    width: 8px; height: 16px;
+    background: linear-gradient(180deg, #1a2a36 0%, #0c1a26 100%);
+    border: 1px solid #00e0ff;
+    border-bottom: 0;
   }
-  .striker .legL { left: 12px; }
-  .striker .legR { right: 12px; }
+  .striker .legL { left: 14px; }
+  .striker .legR { right: 14px; }
   .striker.kicking {
     transform: translateX(-50%) translateX(-50px);
   }
@@ -525,7 +609,7 @@
   }
 
   /* ===================================================
-     Result flash
+     Result flash + celebration FX
   =================================================== */
   .flash {
     position: absolute;
@@ -533,18 +617,78 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 88px;
-    font-weight: 200;
-    letter-spacing: 0.06em;
+    font-size: 110px;
+    font-weight: 100;
+    letter-spacing: 0.08em;
     opacity: 0;
     pointer-events: none;
     z-index: 25;
-    transition: opacity 0.16s ease;
+    transform-origin: center;
   }
   .flash.show { opacity: 1; }
-  .flash.goal  { color: #7cf6c8; text-shadow: 0 0 32px rgba(124,246,200,0.85), 0 0 60px rgba(124,246,200,0.5); }
-  .flash.miss  { color: #ff5b6e; text-shadow: 0 0 28px rgba(255,91,110,0.75); }
-  .flash.saved { color: #ffd54a; text-shadow: 0 0 28px rgba(255,213,74,0.75); }
+  .flash.goal {
+    color: #7cf6c8;
+    text-shadow:
+      0 0 24px #7cf6c8,
+      0 0 48px rgba(124,246,200,0.7),
+      0 0 80px rgba(0,224,255,0.5);
+    animation: goal-burst 1s cubic-bezier(0.2, 1.3, 0.4, 1.05) forwards;
+  }
+  .flash.miss {
+    color: #ff5b6e;
+    text-shadow: 0 0 24px #ff5b6e, 0 0 48px rgba(255,91,110,0.6);
+    animation: result-pop 0.7s ease forwards;
+  }
+  .flash.saved {
+    color: #ffd54a;
+    text-shadow: 0 0 24px #ffd54a, 0 0 48px rgba(255,213,74,0.6);
+    animation: result-pop 0.7s ease forwards;
+  }
+  @keyframes goal-burst {
+    0%   { transform: scale(0.2)  skewX(-15deg); opacity: 0; letter-spacing: 0.4em; }
+    20%  { transform: scale(1.25) skewX( 4deg);  opacity: 1; letter-spacing: 0.06em; }
+    35%  { transform: scale(0.95) skewX(-2deg); }
+    50%  { transform: scale(1.10) skewX( 0deg); }
+    100% { transform: scale(1)    skewX( 0deg); opacity: 1; }
+  }
+  @keyframes result-pop {
+    0%   { transform: scale(0.4); opacity: 0; }
+    35%  { transform: scale(1.18); opacity: 1; }
+    100% { transform: scale(1);    opacity: 1; }
+  }
+
+  /* Goal screen flash */
+  .screenFlash {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%,
+      rgba(124,246,200,0.45) 0%,
+      rgba(124,246,200,0.18) 30%,
+      transparent 70%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 24;
+  }
+  .screenFlash.go { animation: screen-flash 0.9s ease-out forwards; }
+  @keyframes screen-flash {
+    0%   { opacity: 0;   }
+    20%  { opacity: 1;   }
+    100% { opacity: 0;   }
+  }
+
+  /* Confetti particles */
+  .confetti {
+    position: absolute;
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 26;
+    box-shadow: 0 0 6px currentColor;
+  }
+  @keyframes confetti-fall {
+    0%   { transform: translateY(-40px) rotate(0deg);   opacity: 1; }
+    100% { transform: translateY(560px) rotate(720deg); opacity: 0; }
+  }
 
   /* ===================================================
      Overlays
@@ -712,6 +856,11 @@
   <!-- ===== Pitch ===== -->
   <div class="pitch" id="pitch">
 
+    <!-- Cyberpunk floor grid + perspective beams -->
+    <div class="grid-floor"></div>
+    <div class="persp-l"></div>
+    <div class="persp-r"></div>
+
     <!-- Net background, drawn before goal frame so frame is on top -->
     <div class="netBg"></div>
     <!-- Net pattern lines -->
@@ -790,6 +939,7 @@
       </div>
     </div>
 
+    <div class="screenFlash" id="screenFlash"></div>
     <div class="flash" id="flash"></div>
   </div>
 
@@ -940,9 +1090,46 @@ function setStatus(text, cls) {
 }
 function flash(text, cls) {
   const f = $('flash');
+  // restart animation by removing then re-adding
+  f.className = 'flash';
+  void f.offsetWidth;
   f.textContent = text;
   f.className = 'flash show ' + cls;
-  setTimeout(() => { f.className = 'flash'; }, 900);
+  setTimeout(() => { f.className = 'flash'; }, 1000);
+
+  if (cls === 'goal') {
+    fireScreenFlash();
+    fireConfetti();
+  }
+}
+
+function fireScreenFlash() {
+  const el = $('screenFlash');
+  el.classList.remove('go');
+  void el.offsetWidth;
+  el.classList.add('go');
+  setTimeout(() => el.classList.remove('go'), 950);
+}
+
+const CONFETTI_COLORS = ['#7cf6c8', '#00e0ff', '#ffd54a', '#ff5b6e', '#ff0080', '#ffffff'];
+function fireConfetti() {
+  const pitch = $('pitch');
+  const count = 28;
+  for (let i = 0; i < count; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    c.style.background = color;
+    c.style.color = color;
+    c.style.left = (40 + Math.random() * 520) + 'px';
+    c.style.top  = (60 + Math.random() * 60) + 'px';
+    c.style.width  = (4 + Math.random() * 6) + 'px';
+    c.style.height = (4 + Math.random() * 6) + 'px';
+    c.style.animation = `confetti-fall ${0.9 + Math.random() * 0.7}s ease-out forwards`;
+    c.style.animationDelay = (Math.random() * 0.15) + 's';
+    pitch.appendChild(c);
+    setTimeout(() => c.remove(), 1800);
+  }
 }
 
 /* ===================================================
