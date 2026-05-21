@@ -46,35 +46,32 @@
     color: #000;
     background: #7cf6c8;
     padding: 3px 8px;
-    border-radius: 8px;
     margin-left: 8px;
   }
-  .matchScore {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: #8a93a3;
-  }
-  .matchScore .you,
-  .matchScore .cpu {
-    font-size: 18px;
-    font-weight: 300;
-    color: #fff;
-    font-variant-numeric: tabular-nums;
-    min-width: 16px;
-    text-align: center;
-  }
-  .matchScore .you { color: #7cf6c8; }
-  .matchScore .cpu { color: #ff8a99; }
-  .matchScore .vs { color: #2a2f3a; font-size: 11px; }
   .turnInfo {
     font-size: 10px;
     color: #8a93a3;
     letter-spacing: 0.2em;
     margin-left: 8px;
   }
+  .matchScore {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #8a93a3;
+  }
+  .matchScore .you,
+  .matchScore .cpu {
+    font-size: 20px;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    min-width: 18px;
+    text-align: center;
+  }
+  .matchScore .you { color: #7cf6c8; }
+  .matchScore .cpu { color: #ff8a99; }
+  .matchScore .vs  { color: #555; font-size: 11px; }
 
   /* =====================================================
      Pitch
@@ -82,216 +79,282 @@
   .pitch {
     position: absolute;
     top: 44px; left: 0; right: 0; bottom: 56px;
-    background: radial-gradient(ellipse at 50% 22%, #0c2418 0%, #07140d 55%, #04090a 100%);
+    background: #082018;
     overflow: hidden;
   }
-  .pitch::before {
-    content: "";
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(ellipse at 50% 26%, transparent 0%, rgba(124,246,200,0.05) 40%, transparent 70%),
-      linear-gradient(180deg, transparent 0%, transparent 40%, rgba(255,255,255,0.04) 100%);
-    pointer-events: none;
-  }
 
-  /* Goal */
+  /* Goal: simple solid rectangle outline, no SVG, no filters */
   .goal {
     position: absolute;
-    top: 28px;
-    left: 90px;
-    width: 420px;
-    height: 150px;
+    top: 36px;
+    left: 110px;
+    width: 380px;
+    height: 130px;
+    border: 3px solid #ffffff;
+    background: #04150e;
+    z-index: 2;
   }
-  .goal svg { width: 100%; height: 100%; overflow: visible; }
-  .goal .post {
-    stroke: #fff; stroke-width: 4; fill: none;
-    stroke-linejoin: round; stroke-linecap: round;
-    filter: drop-shadow(0 0 6px rgba(255,255,255,0.45));
-  }
-  .goal .net { stroke: rgba(255,255,255,0.22); stroke-width: 1; fill: none; }
-  .goal .net-fill { fill: rgba(255,255,255,0.04); }
 
-  .penaltyBox {
+  /* horizontal goal line under the goal */
+  .goalLine {
     position: absolute;
     top: 168px;
-    left: 60px; right: 60px;
-    height: 200px;
-    pointer-events: none;
+    left: 0; right: 0;
+    height: 0;
+    border-top: 2px solid rgba(255,255,255,0.35);
+    z-index: 1;
   }
-  .penaltyBox svg { width: 100%; height: 100%; overflow: visible; }
-  .penaltyBox path { stroke: rgba(255,255,255,0.18); stroke-width: 2; fill: none; }
+
+  /* Penalty spot */
   .penaltySpot {
     position: absolute;
-    left: 50%; top: 360px;
-    width: 6px; height: 6px;
+    left: 50%;
+    top: 360px;
+    width: 8px; height: 8px;
     border-radius: 50%;
     background: #fff;
     transform: translate(-50%, -50%);
-    box-shadow: 0 0 6px rgba(255,255,255,0.6);
+    z-index: 1;
   }
 
-  /* 3x3 grid */
-  .aimGrid {
+  /* Penalty arc (just a single curve approximated by a div) */
+  .penaltyArc {
     position: absolute;
-    top: 38px;
-    left: 140px;
-    width: 320px;
-    height: 110px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 3px;
-    pointer-events: none;
-    z-index: 4;
-  }
-  .aimCell {
-    /* default: completely invisible — no border, no background */
-    border-radius: 4px;
-    transition: background 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
-    pointer-events: none;
-  }
-  .aimCell.target {
-    border: 1.5px solid #7cf6c8;
-    background: rgba(124, 246, 200, 0.16);
-    box-shadow: 0 0 14px rgba(124, 246, 200, 0.45) inset,
-                0 0 14px rgba(124, 246, 200, 0.35);
-  }
-  .keepMode .aimCell.target {
-    border-color: #ffd54a;
-    background: rgba(255, 213, 74, 0.18);
-    box-shadow: 0 0 14px rgba(255, 213, 74, 0.45) inset,
-                0 0 14px rgba(255, 213, 74, 0.35);
-  }
-  .aimCell.locked { opacity: 0.85; }
-
-  /* Goalkeeper */
-  .keeper {
-    position: absolute;
-    top: 60px;
     left: 50%;
-    width: 52px; height: 86px;
+    top: 310px;
+    width: 220px;
+    height: 80px;
+    border: 2px solid rgba(255,255,255,0.18);
+    border-top: 0;
+    border-radius: 0 0 110px 110px / 0 0 80px 80px;
     transform: translateX(-50%);
-    transition: transform 0.22s cubic-bezier(0.4, 0.8, 0.4, 1);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* =====================================================
+     Single aim cursor — replaces the old 9-cell grid
+  ===================================================== */
+  .cursor {
+    position: absolute;
+    width: 110px;
+    height: 36px;
+    border: 2px solid #7cf6c8;
+    background: rgba(124, 246, 200, 0.18);
+    transform: translate(-50%, -50%);
+    transition: left 0.12s ease, top 0.12s ease,
+                border-color 0.12s ease, background 0.12s ease;
     z-index: 5;
     pointer-events: none;
   }
-  .keeper svg { width: 100%; height: 100%; }
+  .cursor.keep {
+    border-color: #ffd54a;
+    background: rgba(255, 213, 74, 0.2);
+  }
+  .cursor.locked {
+    background: rgba(255, 213, 74, 0.35);
+  }
 
-  /* Striker */
+  /* =====================================================
+     Goalkeeper — single solid-color silhouette
+     (no white limbs that could artifact on MRBD)
+  ===================================================== */
+  .keeper {
+    position: absolute;
+    top: 68px;
+    left: 50%;
+    width: 44px;
+    height: 80px;
+    transform: translateX(-50%);
+    transition: transform 0.22s cubic-bezier(0.4, 0.8, 0.4, 1);
+    z-index: 6;
+    pointer-events: none;
+  }
+  .keeper .body {
+    position: absolute;
+    inset: 18px 0 14px 0;
+    background: #ffd54a;
+    border-radius: 4px;
+  }
+  .keeper .head {
+    position: absolute;
+    top: 0; left: 50%;
+    width: 20px; height: 20px;
+    background: #ffd54a;
+    border-radius: 50%;
+    transform: translateX(-50%);
+  }
+  .keeper .legL,
+  .keeper .legR {
+    position: absolute;
+    bottom: 0;
+    width: 8px; height: 14px;
+    background: #ffd54a;
+  }
+  .keeper .legL { left: 8px; }
+  .keeper .legR { right: 8px; }
+
+  /* =====================================================
+     Striker — single silhouette block
+  ===================================================== */
   .striker {
     position: absolute;
-    bottom: 70px;
+    bottom: 80px;
     left: 50%;
-    width: 86px; height: 132px;
-    transform: translateX(-50%) translateX(-46px);
-    z-index: 3;
+    width: 56px;
+    height: 110px;
+    transform: translateX(-50%) translateX(-44px);
+    z-index: 4;
     pointer-events: none;
     transition: transform 0.15s ease;
   }
-  .striker svg { width: 100%; height: 100%; }
-  .striker.kicking { transform: translateX(-50%) translateX(-46px) translateX(-6px); }
+  .striker .body {
+    position: absolute;
+    inset: 22px 8px 18px 8px;
+    background: #cfd6e0;
+    border-radius: 4px;
+  }
+  .striker .head {
+    position: absolute;
+    top: 0; left: 50%;
+    width: 22px; height: 22px;
+    background: #cfd6e0;
+    border-radius: 50%;
+    transform: translateX(-50%);
+  }
+  .striker .legL,
+  .striker .legR {
+    position: absolute;
+    bottom: 0;
+    width: 10px; height: 20px;
+    background: #cfd6e0;
+  }
+  .striker .legL { left: 12px; }
+  .striker .legR { right: 12px; }
+  .striker.kicking {
+    transform: translateX(-50%) translateX(-44px) translateX(-6px);
+  }
 
-  /* Ball */
+  /* =====================================================
+     Ball (solid white circle with one dark mark)
+  ===================================================== */
   .ball {
     position: absolute;
-    bottom: 60px;
+    bottom: 64px;
     left: 50%;
-    width: 36px; height: 36px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #ffffff;
     transform: translateX(-50%);
-    z-index: 6;
+    z-index: 7;
     pointer-events: none;
     will-change: transform;
   }
-  .ball svg { width: 100%; height: 100%; }
+  .ball::before {
+    content: "";
+    position: absolute;
+    top: 6px; left: 50%;
+    width: 8px; height: 8px;
+    background: #111;
+    border-radius: 50%;
+    transform: translateX(-50%);
+  }
+
   .ballShadow {
     position: absolute;
-    bottom: 50px;
+    bottom: 58px;
     left: 50%;
-    width: 24px; height: 6px;
-    background: radial-gradient(ellipse, rgba(0,0,0,0.55) 0%, transparent 70%);
+    width: 22px; height: 6px;
+    background: rgba(0,0,0,0.6);
+    border-radius: 50%;
     transform: translateX(-50%);
-    z-index: 2;
+    z-index: 3;
     pointer-events: none;
     will-change: transform, opacity;
   }
 
-  /* Power meter */
+  /* =====================================================
+     Power meter (solid blocks, no gradient)
+  ===================================================== */
   .powerWrap {
     position: absolute;
-    right: 14px; top: 30px; bottom: 60px;
-    width: 14px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(124,246,200,0.3);
-    border-radius: 8px;
+    right: 14px; top: 36px; bottom: 70px;
+    width: 12px;
+    background: #1a1f2a;
+    border: 1px solid #7cf6c8;
     overflow: hidden;
     z-index: 8;
-    transition: opacity 0.2s ease;
   }
   .powerFill {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     height: 50%;
-    background: linear-gradient(180deg, #ff5b6e 0%, #ffd54a 50%, #7cf6c8 100%);
+    background: #7cf6c8;
     transition: height 0.08s linear;
   }
-  .powerWrap::after {
-    content: "";
+  /* sweet-spot band */
+  .sweet {
     position: absolute;
-    left: -3px; right: -3px;
-    top: 30%;
-    height: 28%;
-    border-top:    1px solid rgba(124,246,200,0.7);
-    border-bottom: 1px solid rgba(124,246,200,0.7);
+    right: 6px;
+    top: calc(36px + (1 - 0.58) * (500px - 36px - 70px));
+    width: 26px;
+    height: calc((0.58 - 0.30) * (500px - 36px - 70px));
+    border-top: 2px solid #fff;
+    border-bottom: 2px solid #fff;
     pointer-events: none;
+    z-index: 8;
   }
   .powerLabel {
     position: absolute;
-    right: 32px; top: 30px;
-    font-size: 9px;
+    right: 32px; top: 38px;
+    font-size: 10px;
     letter-spacing: 0.25em;
     color: #7cf6c8;
     writing-mode: vertical-rl;
     z-index: 8;
-    transition: opacity 0.2s ease;
   }
-  .powerWrap.hidden, .powerLabel.hidden { opacity: 0.18; }
+  .powerWrap.hidden,
+  .powerLabel.hidden,
+  .sweet.hidden { display: none; }
 
-  /* attempt dots (shows 1..5 with goal/miss) */
+  /* =====================================================
+     Attempt dots (YOU + CPU)
+  ===================================================== */
   .attemptDots {
     position: absolute;
     bottom: 8px; left: 14px;
     display: flex;
-    gap: 6px;
+    gap: 14px;
     z-index: 8;
   }
-  .attemptDots .row {
-    display: flex; flex-direction: column; gap: 4px;
-  }
+  .attemptDots .row { display: flex; flex-direction: column; gap: 3px; }
   .attemptDots .row .label {
-    font-size: 8px;
+    font-size: 9px;
     letter-spacing: 0.18em;
     color: #8a93a3;
-    margin-bottom: 2px;
   }
   .attemptDots .row .dots { display: flex; gap: 5px; }
   .attemptDots .d {
-    width: 8px; height: 8px;
-    border-radius: 50%;
+    width: 9px; height: 9px;
     background: #2a2f3a;
-    border: 1px solid rgba(255,255,255,0.15);
   }
-  .attemptDots .d.score   { background: #7cf6c8; box-shadow: 0 0 6px #7cf6c8; }
-  .attemptDots .d.fail    { background: #ff5b6e; box-shadow: 0 0 5px #ff5b6e; }
+  .attemptDots .d.score { background: #7cf6c8; }
+  .attemptDots .d.fail  { background: #ff5b6e; }
   .attemptDots .youRow .label { color: #7cf6c8; }
   .attemptDots .cpuRow .label { color: #ff8a99; }
 
-  /* Bottom status */
+  /* =====================================================
+     Bottom status
+  ===================================================== */
   .bottom {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     height: 56px;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
     z-index: 20;
   }
   .status {
@@ -301,58 +364,63 @@
     min-height: 18px;
     text-align: center;
   }
-  .status.goal  { color: #7cf6c8; text-shadow: 0 0 12px #7cf6c8; }
-  .status.miss  { color: #ff5b6e; text-shadow: 0 0 10px #ff5b6e; }
-  .status.saved { color: #ffd54a; text-shadow: 0 0 10px #ffd54a; }
+  .status.goal  { color: #7cf6c8; }
+  .status.miss  { color: #ff5b6e; }
+  .status.saved { color: #ffd54a; }
   .status.hint  { color: #7cf6c8; }
   .hint {
     font-size: 10px;
-    color: #2a2f3a;
+    color: #3a3f4a;
     letter-spacing: 0.3em;
   }
 
-  /* Result flash */
+  /* =====================================================
+     Result flash
+  ===================================================== */
   .flash {
     position: absolute;
     inset: 44px 0 56px 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 92px; font-weight: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 88px;
+    font-weight: 200;
     letter-spacing: 0.06em;
     opacity: 0;
     pointer-events: none;
     z-index: 25;
-    transition: opacity 0.18s ease;
+    transition: opacity 0.16s ease;
   }
   .flash.show { opacity: 1; }
-  .flash.goal  { color: #7cf6c8; text-shadow: 0 0 30px #7cf6c8; }
-  .flash.miss  { color: #ff5b6e; text-shadow: 0 0 24px #ff5b6e; }
-  .flash.saved { color: #ffd54a; text-shadow: 0 0 24px #ffd54a; }
+  .flash.goal  { color: #7cf6c8; }
+  .flash.miss  { color: #ff5b6e; }
+  .flash.saved { color: #ffd54a; }
 
-  /* Overlay screens (menu / halftime / fulltime) */
+  /* =====================================================
+     Overlay screens (menu / halftime / fulltime)
+  ===================================================== */
   .overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.82);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.92);
+    display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
     z-index: 50;
-    transition: opacity 0.22s ease;
     padding: 20px;
   }
-  .overlay.hidden { opacity: 0; pointer-events: none; }
+  .overlay.hidden { display: none; }
   .overlay .big {
     font-size: 40px;
     font-weight: 200;
     letter-spacing: 0.12em;
     color: #7cf6c8;
-    text-shadow: 0 0 24px rgba(124,246,200,0.35);
     margin-bottom: 6px;
   }
   .overlay .sub {
     font-size: 13px;
-    letter-spacing: 0.32em;
+    letter-spacing: 0.3em;
     color: #8a93a3;
     margin-bottom: 26px;
   }
@@ -360,22 +428,21 @@
     margin-top: 22px;
     font-size: 10px;
     letter-spacing: 0.3em;
-    color: #2a2f3a;
+    color: #3a3f4a;
   }
 
-  /* mode select */
   .modes { display: flex; gap: 20px; }
   .modeBtn {
     width: 180px; height: 180px;
     border: 2px solid #2a2f3a;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.02);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
+    background: #0a0f14;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     gap: 6px;
-    cursor: pointer;
-    transition: all 0.18s ease;
     padding: 12px;
+    cursor: pointer;
   }
   .modeBtn .icon { font-size: 56px; line-height: 1; }
   .modeBtn .label { font-size: 14px; letter-spacing: 0.18em; color: #cfd6e0; }
@@ -385,23 +452,24 @@
   }
   .modeBtn.target {
     border-color: #7cf6c8;
-    background: rgba(124,246,200,0.08);
-    box-shadow: 0 0 24px rgba(124,246,200,0.35);
+    background: #0d1a16;
   }
   .modeBtn.target .label { color: #7cf6c8; }
 
-  /* half-time / full-time content */
   .matchSummary {
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
     gap: 32px;
     margin-bottom: 18px;
   }
   .matchSummary .side {
-    display: flex; flex-direction: column; align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     min-width: 110px;
   }
   .matchSummary .side .name {
-    font-size: 11px; letter-spacing: 0.28em; color: #8a93a3;
+    font-size: 11px; letter-spacing: 0.28em;
     margin-bottom: 6px;
   }
   .matchSummary .side .val {
@@ -409,14 +477,15 @@
     font-variant-numeric: tabular-nums;
   }
   .matchSummary .you .name { color: #7cf6c8; }
-  .matchSummary .you .val  { color: #7cf6c8; text-shadow: 0 0 20px rgba(124,246,200,0.4); }
+  .matchSummary .you .val  { color: #7cf6c8; }
   .matchSummary .cpu .name { color: #ff8a99; }
-  .matchSummary .cpu .val  { color: #ff8a99; text-shadow: 0 0 18px rgba(255,138,153,0.35); }
-  .matchSummary .dash {
-    font-size: 32px; color: #2a2f3a;
-  }
+  .matchSummary .cpu .val  { color: #ff8a99; }
+  .matchSummary .dash { font-size: 32px; color: #3a3f4a; }
+
   .summaryDots {
-    display: flex; flex-direction: column; gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     margin-bottom: 18px;
   }
   .summaryDots .row { display: flex; gap: 8px; align-items: center; }
@@ -427,16 +496,11 @@
   .summaryDots .row .dots { display: flex; gap: 6px; }
   .summaryDots .row.you .lbl { color: #7cf6c8; }
   .summaryDots .row.cpu .lbl { color: #ff8a99; }
-  .summaryDots .d {
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: #2a2f3a;
-    border: 1px solid rgba(255,255,255,0.18);
-  }
-  .summaryDots .d.score { background: #7cf6c8; box-shadow: 0 0 6px #7cf6c8; }
-  .summaryDots .d.fail  { background: #ff5b6e; box-shadow: 0 0 5px #ff5b6e; }
-  .summaryDots .row.cpu .d.score { background: #ff8a99; box-shadow: 0 0 6px #ff8a99; }
-  .summaryDots .row.cpu .d.fail  { background: #2a2f3a; box-shadow: none; }
+  .summaryDots .d { width: 12px; height: 12px; background: #2a2f3a; }
+  .summaryDots .d.score { background: #7cf6c8; }
+  .summaryDots .d.fail  { background: #ff5b6e; }
+  .summaryDots .row.cpu .d.score { background: #ff8a99; }
+  .summaryDots .row.cpu .d.fail  { background: #2a2f3a; }
 
   .verdict {
     font-size: 26px;
@@ -444,8 +508,8 @@
     margin-bottom: 10px;
     font-weight: 200;
   }
-  .verdict.win  { color: #7cf6c8; text-shadow: 0 0 18px rgba(124,246,200,0.5); }
-  .verdict.lose { color: #ff5b6e; text-shadow: 0 0 18px rgba(255,91,110,0.5); }
+  .verdict.win  { color: #7cf6c8; }
+  .verdict.lose { color: #ff5b6e; }
   .verdict.draw { color: #ffd54a; }
 
   .backBadge {
@@ -453,7 +517,7 @@
     left: 12px; bottom: 4px;
     font-size: 9px;
     letter-spacing: 0.22em;
-    color: #2a2f3a;
+    color: #3a3f4a;
     z-index: 21;
   }
   .backBadge b { color: #8a93a3; font-weight: 400; }
@@ -479,93 +543,42 @@
   <!-- ===== Pitch ===== -->
   <div class="pitch" id="pitch">
 
-    <div class="penaltyBox">
-      <svg viewBox="0 0 300 200" preserveAspectRatio="none">
-        <path d="M 0 200 L 50 0 L 250 0 L 300 200" />
-        <path d="M 90 200 L 110 80 L 190 80 L 210 200" />
-      </svg>
-    </div>
+    <div class="goal"></div>
+    <div class="goalLine"></div>
+    <div class="penaltyArc"></div>
     <div class="penaltySpot"></div>
 
-    <div class="goal">
-      <svg viewBox="0 0 420 150" preserveAspectRatio="none">
-        <path class="net-fill" d="M 40 20 L 380 20 L 380 110 L 40 110 Z" />
-        <g class="net">
-          <line x1="80"  y1="30" x2="80"  y2="105" />
-          <line x1="120" y1="30" x2="120" y2="105" />
-          <line x1="160" y1="30" x2="160" y2="105" />
-          <line x1="200" y1="30" x2="200" y2="105" />
-          <line x1="240" y1="30" x2="240" y2="105" />
-          <line x1="280" y1="30" x2="280" y2="105" />
-          <line x1="320" y1="30" x2="320" y2="105" />
-          <line x1="340" y1="30" x2="340" y2="105" />
-        </g>
-        <g class="net">
-          <line x1="50" y1="45"  x2="370" y2="45" />
-          <line x1="50" y1="65"  x2="370" y2="65" />
-          <line x1="50" y1="85"  x2="370" y2="85" />
-          <line x1="50" y1="100" x2="370" y2="100" />
-        </g>
-        <path class="post" d="M 40 110 L 40 20 L 380 20 L 380 110" />
-      </svg>
-    </div>
+    <!-- Aim cursor (single floating element) -->
+    <div class="cursor" id="cursor"></div>
 
-    <div class="aimGrid" id="aimGrid">
-      <div class="aimCell" data-cell="0"></div>
-      <div class="aimCell" data-cell="1"></div>
-      <div class="aimCell" data-cell="2"></div>
-      <div class="aimCell" data-cell="3"></div>
-      <div class="aimCell" data-cell="4"></div>
-      <div class="aimCell" data-cell="5"></div>
-      <div class="aimCell" data-cell="6"></div>
-      <div class="aimCell" data-cell="7"></div>
-      <div class="aimCell" data-cell="8"></div>
-    </div>
-
+    <!-- Goalkeeper -->
     <div class="keeper" id="keeper">
-      <svg viewBox="0 0 52 86">
-        <circle cx="6"  cy="44" r="6" fill="#ffd54a"/>
-        <circle cx="46" cy="44" r="6" fill="#ffd54a"/>
-        <rect x="6"  y="42" width="18" height="6" fill="#fff"/>
-        <rect x="28" y="42" width="18" height="6" fill="#fff"/>
-        <rect x="16" y="28" width="20" height="34" rx="4" fill="#7cf6c8"/>
-        <circle cx="26" cy="16" r="10" fill="#fff"/>
-        <rect x="18" y="62" width="6" height="20" fill="#fff"/>
-        <rect x="28" y="62" width="6" height="20" fill="#fff"/>
-      </svg>
+      <div class="head"></div>
+      <div class="body"></div>
+      <div class="legL"></div>
+      <div class="legR"></div>
     </div>
 
+    <!-- Ball shadow + ball -->
     <div class="ballShadow" id="ballShadow"></div>
+    <div class="ball" id="ball"></div>
 
-    <div class="ball" id="ball">
-      <svg viewBox="0 0 36 36">
-        <circle cx="18" cy="18" r="16" fill="#fff" stroke="#000" stroke-width="1.5"/>
-        <polygon points="18,7 24,12 22,20 14,20 12,12" fill="#000"/>
-        <polygon points="6,16 12,12 14,20 10,26"  fill="#000" opacity="0.55"/>
-        <polygon points="30,16 24,12 22,20 26,26" fill="#000" opacity="0.55"/>
-        <polygon points="12,28 14,20 22,20 24,28 18,32" fill="none" stroke="#000" stroke-width="1.2"/>
-      </svg>
-    </div>
-
+    <!-- Striker -->
     <div class="striker" id="striker">
-      <svg viewBox="0 0 86 132">
-        <circle cx="43" cy="18" r="12" fill="#cfd6e0"/>
-        <rect x="28" y="30" width="30" height="44" rx="6" fill="#cfd6e0"/>
-        <rect x="6"  y="48" width="22" height="9" fill="#cfd6e0"/>
-        <rect x="58" y="48" width="22" height="9" fill="#cfd6e0"/>
-        <rect x="32" y="74" width="10" height="40" fill="#cfd6e0"/>
-        <rect x="46" y="74" width="10" height="32" fill="#cfd6e0"/>
-        <rect x="46" y="100" width="22" height="9" fill="#cfd6e0"/>
-        <ellipse cx="68" cy="112" rx="10" ry="5" fill="#7cf6c8"/>
-      </svg>
+      <div class="head"></div>
+      <div class="body"></div>
+      <div class="legL"></div>
+      <div class="legR"></div>
     </div>
 
+    <!-- Power meter -->
     <div class="powerLabel" id="powerLabel">POWER</div>
     <div class="powerWrap" id="powerWrap">
       <div class="powerFill" id="powerFill"></div>
     </div>
+    <div class="sweet" id="sweet"></div>
 
-    <!-- Attempt dots overlay (YOU + CPU rows) -->
+    <!-- Attempt dots -->
     <div class="attemptDots">
       <div class="row youRow">
         <div class="label">YOU</div>
@@ -573,7 +586,7 @@
           <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
         </div>
       </div>
-      <div class="row cpuRow" style="margin-left:14px;">
+      <div class="row cpuRow">
         <div class="label">CPU</div>
         <div class="dots" id="cpuDots">
           <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
@@ -591,7 +604,7 @@
   </div>
   <div class="backBadge"><b>M</b> · MENU</div>
 
-  <!-- ===== Menu (pick first role) ===== -->
+  <!-- ===== Menu ===== -->
   <div class="overlay" id="menu">
     <div class="big">SOCCER · PK</div>
     <div class="sub">5 vs 5 SHOOTOUT</div>
@@ -649,25 +662,28 @@
 const $ = id => document.getElementById(id);
 
 /* =====================================================
-   Geometry
+   Geometry — cell centers within pitch (600 × 500)
+   Goal element: top:36, left:110, width:380, height:130
+   Cell columns (3): x ≈ 175, 300, 425
+   Cell rows (3):    y ≈ 60, 100, 145
 ===================================================== */
-const COL_X = [192, 300, 408];
-const ROW_Y = [55, 93, 131];
+const COL_X = [180, 300, 420];
+const ROW_Y = [62, 100, 144];
 const cellCenter = i => ({ x: COL_X[i % 3], y: ROW_Y[Math.floor(i / 3)] });
 
-const BALL_START   = { x: 300, y: 422 };
-const KEEPER_HOME  = { x: 300, y: 103 };
+const BALL_START   = { x: 300, y: 420 };
+const KEEPER_HOME  = { x: 300, y: 108 };  // keeper top:68 + half height 40 = 108
 
 /* =====================================================
    State
 ===================================================== */
 const state = {
-  scene: 'menu',          // 'menu' | 'play' | 'halftime' | 'fulltime'
-  menuPick: 0,            // 0 = shoot, 1 = keep
-  role: 'shoot',          // current user role: 'shoot' | 'keep'
+  scene: 'menu',
+  menuPick: 0,
+  role: 'shoot',
   firstRole: 'shoot',
-  phase: 1,               // 1 | 2 | 'sd'
-  turn: 0,                // 0-indexed turn within phase
+  phase: 1,
+  turn: 0,
   maxTurns: 5,
   active: false,
   aim: 4,
@@ -675,32 +691,27 @@ const state = {
   power: 0.5,
   powerDir: 1,
   you: 0, cpu: 0,
-  // history of each attempt: { who: 'you'|'cpu', outcome: 'goal'|'fail' }
   history: { you: [], cpu: [] },
-  // sudden death sub-round tracker (each round = you shoot + you save once)
   sdRound: 0,
 };
+
+const modeButtons = Array.from(document.querySelectorAll('.modeBtn'));
 
 /* =====================================================
    Render helpers
 ===================================================== */
-const cells = Array.from(document.querySelectorAll('.aimCell'));
-const modeButtons = Array.from(document.querySelectorAll('.modeBtn'));
-
-function renderGrid() {
+function renderCursor() {
   const which = state.role === 'keep' ? state.dive : state.aim;
-  // wipe ALL classes from every cell, then add target only to the active one
-  cells.forEach((c, i) => {
-    c.className = 'aimCell' + (i === which ? ' target' : '');
-  });
-  // keepMode class on stage MUST track current role (yellow vs green)
-  $('stage').classList.toggle('keepMode', state.role === 'keep');
+  const c = cellCenter(which);
+  const cur = $('cursor');
+  cur.style.left = c.x + 'px';
+  cur.style.top  = c.y + 'px';
+  cur.classList.toggle('keep', state.role === 'keep');
 }
 
 function renderScore() {
   $('youScore').textContent = state.you;
   $('cpuScore').textContent = state.cpu;
-  // turn info
   if (state.phase === 'sd') {
     $('turnInfo').textContent = 'SD · R' + (state.sdRound + 1);
   } else {
@@ -709,17 +720,14 @@ function renderScore() {
 }
 
 function renderAttemptDots() {
-  const youDots = $('youDots').children;
-  const cpuDots = $('cpuDots').children;
+  const yd = $('youDots').children;
+  const cd = $('cpuDots').children;
   for (let i = 0; i < 5; i++) {
-    [youDots[i], cpuDots[i]].forEach(d => d.className = 'd');
+    yd[i].className = 'd';
+    cd[i].className = 'd';
   }
-  state.history.you.forEach((h, i) => {
-    if (i < 5) youDots[i].classList.add(h === 'goal' ? 'score' : 'fail');
-  });
-  state.history.cpu.forEach((h, i) => {
-    if (i < 5) cpuDots[i].classList.add(h === 'goal' ? 'score' : 'fail');
-  });
+  state.history.you.forEach((h, i) => { if (i < 5) yd[i].classList.add(h === 'goal' ? 'score' : 'fail'); });
+  state.history.cpu.forEach((h, i) => { if (i < 5) cd[i].classList.add(h === 'goal' ? 'score' : 'fail'); });
 }
 
 function renderPower() {
@@ -743,7 +751,7 @@ function flash(text, cls) {
 }
 
 /* =====================================================
-   Power oscillation (only while user is about to shoot)
+   Power oscillation
 ===================================================== */
 let lastT = performance.now();
 function tick(t) {
@@ -760,7 +768,7 @@ function tick(t) {
 requestAnimationFrame(t => { lastT = t; tick(t); });
 
 /* =====================================================
-   Aim navigation
+   Cursor navigation
 ===================================================== */
 function moveCursor(dx, dy) {
   const key = state.role === 'keep' ? 'dive' : 'aim';
@@ -768,21 +776,51 @@ function moveCursor(dx, dy) {
   x = Math.max(0, Math.min(2, x + dx));
   y = Math.max(0, Math.min(2, y + dy));
   state[key] = y * 3 + x;
-  renderGrid();
+  renderCursor();
 }
 
 /* =====================================================
-   Animation helpers
+   Keeper / ball animations
 ===================================================== */
+function resetKeeperPosition(instant) {
+  const k = $('keeper');
+  if (instant) {
+    const prev = k.style.transition;
+    k.style.transition = 'none';
+    k.style.transform  = 'translateX(-50%)';
+    void k.offsetWidth;
+    k.style.transition = prev || '';
+  } else {
+    k.style.transform = 'translateX(-50%)';
+  }
+}
+
 function diveKeeper(cell, delay) {
   setTimeout(() => {
     const target = cellCenter(cell);
     const dx = target.x - KEEPER_HOME.x;
     const dy = target.y - KEEPER_HOME.y;
-    const tilt = dx > 30 ? 22 : dx < -30 ? -22 : 0;
+    const tilt = dx > 30 ? 20 : dx < -30 ? -20 : 0;
     $('keeper').style.transform =
       `translateX(calc(-50% + ${dx}px)) translateY(${dy}px) rotate(${tilt}deg)`;
   }, delay);
+}
+
+function resetBall(instant) {
+  const ball   = $('ball');
+  const shadow = $('ballShadow');
+  // Hard-cancel any in-flight or retained animations
+  ball.getAnimations().forEach(a => a.cancel());
+  shadow.getAnimations().forEach(a => a.cancel());
+  // Wipe inline transforms entirely, then set the base translate
+  ball.style.removeProperty('transform');
+  shadow.style.removeProperty('transform');
+  ball.style.transform   = 'translateX(-50%)';
+  shadow.style.transform = 'translateX(-50%)';
+  shadow.style.opacity   = '0.8';
+  // Force layout flush so MRBD picks it up immediately
+  void ball.offsetWidth;
+  void shadow.offsetWidth;
 }
 
 function flyBall({ toCell, power, tooWeak, tooWild, onArrive }) {
@@ -790,8 +828,7 @@ function flyBall({ toCell, power, tooWeak, tooWild, onArrive }) {
   const shadow = $('ballShadow');
   const target = cellCenter(toCell);
 
-  let endX = target.x;
-  let endY = target.y;
+  let endX = target.x, endY = target.y;
   if (tooWeak) {
     endY = BALL_START.y - (BALL_START.y - target.y) * 0.35;
     endX = target.x + (Math.random() * 40 - 20);
@@ -810,59 +847,44 @@ function flyBall({ toCell, power, tooWeak, tooWild, onArrive }) {
   const dy = endY - BALL_START.y;
   const ms = Math.round(1200 - power * 850);
   const endScale = tooWeak ? 0.75 : 0.45;
-  const arcLift = tooWeak ? 30 : 70 + power * 60;
+  const arcLift  = tooWeak ? 30 : 70 + power * 60;
   const midX = dx * 0.5;
   const midY = dy * 0.5 - arcLift;
   const midScale = (1 + endScale) / 2 + 0.05;
 
   ball.getAnimations().forEach(a => a.cancel());
-  ball.animate(
+  const finalBallTf   = `translateX(-50%) translate(${dx}px, ${dy}px) scale(${endScale})`;
+  const finalShadowTf = `translateX(-50%) translate(${dx}px, ${-dy * 0.08}px) scale(0.4)`;
+  const ballAnim = ball.animate(
     [
       { transform: 'translateX(-50%) translate(0, 0) scale(1)' },
       { transform: `translateX(-50%) translate(${midX}px, ${midY}px) scale(${midScale})` },
-      { transform: `translateX(-50%) translate(${dx}px, ${dy}px) scale(${endScale})` },
+      { transform: finalBallTf },
     ],
-    { duration: ms, easing: 'cubic-bezier(0.25, 0.55, 0.5, 1)', fill: 'forwards' }
+    { duration: ms, easing: 'cubic-bezier(0.25, 0.55, 0.5, 1)', fill: 'none' }
   );
 
   shadow.getAnimations().forEach(a => a.cancel());
-  shadow.animate(
+  const shadowAnim = shadow.animate(
     [
       { transform: 'translateX(-50%) translate(0, 0) scale(1)', opacity: 0.8 },
       { transform: `translateX(-50%) translate(${midX}px, ${-dy * 0.05}px) scale(0.65)`, opacity: 0.45 },
-      { transform: `translateX(-50%) translate(${dx}px, ${-dy * 0.08}px) scale(0.4)`,   opacity: 0.2 },
+      { transform: finalShadowTf, opacity: 0.2 },
     ],
-    { duration: ms, easing: 'cubic-bezier(0.25, 0.55, 0.5, 1)', fill: 'forwards' }
+    { duration: ms, easing: 'cubic-bezier(0.25, 0.55, 0.5, 1)', fill: 'none' }
   );
 
-  // trail
-  const trailCount = 5;
-  for (let i = 1; i <= trailCount; i++) {
-    setTimeout(() => spawnTrail(
-      BALL_START.x + dx * (i / (trailCount + 1)),
-      BALL_START.y + dy * (i / (trailCount + 1)) - arcLift * Math.sin(Math.PI * i / (trailCount + 1)),
-    ), (ms / (trailCount + 1)) * i);
-  }
-  setTimeout(onArrive, ms);
-}
-
-function spawnTrail(x, y) {
-  const t = document.createElement('div');
-  t.style.cssText = `
-    position:absolute; left:${x}px; top:${y}px;
-    width:6px; height:6px; border-radius:50%;
-    background: rgba(255,255,255,0.65);
-    box-shadow: 0 0 4px rgba(255,255,255,0.5);
-    transform: translate(-50%,-50%);
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    z-index: 5; pointer-events: none;
-  `;
-  $('pitch').appendChild(t);
-  requestAnimationFrame(() => {
-    t.style.opacity = '0';
-    t.style.transform = 'translate(-50%,-50%) scale(0.3)';
-  });
-  setTimeout(() => t.remove(), 520);
+  // Commit the end state to inline styles a tick before the animation
+  // finishes, so MRBD doesn't snap back. We control persistence directly.
+  setTimeout(() => {
+    ball.style.transform = finalBallTf;
+    shadow.style.transform = finalShadowTf;
+    shadow.style.opacity = '0.2';
+  }, Math.max(0, ms - 30));
+  setTimeout(() => {
+    try { ballAnim.cancel(); shadowAnim.cancel(); } catch(e) {}
+    onArrive();
+  }, ms);
 }
 
 function weightedPick(weights) {
@@ -876,7 +898,7 @@ function weightedPick(weights) {
 }
 
 /* =====================================================
-   YOU shoot (user kicks)
+   YOU shoot
 ===================================================== */
 function shoot() {
   if (state.active) return;
@@ -885,7 +907,6 @@ function shoot() {
   const aim   = state.aim;
   const power = state.power;
 
-  // accuracy by sweet spot (~30%-58%)
   let accuracy;
   if      (power < 0.10) accuracy = 0.10;
   else if (power < 0.30) accuracy = 0.55;
@@ -924,17 +945,10 @@ function shoot() {
       else if (landed === keeperCell) outcome = 'saved';
       else                            outcome = 'goal';
 
-      if (outcome === 'goal') {
-        state.you++;
-        state.history.you.push('goal');
-        flash('GOAL!', 'goal'); setStatus('GOAL!', 'goal');
-      } else if (outcome === 'saved') {
-        state.history.you.push('fail');
-        flash('SAVED', 'saved'); setStatus('SAVED', 'saved');
-      } else {
-        state.history.you.push('fail');
-        flash('MISS', 'miss'); setStatus('MISS', 'miss');
-      }
+      if (outcome === 'goal')      { state.you++; state.history.you.push('goal'); flash('GOAL!', 'goal');  setStatus('GOAL!', 'goal'); }
+      else if (outcome === 'saved'){ state.history.you.push('fail');               flash('SAVED', 'saved'); setStatus('SAVED', 'saved'); }
+      else                         { state.history.you.push('fail');               flash('MISS', 'miss');   setStatus('MISS', 'miss'); }
+
       renderScore();
       renderAttemptDots();
       setTimeout(advanceTurn, 1300);
@@ -943,13 +957,12 @@ function shoot() {
 }
 
 /* =====================================================
-   YOU keep (CPU shoots)
+   YOU keep
 ===================================================== */
 function keep() {
   if (state.active) return;
   state.active = true;
-  cells[state.dive].classList.add('locked');
-
+  $('cursor').classList.add('locked');
   setStatus('STRIKER READY…', 'hint');
 
   setTimeout(() => {
@@ -984,17 +997,10 @@ function keep() {
         else if (landed === state.dive) outcome = 'saved';
         else                            outcome = 'goal';
 
-        if (outcome === 'goal') {
-          state.cpu++;
-          state.history.cpu.push('goal');
-          flash('GOAL', 'goal'); setStatus('CONCEDED', 'goal');
-        } else if (outcome === 'saved') {
-          state.history.cpu.push('fail');
-          flash('SAVED!', 'saved'); setStatus('GREAT SAVE!', 'saved');
-        } else {
-          state.history.cpu.push('fail');
-          flash('WIDE', 'miss'); setStatus('WIDE — LUCKY!', 'miss');
-        }
+        if (outcome === 'goal')      { state.cpu++; state.history.cpu.push('goal'); flash('GOAL', 'goal');   setStatus('CONCEDED', 'goal'); }
+        else if (outcome === 'saved'){ state.history.cpu.push('fail');                flash('SAVED!', 'saved'); setStatus('GREAT SAVE!', 'saved'); }
+        else                         { state.history.cpu.push('fail');                flash('WIDE', 'miss');   setStatus('WIDE — LUCKY!', 'miss'); }
+
         renderScore();
         renderAttemptDots();
         setTimeout(advanceTurn, 1300);
@@ -1024,65 +1030,44 @@ function startMatch(firstRole) {
 }
 
 function startRound() {
-  // reset visuals
-  $('ball').getAnimations().forEach(a => a.cancel());
-  $('ballShadow').getAnimations().forEach(a => a.cancel());
-  $('ball').style.transform   = 'translateX(-50%)';
-  $('ballShadow').style.transform = 'translateX(-50%)';
-  $('ballShadow').style.opacity = '0.8';
-  $('keeper').style.transform = 'translateX(-50%)';
-  // hard reset all cell classes (defensive: kill any leftover target/locked)
-  cells.forEach(c => { c.className = 'aimCell'; });
+  resetBall();
+  resetKeeperPosition(true);
+  $('cursor').className = 'cursor';
   state.active = false;
 
-  // mode-specific UI
   if (state.role === 'shoot') {
     state.aim = 4;
-    $('stage').classList.remove('keepMode');
     $('modePill').textContent = 'SHOOT';
     $('modePill').style.background = '#7cf6c8';
     $('powerWrap').classList.remove('hidden');
     $('powerLabel').classList.remove('hidden');
+    $('sweet').classList.remove('hidden');
     setStatus('AIM & SHOOT', '');
     $('hint').textContent = '← → ↑ ↓  AIM  ·  ⏎  SHOOT';
   } else {
     state.dive = 4;
-    $('stage').classList.add('keepMode');
     $('modePill').textContent = 'SAVE';
     $('modePill').style.background = '#ffd54a';
     $('powerWrap').classList.add('hidden');
     $('powerLabel').classList.add('hidden');
+    $('sweet').classList.add('hidden');
     setStatus('PICK YOUR DIVE', '');
     $('hint').textContent = '← → ↑ ↓  DIVE  ·  ⏎  READY';
   }
-  renderGrid();
+  renderCursor();
   renderScore();
   renderAttemptDots();
 }
 
 function advanceTurn() {
   state.turn++;
-
-  if (state.phase === 'sd') {
-    handleSDProgress();
-    return;
-  }
-
-  if (state.turn < state.maxTurns) {
-    startRound();
-    return;
-  }
-
-  // Phase finished
+  if (state.phase === 'sd') { handleSDProgress(); return; }
+  if (state.turn < state.maxTurns) { startRound(); return; }
   if (state.phase === 1) {
     showHalftime();
   } else {
-    // Phase 2 done — check tied
-    if (state.you === state.cpu) {
-      startSuddenDeath();
-    } else {
-      showFulltime();
-    }
+    if (state.you === state.cpu) startSuddenDeath();
+    else                          showFulltime();
   }
 }
 
@@ -1096,21 +1081,17 @@ function showHalftime() {
 }
 
 function continueFromHalftime() {
-  // Swap role for phase 2
   state.phase = 2;
   state.turn  = 0;
   state.role  = (state.firstRole === 'shoot') ? 'keep' : 'shoot';
   state.scene = 'play';
   $('halftime').classList.add('hidden');
-  // attempt dots already capture per-role progress; they re-render
   startRound();
 }
 
 function startSuddenDeath() {
   state.phase = 'sd';
   state.sdRound = 0;
-  // In sudden death we always do: 1 shoot + 1 save per round
-  // Start with whichever was the user's first role (variety)
   state.role = state.firstRole;
   state.turn = 0;
   state.scene = 'play';
@@ -1119,25 +1100,14 @@ function startSuddenDeath() {
 }
 
 function handleSDProgress() {
-  // After each SD attempt:
-  //   If first attempt of round done → flip role
-  //   If second attempt of round done → check if leading; if equal, next round
-  // We track within-round attempts with a simple parity on state.turn (0/1)
-  const attemptInRound = state.turn % 2; // 0 just finished, now 1 due; 0 means start of next round
-
+  const attemptInRound = state.turn % 2;
   if (attemptInRound === 1) {
-    // Second attempt of round just finished
-    if (state.you !== state.cpu) {
-      showFulltime();
-      return;
-    }
-    // Tied → new round
+    if (state.you !== state.cpu) { showFulltime(); return; }
     state.sdRound++;
     state.role = state.firstRole;
     setStatus('SUDDEN DEATH · R' + (state.sdRound + 1), 'hint');
     setTimeout(startRound, 600);
   } else {
-    // First attempt done → flip role for second attempt
     state.role = (state.role === 'shoot') ? 'keep' : 'shoot';
     setTimeout(startRound, 500);
   }
@@ -1152,9 +1122,8 @@ function showFulltime() {
 
   const v = $('ftVerdict');
   if (state.you > state.cpu)      { v.textContent = '— YOU WIN! —';  v.className = 'verdict win';  $('ftBig').textContent = 'VICTORY'; }
-  else if (state.you < state.cpu) { v.textContent = '— YOU LOSE —';  v.className = 'verdict lose'; $('ftBig').textContent = 'DEFEAT';  }
+  else if (state.you < state.cpu) { v.textContent = '— YOU LOSE —';  v.className = 'verdict lose'; $('ftBig').textContent = 'DEFEAT'; }
   else                            { v.textContent = '— DRAW —';      v.className = 'verdict draw'; $('ftBig').textContent = 'FULL TIME'; }
-
   $('fulltime').classList.remove('hidden');
 }
 
@@ -1179,12 +1148,11 @@ function openMenu() {
 }
 
 /* =====================================================
-   Input handling
+   Input
 ===================================================== */
 document.addEventListener('keydown', e => {
   const k = e.key;
 
-  // M = open menu (always available, abandons current match)
   if (k === 'm' || k === 'M') {
     if (state.active) return;
     openMenu();
@@ -1195,26 +1163,19 @@ document.addEventListener('keydown', e => {
   if (state.scene === 'menu') {
     if (k === 'ArrowLeft')  { state.menuPick = 0; renderMenuPick(); e.preventDefault(); }
     if (k === 'ArrowRight') { state.menuPick = 1; renderMenuPick(); e.preventDefault(); }
-    if (k === 'Enter') {
-      startMatch(state.menuPick === 0 ? 'shoot' : 'keep');
-      e.preventDefault();
-    }
+    if (k === 'Enter')      { startMatch(state.menuPick === 0 ? 'shoot' : 'keep'); e.preventDefault(); }
     return;
   }
-
   if (state.scene === 'halftime') {
     if (k === 'Enter') { continueFromHalftime(); e.preventDefault(); }
     return;
   }
-
   if (state.scene === 'fulltime') {
     if (k === 'Enter') { startMatch(state.firstRole); e.preventDefault(); }
     return;
   }
 
-  // scene === 'play'
   if (state.active) return;
-
   switch (k) {
     case 'ArrowLeft':  moveCursor(-1, 0); break;
     case 'ArrowRight': moveCursor( 1, 0); break;
@@ -1230,18 +1191,6 @@ document.addEventListener('keydown', e => {
   e.preventDefault();
 });
 
-/* =====================================================
-   Click handlers (desktop helpers)
-===================================================== */
-cells.forEach((c, i) => {
-  c.style.pointerEvents = 'auto';
-  c.addEventListener('click', () => {
-    if (state.scene !== 'play' || state.active) return;
-    if (state.role === 'shoot') state.aim = i;
-    else                          state.dive = i;
-    renderGrid();
-  });
-});
 modeButtons.forEach((b, i) => {
   b.addEventListener('click', () => {
     state.menuPick = i;
@@ -1249,16 +1198,11 @@ modeButtons.forEach((b, i) => {
     startMatch(b.dataset.mode);
   });
 });
-$('pitch').addEventListener('dblclick', () => {
-  if (state.scene !== 'play' || state.active) return;
-  if (state.role === 'shoot') shoot();
-  else                          keep();
-});
 
 /* =====================================================
    Init
 ===================================================== */
-renderGrid();
+renderCursor();
 renderScore();
 renderAttemptDots();
 renderPower();
