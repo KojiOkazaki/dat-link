@@ -145,13 +145,13 @@
     z-index: 4;
   }
   .aimCell {
-    border: 1.5px solid transparent;
+    /* default: completely invisible — no border, no background */
     border-radius: 4px;
-    transition: all 0.12s ease;
+    transition: background 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+    pointer-events: none;
   }
   .aimCell.target {
-    border-color: #7cf6c8;
-    border-style: solid;
+    border: 1.5px solid #7cf6c8;
     background: rgba(124, 246, 200, 0.16);
     box-shadow: 0 0 14px rgba(124, 246, 200, 0.45) inset,
                 0 0 14px rgba(124, 246, 200, 0.35);
@@ -162,7 +162,7 @@
     box-shadow: 0 0 14px rgba(255, 213, 74, 0.45) inset,
                 0 0 14px rgba(255, 213, 74, 0.35);
   }
-  .aimCell.locked { border-style: solid; opacity: 0.85; }
+  .aimCell.locked { opacity: 0.85; }
 
   /* Goalkeeper */
   .keeper {
@@ -523,7 +523,7 @@
       <div class="aimCell" data-cell="1"></div>
       <div class="aimCell" data-cell="2"></div>
       <div class="aimCell" data-cell="3"></div>
-      <div class="aimCell target" data-cell="4"></div>
+      <div class="aimCell" data-cell="4"></div>
       <div class="aimCell" data-cell="5"></div>
       <div class="aimCell" data-cell="6"></div>
       <div class="aimCell" data-cell="7"></div>
@@ -697,7 +697,12 @@ const modeButtons = Array.from(document.querySelectorAll('.modeBtn'));
 
 function renderGrid() {
   const which = state.role === 'keep' ? state.dive : state.aim;
-  cells.forEach((c, i) => c.classList.toggle('target', i === which));
+  // wipe ALL classes from every cell, then add target only to the active one
+  cells.forEach((c, i) => {
+    c.className = 'aimCell' + (i === which ? ' target' : '');
+  });
+  // keepMode class on stage MUST track current role (yellow vs green)
+  $('stage').classList.toggle('keepMode', state.role === 'keep');
 }
 
 function renderScore() {
@@ -1034,7 +1039,8 @@ function startRound() {
   $('ballShadow').style.transform = 'translateX(-50%)';
   $('ballShadow').style.opacity = '0.8';
   $('keeper').style.transform = 'translateX(-50%)';
-  cells.forEach(c => c.classList.remove('locked'));
+  // hard reset all cell classes (defensive: kill any leftover target/locked)
+  cells.forEach(c => { c.className = 'aimCell'; });
   state.active = false;
 
   // mode-specific UI
