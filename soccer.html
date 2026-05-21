@@ -39,14 +39,17 @@
     font-size: 12px;
     letter-spacing: 0.22em;
     color: #7cf6c8;
+    text-shadow: 0 0 6px rgba(124,246,200,0.6);
   }
   .mode-pill {
     font-size: 10px;
     letter-spacing: 0.24em;
     color: #000;
-    background: #7cf6c8;
+    background: linear-gradient(135deg, #b4ffe0 0%, #7cf6c8 100%);
+    box-shadow: 0 0 10px rgba(124,246,200,0.55);
     padding: 3px 8px;
     margin-left: 8px;
+    border-radius: 2px;
   }
   .turnInfo {
     font-size: 10px;
@@ -70,8 +73,14 @@
     text-align: center;
     line-height: 1;
   }
-  .matchScore .you { color: #7cf6c8; }
-  .matchScore .cpu { color: #ff8a99; }
+  .matchScore .you {
+    color: #7cf6c8;
+    text-shadow: 0 0 10px rgba(124,246,200,0.55);
+  }
+  .matchScore .cpu {
+    color: #ff8a99;
+    text-shadow: 0 0 10px rgba(255,138,153,0.5);
+  }
   .matchScore .vs  { color: #555; font-size: 11px; }
 
   /* ===================================================
@@ -80,8 +89,35 @@
   .pitch {
     position: absolute;
     top: 44px; left: 0; right: 0; bottom: 56px;
-    background: #082018;
+    background:
+      radial-gradient(ellipse at 50% 25%, #0e2e22 0%, #082018 55%, #03100a 100%);
     overflow: hidden;
+  }
+  /* Subtle AR scan-line overlay across the whole pitch */
+  .pitch::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0, transparent 3px,
+      rgba(124,246,200,0.025) 3px, rgba(124,246,200,0.025) 4px
+    );
+    pointer-events: none;
+    z-index: 9;
+  }
+  /* Soft horizon glow at the back of the field */
+  .pitch::after {
+    content: "";
+    position: absolute;
+    top: 140px;
+    left: 0; right: 0;
+    height: 70px;
+    background: linear-gradient(180deg,
+      rgba(124,246,200,0.08) 0%,
+      rgba(124,246,200,0)    100%);
+    pointer-events: none;
+    z-index: 1;
   }
 
   /* ===================================================
@@ -98,6 +134,7 @@
     width: 384px;
     height: 4px;
     background: #ffffff;
+    box-shadow: 0 0 12px rgba(255,255,255,0.55), 0 0 24px rgba(124,246,200,0.25);
     z-index: 2;
   }
   .post-left {
@@ -106,7 +143,8 @@
     left: 108px;
     width: 4px;
     height: 134px;
-    background: #ffffff;
+    background: linear-gradient(180deg, #ffffff 0%, #cfd6e0 100%);
+    box-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 22px rgba(124,246,200,0.25);
     z-index: 2;
   }
   .post-right {
@@ -115,17 +153,22 @@
     left: 488px;
     width: 4px;
     height: 134px;
-    background: #ffffff;
+    background: linear-gradient(180deg, #ffffff 0%, #cfd6e0 100%);
+    box-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 22px rgba(124,246,200,0.25);
     z-index: 2;
   }
-  /* Subtle net background fill — solid, not semi-transparent */
+  /* Net background — subtle gradient gives depth into the net */
   .netBg {
     position: absolute;
     top: 40px;
     left: 112px;
     width: 376px;
     height: 126px;
-    background: #0a2a1c;
+    background:
+      radial-gradient(ellipse at 50% 100%,
+        rgba(124,246,200,0.10) 0%,
+        rgba(10,42,28,0.95)    60%,
+        rgba(4,16,10,1)        100%);
     z-index: 1;
   }
   /* Net pattern — thin solid lines forming a grid */
@@ -202,18 +245,22 @@
   }
   .dot.active {
     display: block;
-    width: 38px;
-    height: 38px;
-    background: #7cf6c8;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, #b4ffe0 0%, #7cf6c8 60%, #4ad6a8 100%);
+    box-shadow:
+      0 0 18px rgba(124,246,200,0.7),
+      0 0 36px rgba(124,246,200,0.4);
+    animation: aim-pulse 1.6s ease-in-out infinite;
   }
   /* Hollow ring effect: pitch-colored disc cut into the center */
   .dot.active::after {
     content: "";
     position: absolute;
     top: 50%; left: 50%;
-    width: 18px; height: 18px;
+    width: 20px; height: 20px;
     border-radius: 50%;
-    background: #0a2a1c;
+    background: rgba(8,32,24,0.92);
     transform: translate(-50%, -50%);
   }
   /* Bright center pip */
@@ -224,13 +271,23 @@
     width: 6px; height: 6px;
     border-radius: 50%;
     background: #ffffff;
+    box-shadow: 0 0 6px #ffffff;
     transform: translate(-50%, -50%);
     z-index: 2;
   }
-  .keepMode .dot.active        { background: #ffd54a; }
-  .keepMode .dot.active::after { background: #1a3a2a; }
-  .dot.locked        { width: 46px; height: 46px; }
-  .dot.locked::after { width: 24px; height: 24px; }
+  .keepMode .dot.active {
+    background: radial-gradient(circle, #fff0b5 0%, #ffd54a 60%, #e8b830 100%);
+    box-shadow:
+      0 0 18px rgba(255,213,74,0.65),
+      0 0 36px rgba(255,213,74,0.35);
+  }
+  .keepMode .dot.active::after { background: rgba(26,58,42,0.92); }
+  .dot.locked        { width: 50px; height: 50px; animation: none; }
+  .dot.locked::after { width: 26px; height: 26px; }
+  @keyframes aim-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1);    }
+    50%      { transform: translate(-50%, -50%) scale(1.08); }
+  }
   /* Absolute positions for each cell (cell center) */
   .dot[data-cell="0"] { left: 170px; top: 58px;  }
   .dot[data-cell="1"] { left: 300px; top: 58px;  }
@@ -254,11 +311,12 @@
     transform: translateX(-50%);
     z-index: 6;
     pointer-events: none;
+    filter: drop-shadow(0 6px 4px rgba(0,0,0,0.6));
   }
   .keeper .body {
     position: absolute;
     top: 18px; left: 6px; right: 6px; bottom: 14px;
-    background: #ffd54a;
+    background: linear-gradient(180deg, #ffe680 0%, #ffd54a 50%, #d8a820 100%);
   }
   .keeper .head {
     position: absolute;
@@ -302,11 +360,20 @@
     transform: translateX(-50%) translateX(-44px);
     z-index: 4;
     pointer-events: none;
+    filter: drop-shadow(0 8px 5px rgba(0,0,0,0.55));
   }
   .striker .body {
     position: absolute;
     top: 22px; left: 8px; right: 8px; bottom: 18px;
-    background: #cfd6e0;
+    background: linear-gradient(180deg, #e8eef6 0%, #cfd6e0 50%, #9aa3b4 100%);
+  }
+  /* Striker jersey accent stripe */
+  .striker .body::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0;
+    top: 10px; height: 6px;
+    background: #ff5b6e;
   }
   .striker .head {
     position: absolute;
@@ -338,7 +405,8 @@
     left: 50%;
     width: 26px; height: 26px;
     border-radius: 50%;
-    background: #ffffff;
+    background: radial-gradient(circle at 35% 35%, #ffffff 0%, #d8dde6 70%, #8a93a3 100%);
+    box-shadow: 0 0 10px rgba(255,255,255,0.55);
     transform: translateX(-50%);
     z-index: 7;
     pointer-events: none;
@@ -364,14 +432,16 @@
     position: absolute;
     right: 14px; top: 36px; bottom: 70px;
     width: 12px;
-    background: #1a1f2a;
+    background: linear-gradient(180deg, #0a1218 0%, #1a1f2a 100%);
+    box-shadow: inset 0 0 4px rgba(0,0,0,0.6);
     z-index: 8;
   }
   .powerFill {
     position: absolute;
     bottom: 0; left: 0; right: 0;
     height: 50%;
-    background: #7cf6c8;
+    background: linear-gradient(0deg, #7cf6c8 0%, #ffd54a 60%, #ff5b6e 100%);
+    box-shadow: 0 0 10px rgba(124,246,200,0.6);
   }
   /* Sweet-spot markers: solid filled bars on either side of the meter */
   .sweetMark {
@@ -444,10 +514,10 @@
     min-height: 18px;
     text-align: center;
   }
-  .status.goal  { color: #7cf6c8; }
-  .status.miss  { color: #ff5b6e; }
-  .status.saved { color: #ffd54a; }
-  .status.hint  { color: #7cf6c8; }
+  .status.goal  { color: #7cf6c8; text-shadow: 0 0 12px rgba(124,246,200,0.7); }
+  .status.miss  { color: #ff5b6e; text-shadow: 0 0 10px rgba(255,91,110,0.6); }
+  .status.saved { color: #ffd54a; text-shadow: 0 0 10px rgba(255,213,74,0.6); }
+  .status.hint  { color: #7cf6c8; text-shadow: 0 0 6px  rgba(124,246,200,0.5); }
   .hint {
     font-size: 10px;
     color: #3a3f4a;
@@ -472,9 +542,9 @@
     transition: opacity 0.16s ease;
   }
   .flash.show { opacity: 1; }
-  .flash.goal  { color: #7cf6c8; }
-  .flash.miss  { color: #ff5b6e; }
-  .flash.saved { color: #ffd54a; }
+  .flash.goal  { color: #7cf6c8; text-shadow: 0 0 32px rgba(124,246,200,0.85), 0 0 60px rgba(124,246,200,0.5); }
+  .flash.miss  { color: #ff5b6e; text-shadow: 0 0 28px rgba(255,91,110,0.75); }
+  .flash.saved { color: #ffd54a; text-shadow: 0 0 28px rgba(255,213,74,0.75); }
 
   /* ===================================================
      Overlays
@@ -482,7 +552,8 @@
   .overlay {
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
-    background: #000;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(20,40,32,0.95) 0%, rgba(0,0,0,0.96) 60%, #000 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -490,12 +561,25 @@
     z-index: 50;
     padding: 20px;
   }
+  /* AR scan lines on overlays */
+  .overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent 0, transparent 3px,
+      rgba(124,246,200,0.025) 3px, rgba(124,246,200,0.025) 4px
+    );
+    pointer-events: none;
+  }
   .overlay.hidden { display: none; }
   .overlay .big {
-    font-size: 40px;
+    font-size: 42px;
     font-weight: 200;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     color: #7cf6c8;
+    text-shadow: 0 0 18px rgba(124,246,200,0.6);
     margin-bottom: 6px;
   }
   .overlay .sub {
@@ -514,7 +598,8 @@
   .modes { display: flex; gap: 20px; }
   .modeBtn {
     width: 180px; height: 180px;
-    background: #0a0f14;
+    background: linear-gradient(160deg, rgba(20,32,28,0.7) 0%, rgba(8,16,12,0.7) 100%);
+    border: 1px solid rgba(124,246,200,0.18);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -522,6 +607,7 @@
     gap: 6px;
     padding: 12px;
     cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   }
   .modeBtn .icon { font-size: 56px; line-height: 1; }
   .modeBtn .label { font-size: 14px; letter-spacing: 0.18em; color: #cfd6e0; }
@@ -530,9 +616,13 @@
     margin-top: 4px; text-align: center;
   }
   .modeBtn.target {
-    background: #1a3a2a;
+    background: linear-gradient(160deg, rgba(40,80,60,0.6) 0%, rgba(15,40,30,0.6) 100%);
+    border-color: #7cf6c8;
+    box-shadow: 0 0 24px rgba(124,246,200,0.35),
+                inset 0 0 16px rgba(124,246,200,0.12);
+    transform: translateY(-2px);
   }
-  .modeBtn.target .label { color: #7cf6c8; }
+  .modeBtn.target .label { color: #7cf6c8; text-shadow: 0 0 8px rgba(124,246,200,0.5); }
   .modeBtn.target .icon { color: #7cf6c8; }
 
   .matchSummary {
@@ -556,9 +646,9 @@
     font-variant-numeric: tabular-nums;
   }
   .matchSummary .you .name { color: #7cf6c8; }
-  .matchSummary .you .val  { color: #7cf6c8; }
+  .matchSummary .you .val  { color: #7cf6c8; text-shadow: 0 0 24px rgba(124,246,200,0.55); }
   .matchSummary .cpu .name { color: #ff8a99; }
-  .matchSummary .cpu .val  { color: #ff8a99; }
+  .matchSummary .cpu .val  { color: #ff8a99; text-shadow: 0 0 22px rgba(255,138,153,0.5); }
   .matchSummary .dash { font-size: 32px; color: #3a3f4a; }
 
   .summaryDots {
@@ -587,9 +677,9 @@
     margin-bottom: 10px;
     font-weight: 200;
   }
-  .verdict.win  { color: #7cf6c8; }
-  .verdict.lose { color: #ff5b6e; }
-  .verdict.draw { color: #ffd54a; }
+  .verdict.win  { color: #7cf6c8; text-shadow: 0 0 24px rgba(124,246,200,0.7); }
+  .verdict.lose { color: #ff5b6e; text-shadow: 0 0 24px rgba(255,91,110,0.65); }
+  .verdict.draw { color: #ffd54a; text-shadow: 0 0 20px rgba(255,213,74,0.6); }
 
   .backBadge {
     position: absolute;
@@ -1131,7 +1221,7 @@ function startRound() {
   if (state.role === 'shoot') {
     state.aim = 4;
     $('modePill').textContent = 'SHOOT';
-    $('modePill').style.background = '#7cf6c8';
+    $('modePill').style.background = 'linear-gradient(135deg, #b4ffe0 0%, #7cf6c8 100%)';
     $('powerWrap').classList.remove('hidden');
     $('powerLabel').classList.remove('hidden');
     $('sweetTop').classList.remove('hidden');
@@ -1141,7 +1231,7 @@ function startRound() {
   } else {
     state.dive = 4;
     $('modePill').textContent = 'SAVE';
-    $('modePill').style.background = '#ffd54a';
+    $('modePill').style.background = 'linear-gradient(135deg, #fff0b5 0%, #ffd54a 100%)';
     $('powerWrap').classList.add('hidden');
     $('powerLabel').classList.add('hidden');
     $('sweetTop').classList.add('hidden');
