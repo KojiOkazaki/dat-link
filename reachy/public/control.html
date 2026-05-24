@@ -160,19 +160,20 @@
     if (m && m.text) { el.textContent = m.text; el.classList.remove('empty'); }
   }
 
-  function connect() {
-    const es = new EventSource('/api/events');
-    es.onerror = () => { $('dot').className = 'dot error'; setTimeout(() => { try { es.close(); } catch(_){} connect(); }, 2000); };
-    es.onmessage = ev => {
-      let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
-      if (m.type === 'snapshot') { applyStatus(m.status); showLatest(m.latest); }
-      else if (m.type === 'speech') { applyStatus(m.status); if (m.message.speaker !== 'user') showLatest(m.message); }
-      else if (m.type === 'status' || m.type === 'command') { applyStatus(m.status); }
-      else if (m.type === 'clear') { $('latest').textContent = '発話を待っています…'; $('latest').classList.add('empty'); applyStatus(m.status); }
-      else if (m.type === 'error') { toast(m.message); }
-    };
+  async function poll() {
+    try {
+      const r = await fetch('/api/snapshot', { cache: 'no-store' });
+      if (!r.ok) throw new Error('http ' + r.status);
+      const d = await r.json();
+      applyStatus(d.status);
+      if (d.latest) showLatest(d.latest);
+      else { $('latest').textContent = '発話を待っています…'; $('latest').classList.add('empty'); }
+    } catch (_) {
+      $('dot').className = 'dot error';
+    }
   }
-  connect();
+  setInterval(poll, 1000);
+  poll();
 </script>
 </body>
 </html>

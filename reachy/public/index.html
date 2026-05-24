@@ -507,47 +507,30 @@
     if (cmd === 'clear_text') { screen = 'view'; }
   }
 
-  /* ---------- SSE ---------- */
-  function connect() {
-    const es = new EventSource('/api/events');
-    es.onopen  = () => { sseLive = true; renderStatus(); };
-    es.onerror = () => {
-      sseLive = false; renderStatus();
-      setTimeout(() => { try { es.close(); } catch (_) {} connect(); }, 2000);
-    };
-    es.onmessage = ev => {
-      let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
-
-      if (m.type === 'snapshot') {
-        latest    = m.latest || null;
-        history   = m.history || [];
-        statusObj = m.status || statusObj;
-        sseLive   = true;
-        render();
-      } else if (m.type === 'speech') {
-        history.push(m.message);
-        if (history.length > 50) history.shift();
-        if (m.message.speaker !== 'user') latest = m.message;
-        if (m.status) statusObj = m.status;
-        render();
-      } else if (m.type === 'status') {
-        if (m.status) statusObj = m.status;
-        renderStatus();
-        renderContent();
-      } else if (m.type === 'clear') {
-        latest = null; history = [];
-        if (m.status) statusObj = m.status;
-        render();
-      } else if (m.type === 'command') {
-        if (m.status) statusObj = m.status;
-        renderStatus();
-      } else if (m.type === 'error') {
-        if (m.message) toast(m.message);
-      }
-      // ping: ignore
-    };
+  /* ---------- polling ---------- */
+  // SSE is buffered by some tunnels/proxies (e.g. Cloudflare quick tunnels),
+  // so the viewer polls a plain JSON snapshot instead. Only the content area
+  // re-renders when something actually changed, so menu focus/scroll are kept.
+  let lastSig = '';
+  async function poll() {
+    try {
+      const r = await fetch('/api/snapshot', { cache: 'no-store' });
+      if (!r.ok) throw new Error('http ' + r.status);
+      const d = await r.json();
+      sseLive   = true;
+      latest    = d.latest  || null;
+      history   = d.history || [];
+      statusObj = d.status  || statusObj;
+      const sig = (latest ? latest.ts : 0) + '|' + history.length + '|' + JSON.stringify(statusObj);
+      renderStatus();
+      if (sig !== lastSig) { lastSig = sig; renderContent(); }
+    } catch (_) {
+      sseLive = false;
+      renderStatus();
+    }
   }
-  connect();
+  setInterval(poll, 1000);
+  poll();
 
   /* ---------- D-pad navigation (spatial, grid-aware) ---------- */
   function stepScroll(dir) {

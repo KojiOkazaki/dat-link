@@ -185,6 +185,12 @@ app.post('/api/clear', (req, res) => {
   res.json({ ok: true });
 });
 
+// Polling fallback for clients behind proxies/tunnels that buffer SSE
+// (e.g. Cloudflare quick tunnels). Returns the same data as the SSE snapshot.
+app.get('/api/snapshot', (req, res) => {
+  res.json({ latest, history: speechHistory, status: status() });
+});
+
 app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 app.get('/api/health', (req, res) => {
