@@ -76,12 +76,18 @@
     animation:rise .3s cubic-bezier(.2,.7,.2,1);}
   .bubble::before{content:"";position:absolute;top:-1px;right:-1px;width:14px;height:14px;
     border-top:2px solid var(--mag);border-right:2px solid var(--mag);opacity:.8;filter:drop-shadow(0 0 4px var(--mag));}
-  .btext{font-size:26px;font-weight:300;line-height:1.4;letter-spacing:.01em;color:#fff;
-         display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden;text-wrap:balance;}
-  .bubble.long  .btext{font-size:22px;-webkit-line-clamp:6;}
-  .bubble.xlong .btext{font-size:18px;-webkit-line-clamp:7;text-align:left;}
+  .btext{font-size:19px;font-weight:300;line-height:1.5;letter-spacing:.01em;color:#fff;
+         max-height:184px;overflow-y:auto;outline:none;text-wrap:balance;
+         scrollbar-width:none;-ms-overflow-style:none;}
+  .btext::-webkit-scrollbar{display:none;}
+  .bubble.long  .btext{font-size:17px;}
+  .bubble.xlong .btext{font-size:15px;text-align:left;line-height:1.55;}
+  .bubble.scrollable::after{content:"⇅";position:absolute;right:9px;bottom:6px;
+    font-family:var(--mono);font-size:12px;color:var(--cy);opacity:.55;}
+  .bubble:focus-within{border-color:var(--cy);
+    box-shadow:0 0 22px rgba(30,240,224,.30), inset 0 0 16px rgba(30,240,224,.06);}
   .bubble.idle{border-left-color:var(--dim);box-shadow:none;background:rgba(8,16,16,.35);}
-  .bubble.idle .btext{color:var(--dim);font-size:15px;letter-spacing:.14em;font-family:var(--mono);}
+  .bubble.idle .btext{color:var(--dim);font-size:15px;letter-spacing:.14em;font-family:var(--mono);max-height:none;overflow:visible;}
   .bubble.idle::before{border-color:var(--dim);opacity:.4;}
   .bubble.user{border-left-color:var(--mag);}
   .bubble.user::before{border-color:var(--cy);}
@@ -141,7 +147,7 @@
 
   <main class="view">
     <div class="state" id="state"><span class="emo" id="emo"></span><span id="stateTxt">STANDBY</span></div>
-    <div class="bubble idle" id="bubble"><p class="btext" id="btext">Waiting for Reachy…</p></div>
+    <div class="bubble idle" id="bubble"><p class="btext" id="btext" tabindex="0">Waiting for Reachy…</p></div>
     <div class="hist" id="hist"></div>
   </main>
 
@@ -264,7 +270,10 @@
       return;
     }
     b.className = 'bubble ' + sizeClass(latest.text) + (latest.speaker === 'user' ? ' user' : '');
-    $('btext').textContent = latest.text;
+    const tx = $('btext');
+    tx.textContent = latest.text;
+    tx.scrollTop = 0;
+    requestAnimationFrame(() => { b.classList.toggle('scrollable', tx.scrollHeight > tx.clientHeight + 2); });
     const prev = history.filter(m => m !== latest).slice(-2).reverse();
     const h = $('hist'); h.innerHTML = '';
     for (const m of prev){
@@ -346,11 +355,26 @@
   setInterval(poll, 1000); poll();
 
   /* ---------- D-pad: arrows always move focus among buttons (wrap) ---------- */
+  function bubbleScrollEl(){
+    const el = document.getElementById('btext');
+    if (latest && el && el.scrollHeight > el.clientHeight + 2) return el;
+    return null;
+  }
   function navigate(dir){
-    const cells = Array.from(grid.querySelectorAll('.btn'));
-    if (!cells.length) return;
+    const sb = bubbleScrollEl();
     const cur = document.activeElement;
-    if (!cells.includes(cur)){ cells[0].focus(); return; }
+    // when the speech bubble is focused and can scroll, scroll it first
+    if (sb && cur === sb && (dir === 'up' || dir === 'down')){
+      const atTop = sb.scrollTop <= 1;
+      const atBot = sb.scrollTop + sb.clientHeight >= sb.scrollHeight - 1;
+      if (dir === 'down' && !atBot){ sb.scrollTop += Math.round(sb.clientHeight*0.6); return; }
+      if (dir === 'up'   && !atTop){ sb.scrollTop -= Math.round(sb.clientHeight*0.6); return; }
+    }
+    const cells = [];
+    if (sb) cells.push(sb);
+    cells.push(...grid.querySelectorAll('.btn'));
+    if (!cells.length) return;
+    if (!cells.includes(cur)){ (grid.querySelector('.btn') || cells[0]).focus(); return; }
     const rects = cells.map(c => c.getBoundingClientRect());
     const rows = [];
     rects.forEach((r,i) => { const row = rows.find(rr => Math.abs(rects[rr[0]].top - r.top) < 10);
