@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
@@ -7,13 +7,12 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <style>
   :root{
-    --cy:#1ef0e0;            /* primary neon cyan */
-    --cy-soft:rgba(30,240,224,.14);
+    --cy:#1ef0e0;
     --cy-line:rgba(30,240,224,.30);
-    --mag:#ff42e6;           /* magenta accent */
+    --mag:#ff42e6;
     --red:#ff3d63;
     --txt:#eafffb;
-    --dim:#5b8480;           /* muted teal-grey */
+    --dim:#5b8480;
     --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
     --sans:-apple-system,"SF Pro Display","Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
   }
@@ -21,59 +20,43 @@
 
   html,body{
     width:600px;height:600px;overflow:hidden;
-    background:#000;color:var(--txt);
-    font-family:var(--sans);
+    background:#000;color:var(--txt);font-family:var(--sans);
     -webkit-font-smoothing:antialiased;text-rendering:geometricPrecision;
   }
 
   .stage{
-    width:600px;height:600px;
-    display:grid;
+    width:600px;height:600px;display:grid;
     grid-template-rows:26px 2px 1fr auto;
-    padding:12px 26px 16px;
-    gap:8px;
-    position:relative;
+    padding:12px 26px 16px;gap:8px;position:relative;
   }
 
   /* ---------- HUD ---------- */
   .hud{display:flex;align-items:center;justify-content:space-between;}
-  .brand{
-    font-family:var(--mono);font-size:12px;font-weight:600;
-    letter-spacing:.34em;color:var(--cy);
-    text-shadow:0 0 12px rgba(30,240,224,.5);
-  }
+  .brand{font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.34em;
+         color:var(--cy);text-shadow:0 0 12px rgba(30,240,224,.5);}
   .brand.down{color:var(--red);text-shadow:0 0 12px rgba(255,61,99,.5);}
-  .brand b{color:var(--mag);font-weight:600;}
+  .brand b{color:var(--mag);}
   .chips{display:flex;align-items:center;gap:8px;}
-  .chip{
-    font-family:var(--mono);font-size:10px;letter-spacing:.18em;
-    color:var(--dim);border:1px solid rgba(91,132,128,.25);
-    border-radius:3px;padding:3px 7px;line-height:1;
-    display:flex;align-items:center;gap:5px;transition:all .25s ease;
-  }
+  .chip{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--dim);
+        border:1px solid rgba(91,132,128,.25);border-radius:3px;padding:3px 7px;line-height:1;
+        display:flex;align-items:center;gap:5px;transition:all .25s ease;}
   .chip.on{color:var(--cy);border-color:var(--cy-line);box-shadow:0 0 12px rgba(30,240,224,.25);}
   .chip.mic.on{color:#ffd25b;border-color:rgba(255,210,91,.5);box-shadow:0 0 12px rgba(255,210,91,.25);}
   .chip .led{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 6px currentColor;}
   .chip.off .led{background:#33403f;box-shadow:none;}
 
-  .rule{
-    height:2px;align-self:center;
-    background:linear-gradient(90deg,transparent,var(--cy) 18%,var(--mag) 82%,transparent);
-    opacity:.55;filter:drop-shadow(0 0 4px rgba(30,240,224,.4));
-  }
+  .rule{height:2px;align-self:center;
+        background:linear-gradient(90deg,transparent,var(--cy) 18%,var(--mag) 82%,transparent);
+        opacity:.55;filter:drop-shadow(0 0 4px rgba(30,240,224,.4));}
 
-  /* ---------- view (no scroll: everything fits) ---------- */
-  .view{
-    min-height:0;display:flex;flex-direction:column;align-items:center;
-    justify-content:center;text-align:center;gap:10px;overflow:hidden;
-  }
+  /* ---------- view ---------- */
+  .view{min-height:0;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;text-align:center;gap:10px;overflow:hidden;}
 
-  .state{
-    display:flex;align-items:center;gap:10px;
-    font-family:var(--mono);font-size:11px;letter-spacing:.30em;
-    color:var(--cy);text-transform:uppercase;
-  }
-  .state .emo{font-size:24px;line-height:1;filter:drop-shadow(0 0 10px rgba(30,240,224,.35));}
+  .state{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;
+         letter-spacing:.30em;color:var(--cy);text-transform:uppercase;}
+  .state .emo{width:26px;height:26px;line-height:0;filter:drop-shadow(0 0 9px rgba(30,240,224,.4));}
+  .state .emo svg{width:26px;height:26px;}
   .state.speaking .emo{animation:bob .9s ease-in-out infinite;}
   .state.thinking .emo{animation:spin 2.4s linear infinite;}
   .state.listening .emo{animation:pulse 1.1s ease-in-out infinite;}
@@ -85,88 +68,60 @@
   .wave i:nth-child(2){animation-delay:.13s;} .wave i:nth-child(3){animation-delay:.26s;} .wave i:nth-child(4){animation-delay:.39s;}
   @keyframes eq{0%,100%{height:4px;}50%{height:12px;}}
 
-  /* speech bubble — the hero */
-  .bubble{
-    position:relative;max-width:100%;
+  .bubble{position:relative;max-width:100%;
     background:linear-gradient(180deg,rgba(8,22,22,.62),rgba(4,12,14,.50));
-    border:1px solid var(--cy-line);
-    border-left:2px solid var(--cy);
-    border-radius:4px;
-    padding:16px 20px 16px 22px;
-    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+    border:1px solid var(--cy-line);border-left:2px solid var(--cy);border-radius:4px;
+    padding:16px 20px 16px 22px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
     box-shadow:0 0 26px rgba(30,240,224,.14), inset 0 0 22px rgba(30,240,224,.05);
-    animation:rise .3s cubic-bezier(.2,.7,.2,1);
-  }
-  .bubble::before{                       /* corner ticks (HUD reticle vibe) */
-    content:"";position:absolute;top:-1px;right:-1px;width:14px;height:14px;
-    border-top:2px solid var(--mag);border-right:2px solid var(--mag);
-    opacity:.8;filter:drop-shadow(0 0 4px var(--mag));
-  }
+    animation:rise .3s cubic-bezier(.2,.7,.2,1);}
+  .bubble::before{content:"";position:absolute;top:-1px;right:-1px;width:14px;height:14px;
+    border-top:2px solid var(--mag);border-right:2px solid var(--mag);opacity:.8;filter:drop-shadow(0 0 4px var(--mag));}
   .btext{font-size:26px;font-weight:300;line-height:1.4;letter-spacing:.01em;color:#fff;
          display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden;text-wrap:balance;}
   .bubble.long  .btext{font-size:22px;-webkit-line-clamp:6;}
   .bubble.xlong .btext{font-size:18px;-webkit-line-clamp:7;text-align:left;}
   .bubble.idle{border-left-color:var(--dim);box-shadow:none;background:rgba(8,16,16,.35);}
-  .bubble.idle .btext{color:var(--dim);font-size:16px;letter-spacing:.14em;}
+  .bubble.idle .btext{color:var(--dim);font-size:15px;letter-spacing:.14em;font-family:var(--mono);}
   .bubble.idle::before{border-color:var(--dim);opacity:.4;}
   .bubble.user{border-left-color:var(--mag);}
   .bubble.user::before{border-color:var(--cy);}
   .bubble.user .btext{color:#f3d9ff;}
   @keyframes rise{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 
-  /* history — max 2 dim lines, no scroll */
   .hist{display:flex;flex-direction:column;gap:3px;width:100%;align-items:stretch;}
   .hist-item{font-family:var(--mono);font-size:11px;line-height:1.4;color:var(--dim);
              text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.8;}
   .hist-item::before{content:"› ";color:var(--cy);opacity:.6;}
   .hist-item.user::before{color:var(--mag);}
 
-  /* ---------- menu (always visible, arrow-nav only) ---------- */
+  /* ---------- menu ---------- */
   .menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .btn{
-    position:relative;background:rgba(255,255,255,.022);
-    border:1px solid rgba(30,240,224,.16);border-radius:3px;
-    color:var(--txt);font-family:var(--sans);font-size:16px;font-weight:300;
-    letter-spacing:.02em;cursor:pointer;text-align:center;
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    min-height:70px;padding:8px 10px;overflow:hidden;
-    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
-    transition:all .12s cubic-bezier(.2,.7,.2,1);
-  }
-  .btn::before{                          /* left accent bar, lights on focus */
-    content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
-    background:var(--cy);opacity:0;transition:opacity .12s ease;
-  }
-  .btn .gi{font-size:21px;line-height:1;}
-  .btn .lb{font-family:var(--mono);font-size:13px;letter-spacing:.12em;}
-  .btn:focus{
-    outline:none;border-color:var(--cy);color:var(--cy);
-    background:rgba(30,240,224,.09);
-    box-shadow:0 0 20px rgba(30,240,224,.4), inset 0 0 14px rgba(30,240,224,.08);
-    transform:translateY(-1px);
-  }
-  .btn:focus::before{opacity:1;box-shadow:0 0 8px var(--cy);}
-  .btn.full{grid-column:1 / -1;}
-  .btn.back{min-height:48px;border-color:rgba(91,132,128,.25);}
-  .btn.back .lb{color:var(--dim);}
-  .btn.back:focus{border-color:var(--cy);}
-  .btn.back:focus .lb{color:var(--cy);}
-  .btn.stop{min-height:54px;border-color:rgba(255,61,99,.45);}
-  .btn.stop .lb{color:#ff7d95;letter-spacing:.24em;}
-  .btn.stop::before{background:var(--red);}
-  .btn.stop:focus{border-color:var(--red);color:var(--red);
-    background:rgba(255,61,99,.10);box-shadow:0 0 20px rgba(255,61,99,.42);}
-  .btn.stop:focus .lb{color:var(--red);}
+  .btn{--ac:var(--cy);position:relative;background:rgba(255,255,255,.022);
+    border:1px solid rgba(30,240,224,.16);border-radius:3px;color:#cfeae7;
+    cursor:pointer;text-align:center;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:7px;min-height:72px;padding:8px 10px;
+    overflow:hidden;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    transition:all .12s cubic-bezier(.2,.7,.2,1);}
+  .btn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac);opacity:0;transition:opacity .12s ease;}
+  .btn .ico{width:23px;height:23px;display:block;color:inherit;transition:filter .12s ease;}
+  .btn .lb{font-family:var(--mono);font-size:12px;letter-spacing:.16em;}
+  .btn:focus{outline:none;border-color:var(--ac);color:var(--ac);
+    background:color-mix(in srgb,var(--ac) 9%,transparent);
+    box-shadow:0 0 22px color-mix(in srgb,var(--ac) 40%,transparent), inset 0 0 14px color-mix(in srgb,var(--ac) 8%,transparent);
+    transform:translateY(-1px);}
+  .btn:focus::before{opacity:1;box-shadow:0 0 8px var(--ac);}
+  .btn:focus .ico{filter:drop-shadow(0 0 6px var(--ac));}
+  .btn.full{grid-column:1 / -1;flex-direction:row;gap:10px;}
+  .btn.full .ico{width:18px;height:18px;}
+  .btn.stop{--ac:var(--red);min-height:54px;border-color:rgba(255,61,99,.42);color:#ff7d95;}
+  .btn.stop .lb{letter-spacing:.30em;}
+  .btn.back{--ac:var(--cy);min-height:48px;border-color:rgba(91,132,128,.25);color:var(--dim);}
 
-  /* toast */
-  .toast{
-    position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
-    font-family:var(--mono);font-size:13px;letter-spacing:.06em;
-    background:rgba(30,240,224,.12);border:1px solid var(--cy-line);
-    color:var(--cy);padding:7px 16px;border-radius:3px;white-space:nowrap;
-    opacity:0;transition:opacity .18s ease;pointer-events:none;z-index:10;
-    box-shadow:0 0 18px rgba(30,240,224,.25);
-  }
+  .toast{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+    font-family:var(--mono);font-size:13px;letter-spacing:.10em;
+    background:rgba(30,240,224,.12);border:1px solid var(--cy-line);color:var(--cy);
+    padding:7px 16px;border-radius:3px;white-space:nowrap;opacity:0;transition:opacity .18s ease;
+    pointer-events:none;z-index:10;box-shadow:0 0 18px rgba(30,240,224,.25);}
   .toast.show{opacity:1;}
 </style>
 </head>
@@ -185,11 +140,8 @@
   <div class="rule"></div>
 
   <main class="view">
-    <div class="state" id="state">
-      <span class="emo" id="emo">😴</span>
-      <span id="stateTxt">待機中</span>
-    </div>
-    <div class="bubble idle" id="bubble"><p class="btext" id="btext">Reachy Mini の発話を待っています…</p></div>
+    <div class="state" id="state"><span class="emo" id="emo"></span><span id="stateTxt">STANDBY</span></div>
+    <div class="bubble idle" id="bubble"><p class="btext" id="btext">Waiting for Reachy…</p></div>
     <div class="hist" id="hist"></div>
   </main>
 
@@ -202,42 +154,76 @@
   const $ = id => document.getElementById(id);
   const grid = $('grid');
 
-  const EMO = {
-    happy:'😊', thinking:'🤔', surprised:'😮', idle:'😴', excited:'🎉',
-    friendly:'❤️', error:'⚠️', listening:'🎤', speaking:'💬', neutral:'🙂',
+  /* ---- monochrome line icons (stroke = currentColor, so they take the button colour) ---- */
+  const ICONS = {
+    move:'<path d="M12 4v16M4 12h16"/><path d="M9 7l3-3 3 3M9 17l3 3 3-3M7 9l-3 3 3 3M17 9l3 3-3 3"/>',
+    emotion:'<circle cx="12" cy="12" r="9"/><path d="M8.5 14.3c.9 1.1 2.1 1.7 3.5 1.7s2.6-.6 3.5-1.7"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/>',
+    action:'<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/>',
+    talk:'<path d="M21 12a8 8 0 0 1-11.7 7.1L3 21l1.9-6.3A8 8 0 1 1 21 12z"/>',
+    stop:'<rect x="6" y="6" width="12" height="12" rx="1.5"/>',
+    left:'<path d="M19 12H5M11 18l-6-6 6-6"/>',
+    right:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+    nod:'<path d="M12 5v14M6 13l6 6 6-6"/>',
+    shake:'<path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/>',
+    eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/>',
+    surprised:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="15" r="1.9"/><circle cx="9" cy="9.5" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.1" fill="currentColor" stroke="none"/>',
+    thinking:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/><path d="M9.5 15.5h5"/>',
+    idle:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+    wave:'<path d="M2 12c2-4 4-4 6 0s4 4 6 0 4-4 6 0"/>',
+    dance:'<path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
+    start:'<path d="M7 4l13 8-13 8V4z"/>',
+    pause:'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',
+    clear:'<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
+    back:'<path d="M15 18l-6-6 6-6"/>',
+    heart:'<path d="M12 21S3.5 15.5 3.5 9.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8.5 2.5C20.5 15.5 12 21 12 21z"/>',
+    mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+    warn:'<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
+    neutral:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/><path d="M9 15h6"/>',
   };
-  const STATE_LABEL = {
-    idle:'待機中', listening:'聞いています', thinking:'考えています',
-    speaking:'話しています', error:'エラー',
-  };
+  function svg(name){
+    return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+         + 'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[name]||'') + '</svg>';
+  }
+
+  const EMO_ICON = { happy:'emotion', thinking:'thinking', surprised:'surprised', idle:'idle',
+    excited:'action', friendly:'heart', error:'warn', listening:'mic', speaking:'talk', neutral:'neutral' };
+  const STATE_LABEL = { idle:'STANDBY', listening:'LISTENING', thinking:'THINKING', speaking:'SPEAKING', error:'ERROR' };
+
+  const CATS = [
+    { s:'move',    label:'MOVE',    icon:'move',    ac:'#1ef0e0' },
+    { s:'emotion', label:'EMOTION', icon:'emotion', ac:'#ff42e6' },
+    { s:'action',  label:'ACTION',  icon:'action',  ac:'#ffb73a' },
+    { s:'conv',    label:'TALK',    icon:'talk',    ac:'#4d9bff' },
+  ];
+  const COLORS = { move:'#1ef0e0', emotion:'#ff42e6', action:'#ffb73a', conv:'#4d9bff' };
 
   const MENUS = {
     move: [
-      { cmd:'look_left',  label:'左を見る',     icon:'⬅️' },
-      { cmd:'look_right', label:'右を見る',     icon:'➡️' },
-      { cmd:'nod',        label:'うなずく',     icon:'⬇️' },
-      { cmd:'shake_head', label:'首を振る',     icon:'↔️' },
-      { cmd:'look_user',  label:'こっちを見て', icon:'👀' },
+      { cmd:'look_left',  label:'LOOK LEFT',  icon:'left'  },
+      { cmd:'look_right', label:'LOOK RIGHT', icon:'right' },
+      { cmd:'nod',        label:'NOD',        icon:'nod'   },
+      { cmd:'shake_head', label:'SHAKE',      icon:'shake' },
+      { cmd:'look_user',  label:'LOOK AT ME', icon:'eye'   },
     ],
     emotion: [
-      { cmd:'happy',     label:'喜ぶ',   icon:'😊' },
-      { cmd:'surprised', label:'驚く',   icon:'😮' },
-      { cmd:'thinking',  label:'考える', icon:'🤔' },
-      { cmd:'idle',      label:'待機',   icon:'😴' },
+      { cmd:'happy',     label:'HAPPY',     icon:'emotion'   },
+      { cmd:'surprised', label:'SURPRISED', icon:'surprised' },
+      { cmd:'thinking',  label:'THINKING',  icon:'thinking'  },
+      { cmd:'idle',      label:'IDLE',      icon:'idle'      },
     ],
     action: [
-      { cmd:'wave',  label:'手を振る', icon:'👋' },
-      { cmd:'dance', label:'ダンス',   icon:'🎉' },
+      { cmd:'wave',  label:'WAVE',  icon:'wave'  },
+      { cmd:'dance', label:'DANCE', icon:'dance' },
     ],
     conv: [
-      { cmd:'start_conversation', label:'会話開始',   icon:'💬' },
-      { cmd:'pause_conversation', label:'会話停止',   icon:'⏸️' },
-      { cmd:'clear_text',         label:'履歴クリア', icon:'🧹' },
+      { cmd:'start_conversation', label:'START', icon:'start' },
+      { cmd:'pause_conversation', label:'PAUSE', icon:'pause' },
+      { cmd:'clear_text',         label:'CLEAR', icon:'clear' },
     ],
   };
   const CMD_LABEL = {};
   Object.values(MENUS).flat().forEach(m => { CMD_LABEL[m.cmd] = m.label; });
-  CMD_LABEL.stop = '停止';
+  CMD_LABEL.stop = 'STOP';
 
   let latest    = null;
   let history   = [];
@@ -245,10 +231,11 @@
   let screen    = 'view';
   let live      = false;
 
-  /* ---------- HUD + state line ---------- */
-  function renderStatus() {
+  /* ---------- HUD + state ---------- */
+  function setChip(id, on){ const c=$(id); c.classList.toggle('on',on); c.classList.toggle('off',!on); }
+  function renderStatus(){
     $('brand').classList.toggle('down', !live);
-    $('brand').innerHTML = live ? '▸ REACHY<b>·</b>LINK' : '▸ LINK <b>再接続中</b>';
+    $('brand').innerHTML = live ? '▸ REACHY<b>·</b>LINK' : '▸ <b>RECONNECTING</b>';
 
     const rs = statusObj.robot_state || 'idle';
     setChip('cMic', rs === 'listening');
@@ -258,37 +245,29 @@
     $('robotTxt').textContent = robotOn ? 'ROBOT' : 'OFF';
 
     const emo = statusObj.emotion || 'idle';
-    $('emo').textContent = EMO[emo] || EMO.neutral;
+    $('emo').innerHTML = svg(EMO_ICON[emo] || 'neutral');
 
     const st = $('state');
     st.className = 'state ' + (['speaking','thinking','listening'].includes(rs) ? rs : '');
-    const lbl = STATE_LABEL[rs] || '待機中';
-    $('stateTxt').innerHTML = lbl + (rs === 'speaking'
-      ? ' <span class="wave"><i></i><i></i><i></i><i></i></span>' : '');
-  }
-  function setChip(id, on) {
-    const c = $(id);
-    c.classList.toggle('on', on);
-    c.classList.toggle('off', !on);
+    $('stateTxt').innerHTML = (STATE_LABEL[rs] || 'STANDBY')
+      + (rs === 'speaking' ? ' <span class="wave"><i></i><i></i><i></i><i></i></span>' : '');
   }
 
   /* ---------- bubble + history ---------- */
   function sizeClass(t){ const n=(t||'').length; if(n>120)return 'xlong'; if(n>50)return 'long'; return ''; }
-
-  function renderContent() {
+  function renderContent(){
     const b = $('bubble');
-    if (!latest) {
+    if (!latest){
       b.className = 'bubble idle';
-      $('btext').textContent = live ? 'Reachy Mini の発話を待っています…' : '接続中…';
+      $('btext').textContent = live ? 'Waiting for Reachy…' : 'Connecting…';
       $('hist').innerHTML = '';
       return;
     }
     b.className = 'bubble ' + sizeClass(latest.text) + (latest.speaker === 'user' ? ' user' : '');
     $('btext').textContent = latest.text;
-
     const prev = history.filter(m => m !== latest).slice(-2).reverse();
     const h = $('hist'); h.innerHTML = '';
-    for (const m of prev) {
+    for (const m of prev){
       const it = document.createElement('div');
       it.className = 'hist-item' + (m.speaker === 'user' ? ' user' : '');
       it.textContent = m.text;
@@ -297,39 +276,34 @@
   }
 
   /* ---------- menu ---------- */
-  function makeBtn(html, key, cls, onClick){
+  function makeBtn(html, key, cls, ac, onClick){
     const b = document.createElement('button');
     b.className = 'btn' + (cls ? ' ' + cls : '');
     b.dataset.key = key;
+    if (ac) b.style.setProperty('--ac', ac);
     b.innerHTML = html;
     b.addEventListener('click', onClick);
     return b;
   }
-
-  function renderGrid() {
+  function renderGrid(){
     const prevKey = document.activeElement && document.activeElement.dataset
                     ? document.activeElement.dataset.key : null;
     grid.innerHTML = '';
     let buttons = [];
 
-    if (screen === 'view') {
-      const cats = [
-        { s:'move',    label:'動き',       icon:'🔄' },
-        { s:'emotion', label:'感情',       icon:'😊' },
-        { s:'action',  label:'アクション', icon:'🎉' },
-        { s:'conv',    label:'会話',       icon:'💬' },
-      ];
-      buttons = cats.map(c => makeBtn(
-        '<span class="gi">'+c.icon+'</span><span class="lb">'+c.label+'</span>',
-        'm-'+c.s, '', () => { screen = c.s; render(); }));
-      buttons.push(makeBtn('<span class="lb">■ STOP</span>', 'cmd-stop', 'stop full',
-        () => sendCommand('stop')));
+    if (screen === 'view'){
+      buttons = CATS.map(c => makeBtn(
+        svg(c.icon) + '<span class="lb">'+c.label+'</span>',
+        'm-'+c.s, '', c.ac, () => { screen = c.s; render(); }));
+      buttons.push(makeBtn(svg('stop') + '<span class="lb">STOP</span>',
+        'cmd-stop', 'stop full', null, () => sendCommand('stop')));
     } else {
+      const ac = COLORS[screen];
       buttons = MENUS[screen].map(m => makeBtn(
-        '<span class="gi">'+m.icon+'</span><span class="lb">'+m.label+'</span>',
-        'cmd-'+m.cmd, '', () => sendCommand(m.cmd)));
-      buttons.push(makeBtn('<span class="lb">‹ 戻る</span>', 'back', 'back full',
-        () => { screen = 'view'; render(); }));
+        svg(m.icon) + '<span class="lb">'+m.label+'</span>',
+        'cmd-'+m.cmd, '', ac, () => sendCommand(m.cmd)));
+      buttons.push(makeBtn(svg('back') + '<span class="lb">BACK</span>',
+        'back', 'back full', null, () => { screen = 'view'; render(); }));
     }
 
     buttons.forEach(b => grid.appendChild(b));
@@ -337,7 +311,6 @@
     let target = prevKey ? all.find(b => b.dataset.key === prevKey) : null;
     (target || all[0]).focus();
   }
-
   function render(){ renderStatus(); renderContent(); renderGrid(); }
 
   /* ---------- toast + command ---------- */
@@ -351,11 +324,11 @@
     try {
       await fetch('/api/command', { method:'POST',
         headers:{'Content-Type':'application/json'}, body:JSON.stringify({ command:cmd }) });
-    } catch(_) { toast('送信失敗'); }
+    } catch(_) { toast('SEND FAILED'); }
     if (cmd === 'clear_text') { screen = 'view'; render(); }
   }
 
-  /* ---------- polling (robust through SSE-buffering tunnels) ---------- */
+  /* ---------- polling ---------- */
   let lastSig = '';
   async function poll(){
     try {
@@ -367,31 +340,26 @@
       statusObj = d.status || statusObj;
       const sig = (latest ? latest.ts : 0) + '|' + history.length + '|' + JSON.stringify(statusObj);
       renderStatus();
-      if (sig !== lastSig) { lastSig = sig; renderContent(); }
+      if (sig !== lastSig){ lastSig = sig; renderContent(); }
     } catch(_) { live = false; renderStatus(); }
   }
   setInterval(poll, 1000); poll();
 
-  /* ---------- D-pad: arrows ALWAYS move focus among menu buttons (wrap) ---------- */
+  /* ---------- D-pad: arrows always move focus among buttons (wrap) ---------- */
   function navigate(dir){
     const cells = Array.from(grid.querySelectorAll('.btn'));
     if (!cells.length) return;
     const cur = document.activeElement;
-    if (!cells.includes(cur)) { cells[0].focus(); return; }
-
+    if (!cells.includes(cur)){ cells[0].focus(); return; }
     const rects = cells.map(c => c.getBoundingClientRect());
     const rows = [];
-    rects.forEach((r,i) => {
-      const row = rows.find(rr => Math.abs(rects[rr[0]].top - r.top) < 10);
-      if (row) row.push(i); else rows.push([i]);
-    });
+    rects.forEach((r,i) => { const row = rows.find(rr => Math.abs(rects[rr[0]].top - r.top) < 10);
+      if (row) row.push(i); else rows.push([i]); });
     rows.sort((a,b)=>rects[a[0]].top-rects[b[0]].top);
     rows.forEach(r=>r.sort((a,b)=>rects[a].left-rects[b].left));
-
     const idx = cells.indexOf(cur);
     let cr=-1; for (let i=0;i<rows.length;i++){ if(rows[i].includes(idx)){cr=i;break;} }
     if (cr===-1){ cells[0].focus(); return; }
-
     if (dir==='up' || dir==='down'){
       const tr = (cr + (dir==='down'?1:-1) + rows.length) % rows.length;
       const cx = rects[idx].left + rects[idx].width/2;
@@ -404,9 +372,8 @@
       cells[row[t]].focus();
     }
   }
-
   document.addEventListener('keydown', e => {
-    switch (e.key) {
+    switch (e.key){
       case 'ArrowUp':    navigate('up');    break;
       case 'ArrowDown':  navigate('down');  break;
       case 'ArrowLeft':  navigate('left');  break;
@@ -415,9 +382,7 @@
         if (document.activeElement && document.activeElement.classList.contains('btn'))
           document.activeElement.click();
         break;
-      case 'Escape':
-        if (screen !== 'view') { screen = 'view'; render(); }
-        break;
+      case 'Escape': if (screen !== 'view'){ screen = 'view'; render(); } break;
       default: return;
     }
     e.preventDefault();
