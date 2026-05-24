@@ -1,0 +1,16 @@
+{
+  "name": "reachy-link",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Relay + Meta Ray-Ban Display viewer that shows Reachy Mini's speech and sends control commands.",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

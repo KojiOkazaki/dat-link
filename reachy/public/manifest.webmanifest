@@ -1,0 +1,10 @@
+{
+  "name": "Reachy Link",
+  "short_name": "Reachy",
+  "description": "Shows Reachy Mini's speech on Meta Ray-Ban Display and sends control commands.",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}

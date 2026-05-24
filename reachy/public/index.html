@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=600, height=600, initial-scale=1.0, user-scalable=no">
+<title>Reachy Link</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 600px;
+    height: 600px;
+    overflow: hidden;
+    background: #000;            /* black = transparent on MRBD: the real Reachy shows through */
+    color: #fff;
+    font-family: -apple-system, "SF Pro Display", "Helvetica Neue",
+                 "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  .stage {
+    width: 600px;
+    height: 600px;
+    display: grid;
+    grid-template-rows: 34px 1fr auto;
+    padding: 12px 20px 16px;
+    gap: 8px;
+    position: relative;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    font-size: 12px;
+    letter-spacing: 0.40em;
+    font-weight: 500;
+    color: #7cf6c8;
+  }
+  .indicators { display: flex; align-items: center; gap: 14px; }
+  .ind {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; letter-spacing: 0.14em; color: #5b6472;
+    transition: color 0.3s ease;
+  }
+  .ind .ico { font-size: 14px; filter: grayscale(1) opacity(0.5); transition: all 0.3s ease; }
+  .ind.on { color: #7cf6c8; }
+  .ind.on .ico { filter: none; }
+  .ind.mic.on   .ico, .ind.mic.on   { color: #ffce5b; }
+  .ind.mic.on   .ico { filter: none; }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #2a2f3a; transition: all 0.3s ease;
+  }
+  .dot.live  { background: #7cf6c8; box-shadow: 0 0 10px #7cf6c8; }
+  .dot.error { background: #ff5b6e; box-shadow: 0 0 10px #ff5b6e;
+               animation: pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+
+  /* ---------- emotion badge (floats at the right, beside the bubble) ---------- */
+  .emotion {
+    position: absolute;
+    top: 96px; right: 18px;
+    width: 92px;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .emotion .face {
+    font-size: 52px; line-height: 1;
+    filter: drop-shadow(0 0 12px rgba(124, 246, 200, 0.35));
+    transition: transform 0.25s ease;
+  }
+  .emotion.speaking .face { animation: bob 0.9s ease-in-out infinite; }
+  .emotion.thinking .face { animation: spin 2.4s linear infinite; }
+  .emotion.listening .face { animation: pulse 1.1s ease-in-out infinite; }
+  @keyframes bob  { 50% { transform: translateY(-4px); } }
+  @keyframes spin { to  { transform: rotate(360deg); } }
+  .emotion .emo-label {
+    font-size: 10px; letter-spacing: 0.18em; color: #7cf6c8; opacity: 0.8;
+    text-transform: uppercase;
+  }
+
+  /* ---------- main content (kept toward the lower-centre, AR overlay) ---------- */
+  .content {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;   /* flex-start avoids the flex+overflow top-clip bug */
+    text-align: center;
+    gap: 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-behavior: smooth;
+    padding: 6px 86px 4px 6px;     /* right padding leaves room for the emotion badge */
+  }
+  .content::-webkit-scrollbar { display: none; }
+
+  .state-label {
+    font-size: 11px;
+    letter-spacing: 0.30em;
+    color: #7cf6c8;
+    text-transform: uppercase;
+    opacity: 0.85;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .state-label .wave { display: inline-flex; gap: 3px; align-items: flex-end; height: 12px; }
+  .state-label .wave i {
+    width: 3px; background: #7cf6c8; border-radius: 2px; height: 5px;
+    animation: eq 0.9s ease-in-out infinite;
+  }
+  .state-label .wave i:nth-child(2) { animation-delay: 0.15s; }
+  .state-label .wave i:nth-child(3) { animation-delay: 0.30s; }
+  .state-label .wave i:nth-child(4) { animation-delay: 0.45s; }
+  @keyframes eq { 0%,100% { height: 4px; } 50% { height: 12px; } }
+
+  /* speech bubble — the most important element */
+  .bubble {
+    position: relative;
+    max-width: 100%;
+    background: rgba(10, 16, 22, 0.55);
+    border: 1px solid rgba(124, 246, 200, 0.30);
+    border-radius: 18px;
+    padding: 16px 20px;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+    box-shadow: 0 0 30px rgba(124, 246, 200, 0.12);
+    animation: rise 0.32s cubic-bezier(.2,.7,.2,1);
+  }
+  .bubble::after {     /* little tail pointing toward the robot */
+    content: "";
+    position: absolute;
+    left: 38px; bottom: -9px;
+    width: 16px; height: 16px;
+    background: rgba(10, 16, 22, 0.55);
+    border-right: 1px solid rgba(124, 246, 200, 0.30);
+    border-bottom: 1px solid rgba(124, 246, 200, 0.30);
+    transform: rotate(45deg);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+  .bubble .text {
+    font-size: 26px;
+    font-weight: 300;
+    line-height: 1.42;
+    letter-spacing: 0.01em;
+    color: #fff;
+    text-wrap: balance;
+  }
+  .bubble.long  .text { font-size: 22px; line-height: 1.46; }
+  .bubble.xlong .text { font-size: 19px; line-height: 1.5; text-align: left; }
+  .bubble.xxlong .text { font-size: 17px; line-height: 1.55; text-align: left; }
+  .bubble.user {
+    border-color: rgba(255, 255, 255, 0.22);
+    box-shadow: none;
+  }
+  .bubble.user .text { color: #cfd6e0; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .idle-hint { color: #4a5260; font-size: 15px; letter-spacing: 0.16em; margin-top: 40px; }
+
+  /* history — small, dimmed, below the bubble */
+  .hist-head {
+    font-size: 9px; letter-spacing: 0.30em; color: #5b6472;
+    text-transform: uppercase; margin-top: 6px;
+  }
+  .hist {
+    display: flex; flex-direction: column; gap: 5px; width: 100%;
+    align-items: stretch;
+  }
+  .hist-item {
+    font-size: 13px; line-height: 1.4; color: #6b7585;
+    text-align: left; max-width: 100%;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .hist-item .who { color: #7cf6c8; opacity: 0.7; margin-right: 6px; }
+  .hist-item.user .who { color: #8a93a3; }
+
+  /* ---------- bottom menu ---------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: auto;
+    gap: 8px;
+  }
+  .grid[data-cols="3"] { grid-template-columns: 1fr 1fr 1fr; }
+
+  .focusable {
+    background: rgba(255, 255, 255, 0.025);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    padding: 8px 10px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    text-align: center;
+    transition: all 130ms cubic-bezier(.2,.7,.2,1);
+    word-break: break-word;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    overflow: hidden;
+    min-height: 88px;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+  .focusable .gi { font-size: 22px; }
+  .focusable:focus {
+    outline: none;
+    border-color: #7cf6c8;
+    color: #7cf6c8;
+    background: rgba(124, 246, 200, 0.10);
+    box-shadow: 0 0 22px rgba(124, 246, 200, 0.35);
+    transform: translateY(-1px);
+  }
+  .focusable.full { grid-column: 1 / -1; }
+  .focusable.back, .focusable.sys {
+    min-height: 60px; font-size: 13px; letter-spacing: 0.16em; color: #8a93a3;
+  }
+  .focusable.back:focus, .focusable.sys:focus { color: #7cf6c8; }
+  .focusable.stop {
+    min-height: 60px; border-color: rgba(255, 91, 110, 0.5); color: #ff8a98;
+    letter-spacing: 0.2em; font-weight: 400;
+  }
+  .focusable.stop:focus {
+    border-color: #ff5b6e; color: #ff5b6e;
+    background: rgba(255, 91, 110, 0.12);
+    box-shadow: 0 0 22px rgba(255, 91, 110, 0.4);
+  }
+
+  /* toast: brief command-sent confirmation */
+  .toast {
+    position: absolute;
+    left: 50%; bottom: 16px;
+    transform: translateX(-50%);
+    background: rgba(124, 246, 200, 0.14);
+    border: 1px solid rgba(124, 246, 200, 0.4);
+    color: #7cf6c8;
+    padding: 8px 16px; border-radius: 999px;
+    font-size: 14px; letter-spacing: 0.06em;
+    opacity: 0; transition: opacity 0.2s ease;
+    pointer-events: none; z-index: 10;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <header class="topbar">
+    <div class="brand">REACHY · LINK</div>
+    <div class="indicators">
+      <span class="ind mic"     id="indMic"><span class="ico">🎤</span></span>
+      <span class="ind speaker" id="indSpk"><span class="ico">🔊</span></span>
+      <span class="ind robot"   id="indRobot"><span class="ico">🤖</span><span id="robotTxt">—</span></span>
+      <span class="dot" id="dot"></span>
+    </div>
+  </header>
+
+  <div class="emotion" id="emotion">
+    <div class="face" id="emoFace">😴</div>
+    <div class="emo-label" id="emoLabel">idle</div>
+  </div>
+
+  <main class="content" id="content"></main>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const content = $('content');
+  const grid    = $('grid');
+
+  const EMO = {
+    happy: '😊', thinking: '🤔', surprised: '😮', idle: '😴',
+    excited: '🎉', friendly: '❤️', error: '⚠️', listening: '🎤',
+    speaking: '💬', neutral: '🙂',
+  };
+  const STATE_LABEL = {
+    idle: '待機中', listening: '聞いています', thinking: '考えています',
+    speaking: '話しています', error: 'エラー',
+  };
+
+  // command menus: { key, label, icon, cmd }
+  const MENUS = {
+    move: [
+      { cmd: 'look_left',  label: '左を見る',     icon: '⬅️' },
+      { cmd: 'look_right', label: '右を見る',     icon: '➡️' },
+      { cmd: 'nod',        label: 'うなずく',     icon: '⬇️' },
+      { cmd: 'shake_head', label: '首を振る',     icon: '↔️' },
+      { cmd: 'look_user',  label: 'こっちを見て', icon: '👀' },
+    ],
+    emotion: [
+      { cmd: 'happy',     label: '喜ぶ',   icon: '😊' },
+      { cmd: 'surprised', label: '驚く',   icon: '😮' },
+      { cmd: 'thinking',  label: '考える', icon: '🤔' },
+      { cmd: 'idle',      label: '待機',   icon: '😴' },
+    ],
+    action: [
+      { cmd: 'wave',  label: '手を振る', icon: '👋' },
+      { cmd: 'dance', label: 'ダンス',   icon: '🎉' },
+    ],
+    conv: [
+      { cmd: 'start_conversation', label: '会話開始', icon: '💬' },
+      { cmd: 'pause_conversation', label: '会話停止', icon: '⏸️' },
+      { cmd: 'clear_text',         label: '履歴クリア', icon: '🧹' },
+    ],
+  };
+  const CMD_LABEL = {};
+  Object.values(MENUS).flat().forEach(m => { CMD_LABEL[m.cmd] = m.label; });
+  CMD_LABEL.stop = '停止';
+
+  let latest    = null;             // last reachy speech
+  let history   = [];               // all speech events
+  let statusObj = { connected: false, robot_state: 'idle', emotion: 'idle' };
+  let screen    = 'view';           // view | move | emotion | action | conv
+  let sseLive   = false;
+
+  /* ---------- top bar / emotion ---------- */
+  function renderStatus() {
+    $('dot').className = 'dot ' + (sseLive ? 'live' : 'error');
+
+    const rs = statusObj.robot_state || 'idle';
+    $('indMic').classList.toggle('on', rs === 'listening');
+    $('indSpk').classList.toggle('on', rs === 'speaking');
+
+    const robotOn = !!statusObj.connected;
+    $('indRobot').classList.toggle('on', robotOn);
+    $('robotTxt').textContent = robotOn ? 'ON' : 'OFF';
+
+    const emo = statusObj.emotion || 'idle';
+    $('emoFace').textContent  = EMO[emo] || EMO.neutral;
+    $('emoLabel').textContent = emo;
+    const eb = $('emotion');
+    eb.className = 'emotion ' + (rs === 'speaking' ? 'speaking'
+                              : rs === 'thinking'  ? 'thinking'
+                              : rs === 'listening' ? 'listening' : '');
+  }
+
+  /* ---------- content ---------- */
+  function bubbleSizeClass(text) {
+    const n = (text || '').length;
+    if (n > 140) return 'xxlong';
+    if (n > 80)  return 'xlong';
+    if (n > 36)  return 'long';
+    return '';
+  }
+
+  function renderContent() {
+    content.innerHTML = '';
+
+    const rs = statusObj.robot_state || 'idle';
+
+    // state label (with a waveform while speaking)
+    const sl = document.createElement('div');
+    sl.className = 'state-label';
+    sl.textContent = STATE_LABEL[rs] || '待機中';
+    if (rs === 'speaking') {
+      const w = document.createElement('span');
+      w.className = 'wave';
+      w.innerHTML = '<i></i><i></i><i></i><i></i>';
+      sl.appendChild(w);
+    }
+    content.appendChild(sl);
+
+    if (!latest) {
+      const h = document.createElement('div');
+      h.className = 'idle-hint';
+      h.textContent = sseLive ? 'Reachy Mini の発話を待っています…' : '接続中…';
+      content.appendChild(h);
+      return;
+    }
+
+    // latest speech bubble (the hero element)
+    const bub = document.createElement('div');
+    bub.className = 'bubble ' + bubbleSizeClass(latest.text)
+                  + (latest.speaker === 'user' ? ' user' : '');
+    const t = document.createElement('div');
+    t.className = 'text';
+    t.textContent = latest.text;
+    bub.appendChild(t);
+    content.appendChild(bub);
+
+    // recent history (small, dimmed, newest first, excluding the latest)
+    const prev = history.filter(m => m !== latest).slice(-6).reverse();
+    if (prev.length) {
+      const hh = document.createElement('div');
+      hh.className = 'hist-head';
+      hh.textContent = '会話履歴';
+      content.appendChild(hh);
+      const list = document.createElement('div');
+      list.className = 'hist';
+      for (const m of prev) {
+        const it = document.createElement('div');
+        it.className = 'hist-item' + (m.speaker === 'user' ? ' user' : '');
+        const who = document.createElement('span');
+        who.className = 'who';
+        who.textContent = m.speaker === 'user' ? 'あなた' : 'Reachy';
+        it.appendChild(who);
+        it.appendChild(document.createTextNode(m.text));
+        list.appendChild(it);
+      }
+      content.appendChild(list);
+    }
+  }
+
+  /* ---------- bottom menu ---------- */
+  function cmdBtn(item) {
+    const b = document.createElement('button');
+    b.className = 'focusable';
+    b.dataset.key = 'cmd-' + item.cmd;
+    b.innerHTML = '<span class="gi">' + item.icon + '</span>' + item.label;
+    b.addEventListener('click', () => sendCommand(item.cmd));
+    return b;
+  }
+  function navBtn(label, key, screenTo, cls) {
+    const b = document.createElement('button');
+    b.className = 'focusable ' + (cls || '');
+    b.dataset.key = key;
+    b.textContent = label;
+    b.addEventListener('click', () => { screen = screenTo; render(); });
+    return b;
+  }
+
+  function renderGrid() {
+    const prevKey = document.activeElement && document.activeElement.dataset
+                    ? document.activeElement.dataset.key : null;
+    grid.innerHTML = '';
+    grid.dataset.cols = '2';
+    let buttons = [];
+
+    if (screen === 'view') {
+      buttons = [
+        navBtn('動き',   'm-move',    'move'),
+        navBtn('感情',   'm-emotion', 'emotion'),
+        navBtn('アクション', 'm-action',  'action'),
+        navBtn('会話',   'm-conv',    'conv'),
+      ];
+      // map each top-level button to an icon via innerHTML
+      const icons = ['🔄', '😊', '🎉', '💬'];
+      buttons.forEach((b, i) => { b.innerHTML = '<span class="gi">' + icons[i] + '</span>' + b.textContent; });
+      const stop = document.createElement('button');
+      stop.className = 'focusable stop full';
+      stop.dataset.key = 'cmd-stop';
+      stop.textContent = '■ 停止 (STOP)';
+      stop.addEventListener('click', () => sendCommand('stop'));
+      buttons.push(stop);
+    } else {
+      buttons = MENUS[screen].map(cmdBtn);
+      buttons.push(navBtn('‹ 戻る', 'back', 'view', 'back full'));
+    }
+
+    buttons.forEach(b => grid.appendChild(b));
+
+    const all = Array.from(grid.querySelectorAll('.focusable:not(:disabled)'));
+    if (!all.length) return;
+    let target = prevKey ? all.find(b => b.dataset.key === prevKey) : null;
+    if (!target) target = all[0];
+    target.focus();
+  }
+
+  function render(opts) {
+    renderStatus();
+    renderContent();
+    renderGrid();
+    requestAnimationFrame(() => {
+      if (!opts || opts.resetScroll !== false) content.scrollTop = 0;
+    });
+  }
+
+  /* ---------- toast ---------- */
+  let toastTimer = null;
+  function toast(msg) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 1400);
+  }
+
+  /* ---------- send command ---------- */
+  async function sendCommand(cmd) {
+    toast('送信: ' + (CMD_LABEL[cmd] || cmd));
+    try {
+      await fetch('/api/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: cmd }),
+      });
+    } catch (_) {
+      toast('送信失敗');
+    }
+    if (cmd === 'clear_text') { screen = 'view'; }
+  }
+
+  /* ---------- SSE ---------- */
+  function connect() {
+    const es = new EventSource('/api/events');
+    es.onopen  = () => { sseLive = true; renderStatus(); };
+    es.onerror = () => {
+      sseLive = false; renderStatus();
+      setTimeout(() => { try { es.close(); } catch (_) {} connect(); }, 2000);
+    };
+    es.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
+
+      if (m.type === 'snapshot') {
+        latest    = m.latest || null;
+        history   = m.history || [];
+        statusObj = m.status || statusObj;
+        sseLive   = true;
+        render();
+      } else if (m.type === 'speech') {
+        history.push(m.message);
+        if (history.length > 50) history.shift();
+        if (m.message.speaker !== 'user') latest = m.message;
+        if (m.status) statusObj = m.status;
+        render();
+      } else if (m.type === 'status') {
+        if (m.status) statusObj = m.status;
+        renderStatus();
+        renderContent();
+      } else if (m.type === 'clear') {
+        latest = null; history = [];
+        if (m.status) statusObj = m.status;
+        render();
+      } else if (m.type === 'command') {
+        if (m.status) statusObj = m.status;
+        renderStatus();
+      } else if (m.type === 'error') {
+        if (m.message) toast(m.message);
+      }
+      // ping: ignore
+    };
+  }
+  connect();
+
+  /* ---------- D-pad navigation (spatial, grid-aware) ---------- */
+  function stepScroll(dir) {
+    const step = Math.round(content.clientHeight * 0.35);
+    if (dir === 'down') content.scrollTop = Math.min(content.scrollHeight, content.scrollTop + step);
+    else                content.scrollTop = Math.max(0, content.scrollTop - step);
+  }
+
+  function navigate(dir) {
+    const cells = Array.from(grid.querySelectorAll('.focusable:not(:disabled)'));
+    if (!cells.length) return;
+    const cur = document.activeElement;
+    if (!cells.includes(cur)) { cells[0].focus(); return; }
+
+    const rects = cells.map(c => c.getBoundingClientRect());
+    const rows = [];
+    rects.forEach((r, i) => {
+      const row = rows.find(rr => Math.abs(rects[rr[0]].top - r.top) < 10);
+      if (row) row.push(i); else rows.push([i]);
+    });
+    rows.sort((a, b) => rects[a[0]].top - rects[b[0]].top);
+    rows.forEach(r => r.sort((a, b) => rects[a].left - rects[b].left));
+
+    const curIdx = cells.indexOf(cur);
+    let curRow = -1, curCol = -1;
+    for (let i = 0; i < rows.length; i++) {
+      const j = rows[i].indexOf(curIdx);
+      if (j !== -1) { curRow = i; curCol = j; break; }
+    }
+    if (curRow === -1) { cells[0].focus(); return; }
+
+    if (dir === 'up' || dir === 'down') {
+      const targetRow = (curRow + (dir === 'down' ? 1 : -1) + rows.length) % rows.length;
+      const curCenter = rects[curIdx].left + rects[curIdx].width / 2;
+      let best = rows[targetRow][0], bestDist = Infinity;
+      for (const t of rows[targetRow]) {
+        const center = rects[t].left + rects[t].width / 2;
+        const d = Math.abs(curCenter - center);
+        if (d < bestDist) { bestDist = d; best = t; }
+      }
+      cells[best].focus();
+    } else {
+      const row = rows[curRow];
+      const ci  = row.indexOf(curIdx);
+      const t   = (ci + (dir === 'right' ? 1 : -1) + row.length) % row.length;
+      cells[row[t]].focus();
+    }
+  }
+
+  // Up/Down scrolls the speech/history first, then moves focus.
+  function handleVertical(dir) {
+    const overflow = content.scrollHeight > content.clientHeight + 1;
+    if (overflow) {
+      if (dir === 'down' && content.scrollTop + content.clientHeight < content.scrollHeight - 2) {
+        stepScroll('down'); return;
+      }
+      if (dir === 'up' && content.scrollTop > 2) {
+        stepScroll('up'); return;
+      }
+    }
+    navigate(dir);
+  }
+
+  document.addEventListener('keydown', e => {
+    switch (e.key) {
+      case 'ArrowUp':    handleVertical('up');   break;
+      case 'ArrowDown':  handleVertical('down'); break;
+      case 'ArrowLeft':  navigate('left');       break;
+      case 'ArrowRight': navigate('right');      break;
+      case 'Enter':
+        if (document.activeElement && document.activeElement.classList.contains('focusable')) {
+          document.activeElement.click();
+        }
+        break;
+      case 'Escape':
+        if (screen !== 'view') { screen = 'view'; render(); }
+        break;
+      default: return;
+    }
+    e.preventDefault();
+  });
+
+  render();
+</script>
+</body>
+</html>
