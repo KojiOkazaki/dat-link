@@ -185,6 +185,8 @@ app.post('/api/clear', (req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 app.get('/api/health', (req, res) => {
   res.json({
     ok:        true,

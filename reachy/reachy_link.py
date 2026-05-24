@@ -8,7 +8,7 @@ Runs on the Reachy Mini (or the Mac next to it). It does two things:
   2. Pulls control commands the glasses sent and hands them to a callback
      so the robot can act on them (start_command_listener).
 
-It is intentionally dependency-light: only `requests`.
+Standard library only (urllib) — no pip installs needed on either machine.
 
 Wiring it into mini_voice.py (from the conversation manual)
 ------------------------------------------------------------
@@ -47,8 +47,8 @@ import sys
 import time
 import json
 import threading
-
-import requests
+import urllib.request
+import urllib.error
 
 RELAY_URL = os.environ.get("RELAY_URL", "http://127.0.0.1:4000").rstrip("/")
 DEBUG = os.environ.get("LINK_DEBUG", "0") == "1"
@@ -58,6 +58,18 @@ _TIMEOUT = float(os.environ.get("LINK_TIMEOUT", "5"))
 def _log(*a):
     if DEBUG:
         print("[reachy_link]", *a, file=sys.stderr)
+
+
+def _request(method, path, body=None):
+    """Tiny urllib JSON request. Returns (status_code, text)."""
+    data = json.dumps(body).encode("utf-8") if body is not None else None
+    headers = {"Content-Type": "application/json"} if data is not None else {}
+    req = urllib.request.Request(f"{RELAY_URL}{path}", data=data, headers=headers, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
+            return r.status, r.read().decode("utf-8", "replace")
+    except urllib.error.HTTPError as e:
+        return e.code, e.read().decode("utf-8", "replace")
 
 
 def post_speech(text, speaker="reachy", emotion=None, state=None):
@@ -72,9 +84,9 @@ def post_speech(text, speaker="reachy", emotion=None, state=None):
     if state:
         body["state"] = state
     try:
-        r = requests.post(f"{RELAY_URL}/api/speech", json=body, timeout=_TIMEOUT)
-        _log("post_speech", r.status_code, text[:40])
-        return r.ok
+        st, _ = _request("POST", "/api/speech", body)
+        _log("post_speech", st, text[:40])
+        return 200 <= st < 300
     except Exception as e:  # noqa: BLE001 - best effort
         _log("post_speech failed:", e)
         return False
@@ -87,9 +99,9 @@ def post_state(state, emotion=None):
     if emotion:
         body["emotion"] = emotion
     try:
-        r = requests.post(f"{RELAY_URL}/api/state", json=body, timeout=_TIMEOUT)
-        _log("post_state", r.status_code, state, emotion or "")
-        return r.ok
+        st, _ = _request("POST", "/api/state", body)
+        _log("post_state", st, state, emotion or "")
+        return 200 <= st < 300
     except Exception as e:  # noqa: BLE001
         _log("post_state failed:", e)
         return False
@@ -100,13 +112,12 @@ def poll_commands():
     Also acts as the heartbeat that keeps the glasses' 'robot ON' indicator
     lit."""
     try:
-        r = requests.get(f"{RELAY_URL}/api/commands", timeout=_TIMEOUT)
-        if not r.ok:
-            return []
-        return r.json().get("commands", [])
+        st, raw = _request("GET", "/api/commands")
+        if 200 <= st < 300:
+            return json.loads(raw).get("commands", [])
     except Exception as e:  # noqa: BLE001
         _log("poll_commands failed:", e)
-        return []
+    return []
 
 
 def start_command_listener(handler, interval=1.0):
