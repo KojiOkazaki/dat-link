@@ -76,18 +76,25 @@
     animation:rise .3s cubic-bezier(.2,.7,.2,1);}
   .bubble::before{content:"";position:absolute;top:-1px;right:-1px;width:14px;height:14px;
     border-top:2px solid var(--mag);border-right:2px solid var(--mag);opacity:.8;filter:drop-shadow(0 0 4px var(--mag));}
-  .btext{font-size:19px;font-weight:300;line-height:1.5;letter-spacing:.01em;color:#fff;
-         max-height:184px;overflow-y:auto;outline:none;text-wrap:balance;
-         scrollbar-width:none;-ms-overflow-style:none;}
-  .btext::-webkit-scrollbar{display:none;}
-  .bubble.long  .btext{font-size:17px;}
-  .bubble.xlong .btext{font-size:15px;text-align:left;line-height:1.55;}
-  .bubble.scrollable::after{content:"⇅";position:absolute;right:9px;bottom:6px;
-    font-family:var(--mono);font-size:12px;color:var(--cy);opacity:.55;}
+  .btext{font-size:17px;font-weight:300;line-height:1.55;letter-spacing:.02em;
+         color:var(--cy);text-shadow:0 0 7px rgba(30,240,224,.22);
+         max-height:228px;overflow-y:auto;outline:none;text-wrap:balance;
+         scrollbar-width:thin;scrollbar-color:rgba(30,240,224,.5) transparent;}
+  .btext::-webkit-scrollbar{width:5px;}
+  .btext::-webkit-scrollbar-thumb{background:rgba(30,240,224,.5);border-radius:3px;}
+  .btext::-webkit-scrollbar-track{background:rgba(30,240,224,.06);}
+  .btext.typing::after{content:"\2589";color:var(--cy);margin-left:2px;
+    text-shadow:0 0 8px var(--cy);animation:blink .65s steps(1) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .bubble.long  .btext{font-size:15px;}
+  .bubble.xlong .btext{font-size:13.5px;text-align:left;line-height:1.62;}
+  .bubble.scrollable::after{content:"\2195";position:absolute;right:11px;bottom:6px;
+    font-family:var(--mono);font-size:12px;color:var(--cy);opacity:.6;}
   .bubble:focus-within{border-color:var(--cy);
     box-shadow:0 0 22px rgba(30,240,224,.30), inset 0 0 16px rgba(30,240,224,.06);}
   .bubble.idle{border-left-color:var(--dim);box-shadow:none;background:rgba(8,16,16,.35);}
-  .bubble.idle .btext{color:var(--dim);font-size:15px;letter-spacing:.14em;font-family:var(--mono);max-height:none;overflow:visible;}
+  .bubble.idle .btext{color:var(--dim);font-size:14px;letter-spacing:.14em;font-family:var(--mono);max-height:none;overflow:visible;text-shadow:none;}
+  .bubble.user .btext{color:#f3b8ff;text-shadow:0 0 7px rgba(255,66,230,.22);}
   .bubble.idle::before{border-color:var(--dim);opacity:.4;}
   .bubble.user{border-left-color:var(--mag);}
   .bubble.user::before{border-color:var(--cy);}
@@ -105,7 +112,7 @@
   .btn{--ac:var(--cy);position:relative;background:rgba(255,255,255,.022);
     border:1px solid rgba(30,240,224,.16);border-radius:3px;color:#cfeae7;
     cursor:pointer;text-align:center;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;gap:7px;min-height:72px;padding:8px 10px;
+    align-items:center;justify-content:center;gap:6px;min-height:64px;padding:7px 10px;
     overflow:hidden;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
     transition:all .12s cubic-bezier(.2,.7,.2,1);}
   .btn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ac);opacity:0;transition:opacity .12s ease;}
@@ -261,19 +268,41 @@
 
   /* ---------- bubble + history ---------- */
   function sizeClass(t){ const n=(t||'').length; if(n>120)return 'xlong'; if(n>50)return 'long'; return ''; }
+  let shownText = null, typeTimer = null, typingActive = false;
+  function typeInto(el, text){
+    clearInterval(typeTimer); typingActive = true;
+    el.classList.add('typing');
+    const step = text.length > 90 ? 2 : 1;
+    let i = 0;
+    typeTimer = setInterval(() => {
+      i += step;
+      el.textContent = text.slice(0, i);
+      el.scrollTop = el.scrollHeight;            // 入力に追従してスクロール
+      if (i >= text.length){
+        clearInterval(typeTimer); typingActive = false;
+        el.textContent = text; el.classList.remove('typing');
+        const b = document.getElementById('bubble');
+        requestAnimationFrame(() => b && b.classList.toggle('scrollable', el.scrollHeight > el.clientHeight + 2));
+      }
+    }, 20);
+  }
   function renderContent(){
-    const b = $('bubble');
+    const b = $('bubble'); const tx = $('btext');
     if (!latest){
+      clearInterval(typeTimer); typingActive = false; tx.classList.remove('typing');
       b.className = 'bubble idle';
-      $('btext').textContent = live ? 'Waiting for Reachy…' : 'Connecting…';
-      $('hist').innerHTML = '';
+      tx.textContent = live ? 'Waiting for Reachy…' : 'Connecting…';
+      shownText = null; $('hist').innerHTML = '';
       return;
     }
     b.className = 'bubble ' + sizeClass(latest.text) + (latest.speaker === 'user' ? ' user' : '');
-    const tx = $('btext');
-    tx.textContent = latest.text;
-    tx.scrollTop = 0;
-    requestAnimationFrame(() => { b.classList.toggle('scrollable', tx.scrollHeight > tx.clientHeight + 2); });
+    if (latest.text !== shownText){
+      shownText = latest.text;
+      typeInto(tx, latest.text);               // 新しい発話はカタカタ表示
+    } else if (!typingActive){
+      tx.textContent = latest.text;
+      requestAnimationFrame(() => b.classList.toggle('scrollable', tx.scrollHeight > tx.clientHeight + 2));
+    }
     const prev = history.filter(m => m !== latest).slice(-2).reverse();
     const h = $('hist'); h.innerHTML = '';
     for (const m of prev){
