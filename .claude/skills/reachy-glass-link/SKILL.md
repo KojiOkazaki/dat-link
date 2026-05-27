@@ -152,6 +152,9 @@ surprised · thinking · idle · excited · start_conversation · pause_conversa
   TALK blue / STOP red); monochrome inline-SVG icons (no emoji); typewriter
   reveal with blinking block cursor; cyan neon body text.
 - See the **`mrbd-llm-app`** skill for the broader MRBD web-app constraints.
+- For running this at an event/venue on flaky or pocket wifi (stable URL,
+  one-command startup, auto-restart, local STT, wifi/AP gotchas, pre-flight
+  checklist), see the **`reachy-venue-deploy`** skill.
 
 ## Tuning knobs
 
