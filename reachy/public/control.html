@@ -82,6 +82,8 @@
   <div class="row two" id="action"></div>
   <div class="section">会話</div>
   <div class="row" id="conv"></div>
+  <div class="section">音量</div>
+  <div class="row two" id="volume"></div>
   <div class="section">安全</div>
   <div class="row two" id="safety"></div>
 </div>
@@ -114,6 +116,10 @@
       { cmd:'pause_conversation', label:'会話停止', icon:'⏸️' },
       { cmd:'clear_text',         label:'クリア',   icon:'🧹' },
     ],
+    volume: [
+      { cmd:'volume_up',   label:'音量 +', icon:'🔊' },
+      { cmd:'volume_down', label:'音量 −', icon:'🔉' },
+    ],
     safety: [
       { cmd:'idle', label:'待機',          icon:'😴' },
       { cmd:'stop', label:'停止 (STOP)',   icon:'■', cls:'stop' },
@@ -130,7 +136,7 @@
       row.appendChild(b);
     }
   }
-  ['move','emotion','action','conv','safety'].forEach(build);
+  ['move','emotion','action','conv','volume','safety'].forEach(build);
 
   let toastTimer = null;
   function toast(msg) {

@@ -20,6 +20,7 @@ const COMMANDS = new Set([
   'wave', 'dance',
   'happy', 'surprised', 'thinking', 'idle', 'excited',
   'start_conversation', 'pause_conversation',
+  'volume_up', 'volume_down',
   'stop', 'clear_text',
 ]);
 

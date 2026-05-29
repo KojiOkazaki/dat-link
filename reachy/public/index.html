@@ -192,6 +192,8 @@
     mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
     warn:'<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/>',
     neutral:'<circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/><path d="M9 15h6"/>',
+    volup:'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M15.5 10v4M13.5 12h4"/>',
+    voldown:'<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M13.5 12h4"/>',
   };
   function svg(name){
     return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
@@ -207,8 +209,9 @@
     { s:'emotion', label:'EMOTION', icon:'emotion', ac:'#ff42e6' },
     { s:'action',  label:'ACTION',  icon:'action',  ac:'#ffb73a' },
     { s:'conv',    label:'TALK',    icon:'talk',    ac:'#4d9bff' },
+    { s:'volume',  label:'VOLUME',  icon:'volup',   ac:'#a78bfa' },
   ];
-  const COLORS = { move:'#1ef0e0', emotion:'#ff42e6', action:'#ffb73a', conv:'#4d9bff' };
+  const COLORS = { move:'#1ef0e0', emotion:'#ff42e6', action:'#ffb73a', conv:'#4d9bff', volume:'#a78bfa' };
 
   const MENUS = {
     move: [
@@ -232,6 +235,10 @@
       { cmd:'start_conversation', label:'START', icon:'start' },
       { cmd:'pause_conversation', label:'PAUSE', icon:'pause' },
       { cmd:'clear_text',         label:'CLEAR', icon:'clear' },
+    ],
+    volume: [
+      { cmd:'volume_up',   label:'VOL +', icon:'volup'   },
+      { cmd:'volume_down', label:'VOL −', icon:'voldown' },
     ],
   };
   const CMD_LABEL = {};
