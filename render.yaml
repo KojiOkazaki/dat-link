@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: reachy-relay
+    runtime: node
+    plan: free
+    rootDir: reachy
+    buildCommand: npm install
+    startCommand: node server.js
+    autoDeploy: true
